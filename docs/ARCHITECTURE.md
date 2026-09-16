@@ -2,7 +2,9 @@
 
 The current design of the site. `CLAUDE.md` holds the rules that follow from it;
 `src/lib/schemas/README.md` and `src/lib/data/README.md` hold the field-level
-detail.
+detail. A printable proposal version with the same design is in
+[`SIG_Reality_Spectra_Technical_Plan.pdf`](./SIG_Reality_Spectra_Technical_Plan.pdf);
+if the two ever disagree, this file wins.
 
 ---
 
