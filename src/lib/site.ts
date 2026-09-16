@@ -13,7 +13,7 @@ export const siteConfig = {
   parentOrganisation: 'VIT Pune',
   tagline: 'The AR/VR/XR club of VIT Pune',
   description:
-    'SIG Reality Spectra is the AR, VR and XR special interest group at VIT Pune. We build real extended-reality projects, run workshops and events, and showcase what our members ship.',
+    'SIG Reality Spectra is the AR, VR and XR special interest group at VIT Pune. We run workshops, hackathons and meetups, and build extended-reality projects together.',
   /** Placeholder until the club email is confirmed. Tracked in docs/OPEN_ITEMS.md. */
   contactEmail: 'TODO@vit.edu',
   socials: {
@@ -24,9 +24,9 @@ export const siteConfig = {
 } as const;
 
 /** Where a route is surfaced in the site chrome. */
-export type NavPlacement = 'primary' | 'cta' | 'footer';
+export type NavPlacement = 'primary' | 'cta';
 
-/** Footer grouping. Primary-nav routes also carry a group so the footer can list everything. */
+/** Footer grouping. */
 export type NavGroup = 'explore' | 'involve' | 'connect';
 
 export type SiteRoute = {
@@ -45,18 +45,19 @@ export type SiteRoute = {
 };
 
 /**
- * The confirmed public sitemap.
+ * The confirmed public sitemap: six pages, no detail routes.
  *
- * Eleven public pages plus three detail-page templates. Navigation is
- * deliberately shallow: five primary links and one call to action, with the
- * long tail in the footer, so the navbar still works on a 360px phone.
+ * Past events and their photos render inline on /events (timeline) and /gallery,
+ * team members on / (core team) and /about (full hierarchy), and the sponsor
+ * form lives on /contact — so no page needs a per-record URL.
  */
 export const siteRoutes = [
   {
     href: '/',
     label: 'Home',
     title: 'SIG Reality Spectra',
-    description: 'The AR/VR/XR club of VIT Pune — what we build, run and ship.',
+    description:
+      'The AR/VR/XR club of VIT Pune — who we are, what we stand for, and our core team.',
     placement: 'primary',
     group: 'explore',
     priority: 1,
@@ -64,105 +65,57 @@ export const siteRoutes = [
   {
     href: '/about',
     label: 'About',
-    description: 'Who we are, what the club does, and how we work.',
+    title: 'About us & team',
+    description: 'About SIG Reality Spectra and every member of the team, by role.',
     placement: 'primary',
     group: 'explore',
     priority: 0.8,
   },
   {
-    href: '/projects',
-    label: 'Projects',
-    description: 'Extended-reality projects built by club members.',
-    placement: 'primary',
-    group: 'explore',
-    priority: 0.9,
-  },
-  {
     href: '/events',
     label: 'Events',
-    description: 'Upcoming and past workshops, sessions and showcases.',
+    description:
+      'The current event with its registration link, and a timeline of every past event.',
     placement: 'primary',
     group: 'explore',
     priority: 0.9,
-  },
-  {
-    href: '/team',
-    label: 'Team',
-    description: 'The current core team and alumni of SIG Reality Spectra.',
-    placement: 'primary',
-    group: 'explore',
-    priority: 0.7,
-  },
-  {
-    href: '/join',
-    label: 'Join Us',
-    description: 'How to join SIG Reality Spectra and why members stay.',
-    placement: 'cta',
-    group: 'involve',
-    priority: 0.9,
-  },
-  {
-    href: '/achievements',
-    label: 'Achievements',
-    description: 'Competition results, recognitions and milestones, by academic year.',
-    placement: 'footer',
-    group: 'explore',
-    priority: 0.6,
   },
   {
     href: '/gallery',
     label: 'Gallery',
-    description: 'Photos from club events, builds and demo days.',
-    placement: 'footer',
+    description: 'Photos from our workshops, hackathons and meetups.',
+    placement: 'primary',
     group: 'explore',
-    priority: 0.6,
-  },
-  {
-    href: '/resources',
-    label: 'Resources',
-    description: 'Learning material, tooling and reading for getting into XR.',
-    placement: 'footer',
-    group: 'involve',
-    priority: 0.5,
-  },
-  {
-    href: '/collaborate',
-    label: 'Collaborate',
-    title: 'Collaborate & Sponsor',
-    description: 'Partner with or sponsor SIG Reality Spectra.',
-    placement: 'footer',
-    group: 'involve',
     priority: 0.7,
   },
   {
     href: '/contact',
     label: 'Contact',
-    description: 'Reach the club committee.',
-    placement: 'footer',
+    title: 'Contact & sponsorship',
+    description: 'Reach the club, or send a sponsorship or collaboration request.',
+    placement: 'primary',
     group: 'connect',
-    priority: 0.5,
+    priority: 0.7,
+  },
+  {
+    href: '/recruitment',
+    label: 'Recruitment',
+    description: "Explore the club's domains and apply whenever recruitment is open.",
+    placement: 'cta',
+    group: 'involve',
+    priority: 0.9,
   },
 ] as const satisfies readonly SiteRoute[];
 
 export type SiteRouteHref = (typeof siteRoutes)[number]['href'];
 
-/**
- * Detail-page templates. They render one record each and are filled in later
- * (projects and gallery in Stage 4, events in Stage 7), so they are listed
- * separately from the fixed pages above.
- */
-export const dynamicRouteTemplates = [
-  { pattern: '/projects/[slug]', sampleHref: '/projects/sample-project', label: 'Project detail' },
-  { pattern: '/events/[slug]', sampleHref: '/events/sample-event', label: 'Event detail' },
-  { pattern: '/gallery/[album]', sampleHref: '/gallery/sample-album', label: 'Gallery album' },
-] as const;
-
 /** Admin routes. Never linked from the public site and always `noindex`. */
 export const adminRoutes = [
   { href: '/admin', label: 'Dashboard' },
   { href: '/admin/events', label: 'Events' },
+  { href: '/admin/team', label: 'Team' },
   { href: '/admin/recruitment', label: 'Recruitment' },
-  { href: '/admin/enquiries', label: 'Enquiries' },
+  { href: '/admin/sponsorships', label: 'Sponsorships' },
 ] as const;
 
 export const primaryNavRoutes = siteRoutes.filter((route) => route.placement === 'primary');

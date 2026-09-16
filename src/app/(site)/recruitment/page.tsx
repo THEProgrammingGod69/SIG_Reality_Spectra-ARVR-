@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 import { PagePlaceholder } from '@/components/ui/page-placeholder';
 import { getRoute, routeTitle } from '@/lib/site';
 
-const route = getRoute('/collaborate');
+const route = getRoute('/recruitment');
 
 export const metadata: Metadata = {
   title: routeTitle(route),
@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   alternates: { canonical: route.href },
 };
 
-export default function CollaboratePage() {
+export default function RecruitmentPage() {
   return (
     <PagePlaceholder title={routeTitle(route)} description={route.description} filledInStage={8} />
   );

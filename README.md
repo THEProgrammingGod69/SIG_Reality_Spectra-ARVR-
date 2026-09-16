@@ -3,12 +3,14 @@
 Official website of **SIG Reality Spectra**, the AR/VR/XR special interest group
 at VIT Pune.
 
-A public site the club can update without a developer: events, recruitment and
-sponsor enquiries are managed from `/admin` and go live immediately, with no
-redeploy. Everything else is edited as JSON/MDX in Git.
+A public site the club can update without a developer: events and their photos,
+team members, recruitment and sponsorship requests are managed from `/admin` and
+go live immediately, with no redeploy. The little copy that rarely changes (intro,
+mission, vision, domains, contact details) is edited as JSON in Git.
 
 > **Contributors: read [`CLAUDE.md`](./CLAUDE.md) first.** It holds the product
-> context, the locked tech stack and the rules this codebase is built on.
+> context, the locked tech stack and the rules this codebase is built on. The
+> design, with diagrams, is in [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md).
 
 ---
 
@@ -62,7 +64,7 @@ src/app/(site)/     public pages, one folder per sitemap route
 src/app/admin/      admin panel (noindex, never linked from the public site)
 src/components/     ui / motion / three / sections / admin
 src/lib/            data repository, Zod schemas, auth, env, site config
-src/content/        Git-edited content (Stage 4)
+src/content/        site info, domains, contact details (Stage 4)
 tests/unit/         Vitest
 tests/e2e/          Playwright
 references/         design and animation inputs — never shipped
@@ -78,16 +80,20 @@ footer, page metadata and the route smoke tests all read from it.
 
 ## Sitemap
 
-**Public** — `/`, `/about`, `/projects`, `/events`, `/team`, `/join`,
-`/achievements`, `/gallery`, `/resources`, `/collaborate`, `/contact`
+| Public page    | Shows                                                                     |
+| -------------- | ------------------------------------------------------------------------- |
+| `/`            | Hero, mission / vision / about, core team                                 |
+| `/about`       | Club details and every team member by hierarchy                           |
+| `/events`      | Current event with registration link, timeline of past events with photos |
+| `/gallery`     | Past-event photos by category (workshops, hackathons, meetups, …)         |
+| `/recruitment` | Domains always; roles PDF and Google Form only while recruitment is open  |
+| `/contact`     | Contact details and the sponsorship request form                          |
 
-**Detail templates** — `/projects/[slug]`, `/events/[slug]`, `/gallery/[album]`
+**Admin** — `/admin` (dashboard), `/admin/login`, `/admin/events`, `/admin/team`,
+`/admin/recruitment`, `/admin/sponsorships`. Never linked from the public site.
 
-**Admin** — `/admin`, `/admin/login`, `/admin/events`, `/admin/recruitment`,
-`/admin/enquiries`
-
-Navigation is deliberately shallow: five primary links plus a Join Us call to
-action, with the rest in the footer, so the navbar works at 360px.
+There are no per-record URLs: events, photos and team members render inline on
+their list pages.
 
 ---
 
@@ -96,18 +102,18 @@ action, with the rest in the footer, so the navbar works at 360px.
 The site is built in ten stages, one per session, each tagged in Git
 (`stage-1`, `stage-2`, …) so any stage can be rolled back cleanly.
 
-| Stage | Scope                                             | Status      |
-| ----- | ------------------------------------------------- | ----------- |
-| 1     | Foundation, architecture, project rules           | **Done**    |
-| 2     | Animation system + AR/VR landing hero             | Not started |
-| 3     | Design system + UI style                          | Not started |
-| 4     | Static pages + typed content layer                | Not started |
-| 5     | Data layer (Redis + Blob) + schemas               | Not started |
-| 6     | Admin authentication + panel shell                | Not started |
-| 7     | Events management, admin ↔ public                 | Not started |
-| 8     | Recruitment toggle + sponsor enquiries            | Not started |
-| 9     | Animation polish, performance, accessibility, SEO | Not started |
-| 10    | Testing, deployment, handover                     | Not started |
+| Stage | Scope                                                                        | Status      |
+| ----- | ---------------------------------------------------------------------------- | ----------- |
+| 1     | Foundation, architecture, project rules                                      | **Done**    |
+| 2     | Animation system + AR/VR landing hero                                        | Not started |
+| 3     | Design system + UI shell                                                     | Not started |
+| 4     | Static content layer + page shells (Home, About, Recruitment, Contact) + SEO | Not started |
+| 5     | Data layer: schemas, repository, browser uploads, cache tags                 | Not started |
+| 6     | Admin authentication + panel shell + dashboard                               | Not started |
+| 7     | Events and gallery — admin ↔ public                                          | Not started |
+| 8     | Team, recruitment and sponsorship requests — admin ↔ public                  | Not started |
+| 9     | Animation polish, performance, accessibility, security headers               | Not started |
+| 10    | Testing, deployment, nightly backup + orphan sweep, handover                 | Not started |
 
 Every page currently renders a placeholder that names the stage which fills it
 in. Inputs still needed from the club are tracked in

@@ -10,7 +10,7 @@ export default function AdminDashboardPage() {
   return (
     <PagePlaceholder
       title="Dashboard"
-      description="Counts for published events, drafts and new enquiries, plus recruitment status."
+      description="Upcoming events, events waiting for the timeline, new sponsorship requests and recruitment status."
       filledInStage={6}
     />
   );

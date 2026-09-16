@@ -13,6 +13,6 @@ export const metadata: Metadata = {
 
 export default function ContactPage() {
   return (
-    <PagePlaceholder title={routeTitle(route)} description={route.description} filledInStage={4} />
+    <PagePlaceholder title={routeTitle(route)} description={route.description} filledInStage={8} />
   );
 }

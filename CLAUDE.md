@@ -12,22 +12,37 @@ decided, and the rules that do not get renegotiated stage by stage.
 The official website of **SIG Reality Spectra**, the AR/VR/XR special interest
 group at **VIT Pune**.
 
-- **Public visitors never log in.** The public site is mostly static.
-- **Events:** the public sees events; the "Register" button redirects to the
-  official **VIERP** registration link stored per event. Past events show
-  "Event concluded" instead of the button.
-- **Recruitment:** an admin toggles recruitment on/off and sets a Google Form
-  URL. When on, the Join Us page and a site-wide banner link to that form.
-- **Sponsors** submit a collaboration/sponsor enquiry form.
-- **Admins** (2–3 allowlisted Google accounts) sign in at `/admin` to:
-  create/edit/delete/reorder events, toggle recruitment and set the form URL,
-  and read sponsor enquiries.
+**Public visitors never log in.** Six public pages:
+
+| Page           | Shows                                                                                           |
+| -------------- | ----------------------------------------------------------------------------------------------- |
+| `/` Home       | Hero (name + one-line intro) · mission, vision and short "about us" · core team members         |
+| `/about`       | Club details · every team member (name, photo, position) arranged by hierarchy                  |
+| `/events`      | Current event on top (details + registration link) · timeline of past events with photos        |
+| `/gallery`     | All past-event photos, filterable by category (workshops, hackathons, meetups, …)               |
+| `/recruitment` | The club's domains, always · roles PDF and Google Form link, **only while recruitment is open** |
+| `/contact`     | Contact details · sponsorship/collaboration request form (goes to the admin panel)              |
+
+**Admins** (2–3 allowlisted Google accounts) sign in at `/admin` to manage four
+things:
+
+| Admin page            | Does                                                                                                                                                                                           |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/admin/events`       | Add the current event (details + registration link). Once it ends it is kept for later; the admin adds a recap and photos and puts it on the timeline. Past events can also be added directly. |
+| `/admin/team`         | Add members with name, position and photo. Core members also appear on the home page; everyone appears on About.                                                                               |
+| `/admin/recruitment`  | Open/close recruitment, upload the roles and responsibilities PDF, set the Google Form link.                                                                                                   |
+| `/admin/sponsorships` | Read sponsorship requests submitted from `/contact`.                                                                                                                                           |
+
 - **Admin changes must appear on the live site immediately after save, with NO
   redeploy.** This is the single hardest constraint in the project and it drives
   the entire data and caching design.
 - **No traditional database.** Data lives in Upstash Redis (JSON records) and
-  Vercel Blob (images), behind a repository layer so Postgres can replace Redis
-  later without touching a single UI file.
+  Vercel Blob (images and the recruitment PDF), behind a repository layer so
+  Postgres can replace Redis later without touching a single UI file.
+- **The gallery has no data of its own.** It is built from the photos of
+  timeline events, grouped by event category — one upload, two places.
+- **Registration and applications happen elsewhere.** Events link out to their
+  registration page (typically VIERP); recruitment links out to a Google Form.
 - **Handover matters.** The club committee changes every year. A coordinator who
   has never seen the code must be able to add an event from a written guide, and
   admin access must transfer by editing one environment variable.
@@ -105,6 +120,14 @@ These are not style preferences. Breaking one is a bug.
 
 10. **A write that does not revalidate its cache tags is an incomplete write.**
 
+11. **Files never travel through a Server Action.** Admin uploads go browser →
+    Blob with a short-lived token from `/api/admin/upload`; a Server Action then
+    attaches the URLs to the record and calls `updateTag`. See
+    `src/lib/data/README.md`.
+
+12. **"Now" is never cached.** Whether an event is current or past is decided at
+    request time, after `await connection()`, outside any `'use cache'` function.
+
 ---
 
 ## 4. Next.js 16 — things that differ from older knowledge
@@ -124,7 +147,12 @@ This project runs **Next.js 16.3.5**. Several APIs changed from 14/15. Check
   within the same request, giving read-your-writes semantics.
   **This is the correct API for our "admin saves, live site updates now" rule** —
   `revalidateTag` alone would leave an admin staring at their own stale data.
-- **`cacheLife` and `cacheTag` are stable** — no `unstable_` prefix.
+- **`cacheLife` and `cacheTag` are stable** — no `unstable_` prefix — but
+  `cacheTag` and `'use cache'` **require `cacheComponents: true`**, which this
+  project enables in `next.config.ts`. With it on, data is dynamic by default,
+  pages prerender a static shell, and anything request-time (cookies, headers,
+  the current time) must sit inside `<Suspense>` or after `await connection()`.
+  The build fails loudly if it does not.
 - **`next lint` is removed.** `pnpm lint` calls the ESLint CLI directly and
   `next build` no longer lints, so linting is a separate gate.
 - **`next typegen`** generates `PageProps<'/route'>`, `LayoutProps<'/route'>` and
@@ -150,6 +178,8 @@ src/
   app/
     (site)/          public routes — one folder per sitemap page
     admin/           admin routes (noindex, never linked publicly)
+    api/admin/upload browser-upload token route          (Stage 5)
+    api/cron/nightly backup + orphan sweep, CRON_SECRET  (Stage 10)
     globals.css      design tokens live here, in @theme
     robots.ts
   components/
@@ -157,7 +187,7 @@ src/
     motion/          reusable animation primitives     (Stage 2)
     three/           R3F scenes                        (Stage 2)
     sections/        composed page sections            (Stage 2/4)
-    admin/           admin components, shadcn/ui       (Stage 6/7)
+    admin/           admin components, shadcn/ui       (Stages 6–8)
   lib/
     data/            repository layer — ONLY place that touches Redis/Blob
     schemas/         Zod schemas
@@ -165,7 +195,7 @@ src/
     env.ts           server env, validated with Zod (server-only)
     env.public.ts    NEXT_PUBLIC_* env, safe in the browser
     site.ts          sitemap, nav and club config — single source of truth
-  content/           Git-edited content (JSON/MDX), validated at build time
+  content/           site info, domains, contact — JSON, validated at build time
 tests/
   unit/              Vitest — schemas and pure utilities
   e2e/               Playwright
@@ -185,46 +215,56 @@ fails if those two ever disagree.
 
 ## 6. Sitemap
 
-Eleven public pages, three detail templates, one admin area. Navigation is
-deliberately shallow — five primary links plus one call to action — so the navbar
-still works at 360px.
+Six public pages with no per-record URLs, and one admin area. Five primary links
+plus the Recruitment call to action, so the navbar still works at 360px. A unit
+test fails if a dynamic `[param]` folder appears under `(site)`.
 
-| Route              | Nav     | Built in |
-| ------------------ | ------- | -------- |
-| `/`                | primary | 2 / 4    |
-| `/about`           | primary | 4        |
-| `/projects`        | primary | 4        |
-| `/events`          | primary | 7        |
-| `/team`            | primary | 4        |
-| `/join`            | CTA     | 8        |
-| `/achievements`    | footer  | 4        |
-| `/gallery`         | footer  | 4        |
-| `/resources`       | footer  | 4        |
-| `/collaborate`     | footer  | 8        |
-| `/contact`         | footer  | 4        |
-| `/projects/[slug]` | —       | 4        |
-| `/events/[slug]`   | —       | 7        |
-| `/gallery/[album]` | —       | 4        |
-| `/admin/*`         | never   | 6–8      |
+| Route                 | Nav     | Data it reads                                     | Built in |
+| --------------------- | ------- | ------------------------------------------------- | -------- |
+| `/`                   | primary | site info (Git) · core team (Redis)               | 2, 4, 8  |
+| `/about`              | primary | site info (Git) · full team (Redis)               | 4, 8     |
+| `/events`             | primary | events (Redis/Blob)                               | 7        |
+| `/gallery`            | primary | photos of timeline events (Redis/Blob)            | 7        |
+| `/contact`            | primary | contact info (Git) · writes sponsorship requests  | 4, 8     |
+| `/recruitment`        | CTA     | domains (Git) · recruitment settings (Redis/Blob) | 4, 8     |
+| `/admin`              | never   | dashboard                                         | 6        |
+| `/admin/login`        | never   | —                                                 | 6        |
+| `/admin/events`       | never   | events                                            | 7        |
+| `/admin/team`         | never   | team members                                      | 8        |
+| `/admin/recruitment`  | never   | recruitment settings                              | 8        |
+| `/admin/sponsorships` | never   | sponsorship requests                              | 8        |
 
 ---
 
 ## 7. Data model (Stages 5–8)
 
+Full field lists live in `src/lib/schemas/README.md`; keys, blob paths and the
+upload flow in `src/lib/data/README.md`; diagrams in `docs/ARCHITECTURE.md`.
+
+| Entity                        | Stored in     | Edited at            | Cache tag                    | Public reader                     |
+| ----------------------------- | ------------- | -------------------- | ---------------------------- | --------------------------------- |
+| SiteInfo, Domain, ContactInfo | `src/content` | Git                  | — (build time)               | Home, About, Recruitment, Contact |
+| Event (+ photos)              | Redis + Blob  | `/admin/events`      | `events`                     | Events, Gallery                   |
+| TeamMember                    | Redis + Blob  | `/admin/team`        | `team`                       | Home (core), About (all)          |
+| RecruitmentSettings           | Redis + Blob  | `/admin/recruitment` | `recruitment`                | Recruitment, nav CTA              |
+| SponsorshipRequest            | Redis         | `/contact` form      | — (admin only, never cached) | —                                 |
+
+- **Event phases are derived, not stored:** _current_ = published and not yet
+  ended; _awaiting timeline_ = ended but not on the timeline (admin-only, kept for
+  later use); _timeline_ = `inTimeline`, which requires a past end and at least
+  one photo. There is no manual ordering — the timeline is chronological.
+- **The gallery has no data of its own:** it is the photos of timeline events,
+  grouped by event category.
+- **Recruitment** can only be opened when both the roles PDF and the Google Form
+  link are set. Domains stay visible whether it is open or not.
+- **Team hierarchy** comes from each member's `tier`, then `order`; `isCore`
+  additionally puts a member on the home page.
+
 Redis keys are namespaced by `REDIS_KEY_PREFIX`, which **must differ between
 production and preview** so preview deployments can never touch live club data.
-
-- `event:{id}` — one JSON record per event
-- a sorted set for display order, and a `slug → id` index
-- `settings` — recruitment toggle, Google Form URL, banner text
-- `enquiry:{id}` — sponsor and collaboration enquiries
-
 Multi-key writes use transactions so indexes cannot drift. Updates carry an
 `updatedAt` optimistic-concurrency check and reject stale edits with a clear
 message rather than silently clobbering someone else's change.
-
-Cache tags: `events`, `event:{slug}`, `settings`. Every write calls a revalidation
-helper — see the `updateTag` note in section 4.
 
 ---
 
@@ -267,18 +307,22 @@ in `src/lib/env.public.ts`.
 One stage per session. `/clear` between stages. Commit and tag each stage
 (`git tag stage-N`) so a bad stage can be rolled back cleanly.
 
-| Stage | Scope                                             | Status      |
-| ----- | ------------------------------------------------- | ----------- |
-| 1     | Foundation, architecture, project rules           | **Done**    |
-| 2     | Animation system + AR/VR landing hero             | Not started |
-| 3     | Design system + UI style                          | Not started |
-| 4     | Static pages + typed content layer                | Not started |
-| 5     | Data layer (Redis + Blob) + schemas               | Not started |
-| 6     | Admin authentication + panel shell                | Not started |
-| 7     | Events management, admin ↔ public                 | Not started |
-| 8     | Recruitment toggle + sponsor enquiries            | Not started |
-| 9     | Animation polish, performance, accessibility, SEO | Not started |
-| 10    | Testing, deployment, handover                     | Not started |
+| Stage | Scope                                                                        | Status      |
+| ----- | ---------------------------------------------------------------------------- | ----------- |
+| 1     | Foundation, architecture, project rules                                      | **Done**    |
+| 2     | Animation system + AR/VR landing hero                                        | Not started |
+| 3     | Design system + UI shell                                                     | Not started |
+| 4     | Static content layer + page shells (Home, About, Recruitment, Contact) + SEO | Not started |
+| 5     | Data layer: schemas, repository, browser uploads, cache tags                 | Not started |
+| 6     | Admin authentication + panel shell + dashboard                               | Not started |
+| 7     | Events and gallery — admin ↔ public                                          | Not started |
+| 8     | Team, recruitment and sponsorship requests — admin ↔ public                  | Not started |
+| 9     | Animation polish, performance, accessibility, security headers               | Not started |
+| 10    | Testing, deployment, nightly backup + orphan sweep, handover                 | Not started |
+
+The architecture was revised after Stage 1 (six-page sitemap, admin-managed
+team, gallery derived from events, recruitment PDF). The Stage 1 scaffold was
+updated to match; `docs/ARCHITECTURE.md` is the current design.
 
 **Temporary scaffolding, to delete as it is replaced:**
 
@@ -289,9 +333,11 @@ One stage per session. `/clear` between stages. Commit and tag each stage
 
 **Deliberately not built yet, so a later stage owns it cleanly:**
 
-- `sitemap.ts` — Stage 4, because it must include published event slugs read
-  through the repository layer.
+- `sitemap.ts` — Stage 4, with the static content layer (the sitemap is fixed:
+  there are no per-record URLs).
 - `proxy.ts` — Stage 6, together with authentication.
+- `api/admin/upload` — Stage 5, with the repository's `media.ts`.
+- `api/cron/nightly` and the Vercel cron schedule — Stage 10.
 
 ---
 

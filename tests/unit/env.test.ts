@@ -28,6 +28,11 @@ describe('serverEnvSchema', () => {
     expect(result.success).toBe(false);
   });
 
+  it('rejects a CRON_SECRET that is too short to be safe', () => {
+    const result = serverEnvSchema.safeParse({ CRON_SECRET: 'short' });
+    expect(result.success).toBe(false);
+  });
+
   it('rejects an AUTH_SECRET that is too short to be safe', () => {
     const result = serverEnvSchema.safeParse({ AUTH_SECRET: 'short' });
     expect(result.success).toBe(false);

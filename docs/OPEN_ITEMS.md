@@ -10,85 +10,83 @@ should be raised rather than worked around with a placeholder that ships.
 
 ## Blocking Stage 2 — animation system and landing hero
 
-| #   | Item                                                                                                        | Why it blocks                                                              | Status |
-| --- | ----------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- | ------ |
-| 1   | **Animation references** in `references/animation/`, with a line per file in `NOTES.md` saying what to copy | Without them the hero is guesswork, and Stage 3 would then have to redo it | Open   |
-| 2   | **Landing concept**, one paragraph — what a visitor sees from load to first scroll                          | Drives the whole 3D scene                                                  | Open   |
-| 3   | **Mood words**, including what to avoid                                                                     | Keeps the scene on the "XR lab, not gaming neon" brief                     | Open   |
-| 4   | **3D models** (`.glb`, ideally under 2 MB) in `public/models/`, or an explicit "none"                       | Decides modelled vs procedural geometry                                    | Open   |
-| 5   | **A real mid-range Android phone** to test on                                                               | The 50+ fps low-tier budget cannot be signed off from a desktop            | Open   |
+| #   | Item                                                                                      | Why it blocks                                                             | Status                             |
+| --- | ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- | ---------------------------------- |
+| 1   | **Landing concept and motion spec**                                                       | Drives the whole 3D scene                                                 | Drafted — SIG Style & Motion Board |
+| 2   | **Decision: allow `ogl`-based effects in the hero, or rebuild them in React Three Fiber** | The board proposes Galaxy and LightRays, which add a second WebGL library | Open                               |
+| 3   | **Decision: keep the 2.4 s intro, or make the headline readable immediately**             | The board's own guardrail says content is readable within 1.5 s           | Open                               |
+| 4   | **A real mid-range Android phone** to test on                                             | The 50+ fps low-tier budget cannot be signed off from a desktop           | Open                               |
 
 ## Blocking Stage 3 — design system
 
-| #   | Item                                                                                       | Why it blocks                                                                                                                                                                                                | Status |
-| --- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------ |
-| 6   | **Vector logo with a transparent background**, light and dark variants, plus a square mark | The supplied `SIG_LOGO.svg` is a 1.7 MB PNG wrapped in SVG with a white background — it cannot be recoloured, will not scale cleanly, and shows a white box on a dark site. See `references/brand/README.md` | Open   |
-| 7   | **Brand colours (hex)** — background, surface, text, muted, one accent, border             | Token values stay neutral placeholders until these land                                                                                                                                                      | Open   |
-| 8   | **Fonts** — Google Font names, or files in `public/fonts`                                  | Currently using Geist as a stand-in                                                                                                                                                                          | Open   |
-| 9   | **VIT branding rules** — mandated marks, colours, placement                                | Compliance, and it can change layout                                                                                                                                                                         | Open   |
-| 10  | **UI design images** in `references/design/` + `NOTES.md`                                  | Same reason as the animation references                                                                                                                                                                      | Open   |
+| #   | Item                                                                                       | Why it blocks                                                                                                                                                                       | Status                             |
+| --- | ------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- |
+| 5   | **Vector logo with a transparent background**, light and dark variants, plus a square mark | The supplied `SIG_LOGO.svg` is a 1.7 MB PNG wrapped in SVG with a white background — it cannot be recoloured and shows a white box on a dark site. See `references/brand/README.md` | Open                               |
+| 6   | **Brand colours and fonts**                                                                | Token values stay neutral placeholders until adopted                                                                                                                                | Drafted — SIG Style & Motion Board |
+| 7   | **Decision: lighten `text-subtle`** (measures about 3.4:1) to reach WCAG AA 4.5:1          | Stage 3 acceptance requires AA contrast                                                                                                                                             | Open                               |
+| 8   | **VIT branding rules** — mandated marks, colours, placement                                | Compliance, and it can change layout                                                                                                                                                | Open                               |
 
-## Blocking Stage 4 — content
+## Blocking Stage 4 — static content
 
-| #   | Item                                                                          | Status |
-| --- | ----------------------------------------------------------------------------- | ------ |
-| 11  | About copy, mission, values                                                   | Open   |
-| 12  | Team list: name, role, photo, LinkedIn, current/alumni                        | Open   |
-| 13  | Projects: title, pitch, description, tech tags, team, GitHub URL, cover image | Open   |
-| 14  | Achievements: title, date, description, image                                 | Open   |
-| 15  | Gallery images grouped by event/year, with consent checked                    | Open   |
-| 16  | Resources: title, type, link                                                  | Open   |
-| 17  | All images compressed to WebP, 300 KB or less each                            | Open   |
+| #   | Item                                                                               | Status |
+| --- | ---------------------------------------------------------------------------------- | ------ |
+| 9   | Club name as displayed and the **one-line intro** for the hero                     | Open   |
+| 10  | **Mission**, **vision** and the short and long **about us** copy                   | Open   |
+| 11  | **List of the club's domains**, with a short description of each                   | Open   |
+| 12  | **Contact details**: official club email, phone, address or map link, social links | Open   |
 
 ## Blocking Stage 5 — data layer
 
-| #   | Item                                                              | Status |
-| --- | ----------------------------------------------------------------- | ------ |
-| 18  | Vercel project created under the **club** account, repo connected | Open   |
-| 19  | Upstash Redis added via Vercel Marketplace, `vercel env pull` run | Open   |
-| 20  | Vercel Blob store created, token in env                           | Open   |
-| 21  | 3–5 real past events to seed with                                 | Open   |
+| #   | Item                                                                                                                     | Status |
+| --- | ------------------------------------------------------------------------------------------------------------------------ | ------ |
+| 13  | Vercel project created under the **club** account, repo connected                                                        | Open   |
+| 14  | Upstash Redis added via Vercel Marketplace, `vercel env pull` run                                                        | Open   |
+| 15  | Vercel Blob store created, token in env                                                                                  | Open   |
+| 16  | **Confirm the event categories**: workshop, hackathon, meetup, talk, competition, other. They become the gallery filters | Open   |
+| 17  | **Confirm the team hierarchy levels** (for example faculty, leadership, leads, members) and what counts as "core"        | Open   |
 
 ## Blocking Stage 6 — admin auth
 
 | #   | Item                                                                                                     | Status |
 | --- | -------------------------------------------------------------------------------------------------------- | ------ |
-| 22  | Google Cloud OAuth client under the **club** Google account, with localhost and production callback URLs | Open   |
-| 23  | `ADMIN_EMAILS` — the 2–3 accounts that get admin access                                                  | Open   |
+| 18  | Google Cloud OAuth client under the **club** Google account, with localhost and production callback URLs | Open   |
+| 19  | `ADMIN_EMAILS` — the 2–3 accounts that get admin access                                                  | Open   |
 
-## Blocking Stage 7 — events
+## Blocking Stage 7 — events and gallery
 
-| #   | Item                                                                             | Status |
-| --- | -------------------------------------------------------------------------------- | ------ |
-| 24  | One example **VIERP** event URL, so the host can be validated                    | Open   |
-| 25  | Preferred poster aspect ratio (e.g. 4:5 or 16:9) — the crop step is locked to it | Open   |
+| #   | Item                                                                                      | Status |
+| --- | ----------------------------------------------------------------------------------------- | ------ |
+| 20  | 3–5 **past events** with dates, details and photos (consent checked) to seed the timeline | Open   |
+| 21  | One example **registration link** (typically VIERP)                                       | Open   |
+| 22  | Preferred **poster aspect ratio** (e.g. 4:5 or 16:9) — the crop step is locked to it      | Open   |
 
-## Blocking Stage 8 — recruitment and sponsors
+## Blocking Stage 8 — team, recruitment and sponsorships
 
-| #   | Item                                                                                            | Status |
-| --- | ----------------------------------------------------------------------------------------------- | ------ |
-| 26  | Current Google Form URL, or a test form                                                         | Open   |
-| 27  | "Why join" copy                                                                                 | Open   |
-| 28  | **Official club email address** — also needed for the Contact page and enquiry acknowledgements | Open   |
-| 29  | Resend account with a verified sending domain                                                   | Open   |
-| 30  | Cloudflare Turnstile site key and secret                                                        | Open   |
-| 31  | Sponsor page content: what the club offers, reach numbers, brochure PDF                         | Open   |
+| #   | Item                                                                    | Status |
+| --- | ----------------------------------------------------------------------- | ------ |
+| 23  | **Team list**: name, position, photo, hierarchy level, core or not      | Open   |
+| 24  | **Roles and responsibilities PDF** and the current **Google Form** link | Open   |
+| 25  | **Is recruitment open right now?**                                      | Open   |
+| 26  | Resend account with a verified sending domain                           | Open   |
+| 27  | Cloudflare Turnstile site key and secret                                | Open   |
 
 ## Blocking Stage 10 — go live
 
 | #   | Item                                                                            | Status |
 | --- | ------------------------------------------------------------------------------- | ------ |
-| 32  | **Domain name decision plus DNS access**, registered under club/VIT ownership   | Open   |
-| 33  | Confirmation that external hosting is acceptable rather than VIT infrastructure | Open   |
-| 34  | Named next-tenure maintainer(s)                                                 | Open   |
+| 28  | **Domain name decision plus DNS access**, registered under club/VIT ownership   | Open   |
+| 29  | Confirmation that external hosting is acceptable rather than VIT infrastructure | Open   |
+| 30  | Named next-tenure maintainer(s)                                                 | Open   |
 
 ---
 
 ## Notes
 
-- Items 6, 28, 32 and 33 were already flagged as unresolved in the club's initial
-  planning document. They have the longest lead times because they depend on
-  people outside the build team, so they are worth chasing first even though
-  their stages come last.
-- Every third-party account (items 18–20, 22, 29, 30) must be created on a
+- Items 5, 12, 28 and 29 depend on people outside the build team and have the
+  longest lead times, so they are worth chasing first even though some of their
+  stages come later.
+- Every third-party account (items 13–15, 18, 26, 27) must be created on a
   **club-owned** account, never a personal one. Yearly handover depends on it.
+- Removed with the architecture revision: projects, achievements, resources,
+  project/event/album detail pages, the sponsor brochure and the separate
+  Collaborate page. Their inputs are no longer needed.

@@ -56,7 +56,10 @@ export const serverEnvSchema = z.object({
    * preview testing can never mutate live club data.
    */
   REDIS_KEY_PREFIX: z.string().min(1).default('sig:dev'),
-  /** Vercel Blob read/write token, for event poster uploads. */
+  /**
+   * Vercel Blob read/write token: event posters and photos, team photos, the
+   * recruitment PDF and nightly backups. Also signs browser-upload tokens.
+   */
   BLOB_READ_WRITE_TOKEN: z.string().min(1).optional(),
 
   // ---- Stage 6: admin authentication --------------------------------------
@@ -67,13 +70,20 @@ export const serverEnvSchema = z.object({
   /** Comma-separated allowlist. These accounts, and only these, can reach /admin. */
   ADMIN_EMAILS: commaSeparatedEmails.optional(),
 
-  // ---- Stage 8: enquiries, email and spam protection ----------------------
+  // ---- Stage 8: sponsorship requests, email and spam protection -----------
   RESEND_API_KEY: z.string().min(1).optional(),
-  /** Where sponsor enquiry alerts are delivered (the club inbox). */
-  ENQUIRY_NOTIFICATION_EMAIL: z.email().optional(),
+  /** Club inbox that is alerted when a sponsorship request arrives. */
+  SPONSORSHIP_NOTIFY_EMAIL: z.email().optional(),
   /** Verified Resend sender. Must be on a verified domain in production. */
-  ENQUIRY_FROM_EMAIL: z.email().optional(),
+  EMAIL_FROM: z.email().optional(),
   TURNSTILE_SECRET_KEY: z.string().min(1).optional(),
+
+  // ---- Stage 10: scheduled jobs --------------------------------------------
+  /**
+   * Shared secret Vercel Cron sends as a Bearer token. The nightly job (Redis
+   * backup to Blob + orphaned-upload sweep) rejects any request without it.
+   */
+  CRON_SECRET: z.string().min(16).optional(),
 });
 
 export type ServerEnv = z.infer<typeof serverEnvSchema>;
@@ -115,7 +125,7 @@ export const env: ServerEnv = parseEnv();
  * travelling deep into the call stack.
  *
  * @example
- *   const token = requireEnv('BLOB_READ_WRITE_TOKEN', 'event poster uploads');
+ *   const token = requireEnv('BLOB_READ_WRITE_TOKEN', 'event photo uploads');
  */
 export function requireEnv<K extends keyof ServerEnv>(
   key: K,

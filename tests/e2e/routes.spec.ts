@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-import { adminRoutes, dynamicRouteTemplates, siteRoutes } from '@/lib/site';
+import { adminRoutes, siteRoutes } from '@/lib/site';
 
 /**
  * Stage 1 acceptance: every route in the sitemap actually loads.
@@ -27,17 +27,6 @@ test.describe('public routes', () => {
     await expect(page.getByRole('link', { name: 'Skip to content' })).toBeAttached();
     await expect(page.locator('main#main-content')).toBeVisible();
   });
-});
-
-test.describe('detail route templates', () => {
-  for (const template of dynamicRouteTemplates) {
-    test(`${template.pattern} renders for a sample slug`, async ({ page }) => {
-      const response = await page.goto(template.sampleHref);
-
-      expect(response?.status()).toBe(200);
-      await expect(page.locator('h1')).toBeVisible();
-    });
-  }
 });
 
 test.describe('admin routes', () => {
@@ -72,6 +61,8 @@ test.describe('robots.txt', () => {
     const response = await request.get('/robots.txt');
 
     expect(response.status()).toBe(200);
-    expect(await response.text()).toContain('Disallow: /admin');
+    const body = await response.text();
+    expect(body).toContain('Disallow: /admin');
+    expect(body).toContain('Disallow: /api/');
   });
 });

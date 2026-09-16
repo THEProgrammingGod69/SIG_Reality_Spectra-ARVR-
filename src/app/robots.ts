@@ -5,7 +5,7 @@ import { publicEnv } from '@/lib/env.public';
 /**
  * `robots.txt`.
  *
- * The admin panel exists from Stage 1, so it is excluded from crawling now
+ * The admin panel and the admin-only API (upload tokens) are excluded from crawling now
  * rather than later. Admin routes also set `robots: noindex` in their metadata —
  * the two are complementary, not redundant: this stops crawling, that stops
  * indexing of anything already discovered.
@@ -19,7 +19,7 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: '*',
         allow: '/',
-        disallow: ['/admin', '/admin/', '/dev/'],
+        disallow: ['/admin', '/admin/', '/api/', '/dev/'],
       },
     ],
     sitemap: new URL('/sitemap.xml', publicEnv.NEXT_PUBLIC_SITE_URL).toString(),

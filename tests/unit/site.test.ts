@@ -6,7 +6,6 @@ import { describe, expect, it } from 'vitest';
 import {
   adminRoutes,
   ctaNavRoutes,
-  dynamicRouteTemplates,
   getRoute,
   primaryNavRoutes,
   siteConfig,
@@ -39,8 +38,15 @@ describe('siteConfig', () => {
 });
 
 describe('siteRoutes', () => {
-  it('declares the eleven confirmed public pages', () => {
-    expect(siteRoutes).toHaveLength(11);
+  it('declares the six confirmed public pages', () => {
+    expect(siteRoutes.map((route) => route.href)).toEqual([
+      '/',
+      '/about',
+      '/events',
+      '/gallery',
+      '/contact',
+      '/recruitment',
+    ]);
   });
 
   it('has no duplicate hrefs', () => {
@@ -70,7 +76,7 @@ describe('siteRoutes', () => {
     // Stage 3 navbar stops fitting without a hamburger on tablet widths.
     expect(primaryNavRoutes.length).toBeLessThanOrEqual(5);
     expect(ctaNavRoutes).toHaveLength(1);
-    expect(ctaNavRoutes[0]?.href).toBe('/join');
+    expect(ctaNavRoutes[0]?.href).toBe('/recruitment');
   });
 
   it('has a page.tsx on disk for every declared route', () => {
@@ -92,13 +98,19 @@ describe('siteRoutes', () => {
   });
 });
 
-describe('dynamicRouteTemplates', () => {
-  it('has a page.tsx for every detail template', () => {
-    for (const template of dynamicRouteTemplates) {
-      const segments = template.pattern.split('/').filter(Boolean);
-      const file = join(APP_SITE_DIR, ...segments, 'page.tsx');
-      expect(fileExists(file), `missing ${file}`).toBe(true);
+describe('route tree', () => {
+  it('has no dynamic segments in the public site', () => {
+    // Events, photos and team members render inline on their list pages, so the
+    // public site has no per-record URLs. A new [param] folder is a design change.
+    function walk(dir: string): string[] {
+      return readdirSync(dir, { withFileTypes: true }).flatMap((entry) =>
+        entry.isDirectory()
+          ? [entry.name, ...walk(join(dir, entry.name)).map((n) => `${entry.name}/${n}`)]
+          : [],
+      );
     }
+    const dynamic = walk(APP_SITE_DIR).filter((name) => /\[.+\]/.test(name));
+    expect(dynamic).toEqual([]);
   });
 });
 
@@ -120,7 +132,7 @@ describe('adminRoutes', () => {
 
 describe('getRoute', () => {
   it('returns the matching route', () => {
-    expect(getRoute('/projects').label).toBe('Projects');
+    expect(getRoute('/events').label).toBe('Events');
   });
 
   it('throws a named error for an unknown route', () => {

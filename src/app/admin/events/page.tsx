@@ -10,7 +10,7 @@ export default function AdminEventsPage() {
   return (
     <PagePlaceholder
       title="Events"
-      description="Create, edit, reorder, publish and delete events."
+      description="Add the current event with its registration link, and complete past events with photos for the timeline."
       filledInStage={7}
     />
   );

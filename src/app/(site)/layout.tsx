@@ -8,7 +8,8 @@ import { ctaNavRoutes, primaryNavRoutes, routesInGroup, siteConfig } from '@/lib
  * The navigation and footer below are TEMPORARY Stage 1 scaffolding: they exist
  * so every route is reachable and the smoke tests are meaningful. Stage 3
  * replaces them with the real Navbar (sticky, blur on scroll, animated mobile
- * menu), Footer and RecruitmentBanner slot, built on the design system.
+ * menu) and Footer, built on the design system. Stage 8 adds the "recruitment
+ * open" state to the Recruitment call to action.
  *
  * What is NOT temporary, and must survive Stage 3:
  *   - the skip link and the single <main id="main-content"> landmark

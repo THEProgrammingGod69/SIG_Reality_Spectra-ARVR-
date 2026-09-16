@@ -10,7 +10,7 @@ export default function AdminRecruitmentPage() {
   return (
     <PagePlaceholder
       title="Recruitment"
-      description="Toggle recruitment open or closed and set the Google Form URL."
+      description="Open or close recruitment, upload the roles and responsibilities PDF, and set the Google Form link."
       filledInStage={8}
     />
   );

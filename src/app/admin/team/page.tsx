@@ -3,14 +3,14 @@ import type { Metadata } from 'next';
 import { PagePlaceholder } from '@/components/ui/page-placeholder';
 
 export const metadata: Metadata = {
-  title: 'Enquiries',
+  title: 'Team',
 };
 
-export default function AdminEnquiriesPage() {
+export default function AdminTeamPage() {
   return (
     <PagePlaceholder
-      title="Enquiries"
-      description="Sponsor and collaboration enquiries, with status filter and CSV export."
+      title="Team"
+      description="Add team members with name, position and photo; mark core members to show them on the home page."
       filledInStage={8}
     />
   );

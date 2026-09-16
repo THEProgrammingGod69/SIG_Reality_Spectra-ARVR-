@@ -5,11 +5,14 @@ fingerprinted, so only put files here that must keep a stable URL.
 
 ```
 public/
-  images/    content images — WebP, 300 KB or less each      (Stage 4)
+  images/    static site imagery (hero still, OG fallback)   (Stages 2–4)
   models/    3D models — .glb, compressed, ideally <2 MB     (Stage 2)
   fonts/     self-hosted brand fonts, if not from Google     (Stage 3)
-  docs/      sponsor brochure PDF and similar downloads      (Stage 8)
 ```
+
+Nothing an admin uploads lives here. Event posters and photos, team photos and
+the recruitment PDF are stored in Vercel Blob, so they change without a
+redeploy.
 
 The Next.js starter icons have been removed. A real favicon and app icons are
 added in Stage 3, once the vector logo lands — see `docs/OPEN_ITEMS.md`.
