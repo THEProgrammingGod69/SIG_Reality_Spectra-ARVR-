@@ -295,7 +295,105 @@ One stage per session. `/clear` between stages. Commit and tag each stage
 
 ---
 
-## 11. Open inputs
+## 11. Component registries and design tooling
+
+`.mcp.json` registers the **shadcn MCP server**, and `components.json` configures
+the shadcn CLI plus the component registries it can pull from. Both are committed
+so every contributor gets the same tooling.
+
+### Registries
+
+| Registry           | Source                                | What it is                    |
+| ------------------ | ------------------------------------- | ----------------------------- |
+| shadcn (`@shadcn`) | built in                              | Admin-panel primitives        |
+| `@react-bits`      | `https://reactbits.dev/r/{name}.json` | 172 animated React components |
+
+```bash
+pnpm exec shadcn search @react-bits -q "scroll"   # browse
+pnpm exec shadcn view @react-bits/ScrollReveal-TS-TW   # read before adding
+pnpm exec shadcn add @react-bits/ScrollReveal-TS-TW --path src/components/motion
+```
+
+**Always pick the `-TS-TW` variant.** Every ReactBits component ships in four
+flavours — `TS-TW`, `TS-CSS`, `JS-TW`, `JS-CSS`. This project is TypeScript +
+Tailwind, so `-TS-TW` is the only correct one.
+
+### Where components land
+
+`components.json` points the `ui` alias at `src/components/admin/ui`, on purpose:
+the locked stack says shadcn/ui is **admin only**, so `shadcn add button` cannot
+silently leak into the public design system. ReactBits items are
+`registry:component`, so pass `--path` explicitly:
+
+| Kind                             | Destination               |
+| -------------------------------- | ------------------------- |
+| shadcn/ui primitive              | `src/components/admin/ui` |
+| ReactBits motion/text effect     | `src/components/motion`   |
+| ReactBits WebGL or 3D background | `src/components/three`    |
+
+### Vendored code is a starting point, not a drop-in
+
+`shadcn add` copies source into our repo; from that moment we own it and our
+rules apply. Every ReactBits component must be reviewed against sections 3 and 4
+before it ships. Real examples found in the registry:
+
+- `ScrollReveal` animates `filter: blur()` and `rotate`. Rule 4 allows only
+  `transform` and `opacity` — the blur has to go or be justified and measured.
+- The same component's cleanup calls `ScrollTrigger.getAll().forEach(t => t.kill())`,
+  which kills **every** ScrollTrigger on the page, not just its own. That will
+  break other scroll animations. Scope cleanup to the instance it created.
+- None of them handle `prefers-reduced-motion`. Wrap or extend them so they do.
+- They carry raw Tailwind colour and size utilities. Re-tokenize per rule 1.
+- They register GSAP plugins at module scope, so they must be client components
+  and should be dynamically imported where they are not above the fold.
+
+Check the ReactBits licence before shipping and keep attribution if it requires it.
+
+### Dependency alignment
+
+Of the 172 components, roughly 118 use only what we already ship — GSAP (34),
+Motion (20), three/R3F (23), Lenis (1) — or have zero runtime dependencies (41).
+
+**47 of them depend on `ogl`**, a WebGL library that is _not_ in the locked stack
+(Aurora, Galaxy, Iridescence, LightRays, Orb, Particles, Plasma, Prism, Threads,
+Silk-likes and similar full-screen shader backgrounds). Adopting one means
+shipping OGL _alongside_ three.js. Against the Stage 2 budget — 50+ fps on a
+mid-range Android and a hero chunk kept out of the initial bundle — that is a
+real cost. Do not add an OGL component without raising it first; prefer the
+three/R3F equivalent, since R3F is already in the stack.
+
+`AeroShards`/`ShapeWaves` need `vgpu`, `FallingText` needs `matter-js`,
+`InfiniteMenu` needs `gl-matrix`. Same rule: raise before adopting.
+
+### Figma MCP
+
+The Figma MCP server is connected (account `Arnav`, **starter** tier). It works in
+both directions — read a design into code, or push code into Figma — and is
+skill-gated: several tools require loading their skill first.
+
+| Need                               | Skill to load first      | Then call            |
+| ---------------------------------- | ------------------------ | -------------------- |
+| Implement a Figma design as code   | `figma-design-to-code`   | `get_design_context` |
+| Implement animation from Figma     | `figma-implement-motion` | `get_motion_context` |
+| Any write into a Figma file        | `figma-use`              | `use_figma`          |
+| Build a design system inside Figma | `figma-generate-library` | `use_figma`          |
+| Map Figma components to our code   | `figma-code-connect`     | Code Connect tools   |
+| FigJam diagram                     | `figma-generate-diagram` | `generate_diagram`   |
+
+Loading the skill is mandatory, not advisory — `get_design_context` and
+`use_figma` fail in confusing ways without it. Read `skill://index.json` for the
+current list.
+
+This is the intended **Stage 3** path: if the club produces a Figma file, read it
+with `figma-design-to-code` and derive the design tokens from it rather than
+eyeballing screenshots. It is blocked on the same input as the rest of Stage 3 —
+see `docs/OPEN_ITEMS.md` item 10. Note that Code Connect and shared team
+libraries may not be available on a starter seat; check before planning around
+them.
+
+---
+
+## 12. Open inputs
 
 Several decisions are still outstanding and block specific stages. They are
 tracked in `docs/OPEN_ITEMS.md`. Check it before starting a stage; if an input is
