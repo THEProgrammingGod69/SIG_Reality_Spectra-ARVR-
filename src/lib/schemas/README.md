@@ -7,15 +7,20 @@ slightly different copy of a field's rules.
 | File             | Schemas                       | Edited via           | Stage |
 | ---------------- | ----------------------------- | -------------------- | ----- |
 | `content.ts`     | SiteInfo, Domain, ContactInfo | Git (`src/content`)  | 4     |
+| `category.ts`    | Category (shared enum)        | —                    | 5     |
 | `event.ts`       | Event, EventPhoto             | `/admin/events`      | 5     |
+| `gallery.ts`     | GalleryPhoto                  | `/admin/gallery`     | 5     |
 | `team.ts`        | TeamMember                    | `/admin/team`        | 5     |
 | `recruitment.ts` | RecruitmentSettings           | `/admin/recruitment` | 5     |
 | `sponsorship.ts` | SponsorshipRequest            | `/contact` form      | 5     |
 
 ## Planned fields
 
-**Event** — id · title (3–80) · category (`workshop` · `hackathon` · `meetup` ·
-`talk` · `competition` · `other`) · summary (20–160) · description (markdown,
+**Category** — one enum, `workshop` · `hackathon` · `meetup` · `talk` ·
+`competition` · `other`, used by events **and** standalone gallery photos so the
+gallery filters mean the same thing everywhere.
+
+**Event** — id · title (3–80) · category · summary (20–160) · description (markdown,
 ≤ 5000) · startsAt · endsAt (optional, after start) · venue · mode (`offline` ·
 `online` · `hybrid`) · registrationUrl (https) · poster + alt text · published ·
 recap (≤ 2000) · photos (≤ 60, each with url, alt, width, height) · inTimeline ·
@@ -29,8 +34,16 @@ An event's phase is **derived at request time, never stored**:
 | Awaiting timeline | ended and not in the timeline                            | admin only — kept for later use |
 | Timeline          | `inTimeline` (requires an end in the past and ≥ 1 photo) | `/events` timeline, `/gallery`  |
 
-A published current event must have a registration link. The gallery is built
-from the photos of timeline events, grouped by event category.
+A published current event must have a registration link.
+
+**GalleryPhoto** (standalone) — id · url · alt text (required) · width · height ·
+category · optional caption (≤ 120) · createdAt · updatedBy.
+
+**The public gallery has two sources** and shows them together, grouped by
+category, newest first: the photos of events on the timeline (their category comes
+from the event) and standalone `GalleryPhoto` records. Removing an event from the
+timeline removes its photos from the gallery; deleting a standalone photo deletes
+its file.
 
 **TeamMember** — id · name · position · photo + alt text · tier (hierarchy level)
 · isCore (also shown on the home page) · order within tier · updatedAt.

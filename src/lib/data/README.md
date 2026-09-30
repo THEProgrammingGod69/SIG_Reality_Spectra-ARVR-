@@ -9,8 +9,9 @@ Planned modules:
 | File              | Responsibility                                                                          |
 | ----------------- | --------------------------------------------------------------------------------------- |
 | `keys.ts`         | Builds every Redis key from `REDIS_KEY_PREFIX` — no hand-written key strings elsewhere  |
-| `tags.ts`         | Cache tag names (`events`, `team`, `recruitment`) shared by reads and writes            |
+| `tags.ts`         | Cache tag names (`events`, `gallery`, `team`, `recruitment`) shared by reads and writes |
 | `events.ts`       | Events: create, update, remove, add/remove photos, add to timeline; cached public reads |
+| `gallery.ts`      | Standalone gallery photos: add, edit category, remove; cached public reads              |
 | `team.ts`         | Team members: create, update, remove, reorder; cached public reads                      |
 | `recruitment.ts`  | Recruitment settings: `get` (safe defaults), `update`                                   |
 | `sponsorships.ts` | Sponsorship requests: `create`, `list` (newest first, paginated), `updateStatus`        |
@@ -22,6 +23,8 @@ Planned modules:
 | ------------------------------- | ---------- | ----------------------------------------------- |
 | `{prefix}:event:{id}`           | JSON       | one Event (details, photos, timeline flag)      |
 | `{prefix}:events:by-start`      | sorted set | event ids scored by start time                  |
+| `{prefix}:gallery:{id}`         | JSON       | one standalone GalleryPhoto                     |
+| `{prefix}:gallery:by-date`      | sorted set | photo ids scored by upload time                 |
 | `{prefix}:member:{id}`          | JSON       | one TeamMember                                  |
 | `{prefix}:members:order`        | sorted set | member ids scored by hierarchy tier, then order |
 | `{prefix}:settings:recruitment` | JSON       | RecruitmentSettings                             |
@@ -35,6 +38,7 @@ Planned modules:
 | ------------------------------------- | ----------------------------------- |
 | `events/{eventId}/poster-{rand}.webp` | event poster                        |
 | `events/{eventId}/photos/{rand}.webp` | past-event photos                   |
+| `gallery/{photoId}-{rand}.webp`       | standalone gallery photo            |
 | `team/{memberId}-{rand}.webp`         | team member photo                   |
 | `recruitment/roles-{rand}.pdf`        | roles and responsibilities          |
 | `backups/{yyyy-mm-dd}.json`           | nightly backup of all Redis records |
@@ -42,7 +46,7 @@ Planned modules:
 ## Uploads
 
 Files never pass through a Server Action: function request bodies are size-capped,
-and a past event can carry dozens of photos. Instead:
+and an event or the gallery can take dozens of photos at once. Instead:
 
 1. The admin UI compresses images to WebP in the browser.
 2. It asks `/api/admin/upload` for a short-lived token. `media.ts` issues one only
@@ -64,6 +68,8 @@ never attached are removed by the nightly orphan sweep.
 - Multi-key writes use transactions so indexes cannot drift.
 - Updates carry an `updatedAt` check and reject stale edits.
 - Deleting a record deletes its blobs; replacing a file deletes the old one.
+- The public gallery is the union of two sources — photos of timeline events (tag
+  `events`) and standalone photos (tag `gallery`) — so its page carries both tags.
 - Public reads are `'use cache'` functions tagged with `cacheTag`. Admin reads are
   never cached. Nothing inside a cached function reads the current time.
 - Everything sits behind an interface (`EventsRepository`, …) so a Postgres

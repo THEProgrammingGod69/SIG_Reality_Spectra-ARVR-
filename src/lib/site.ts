@@ -83,7 +83,7 @@ export const siteRoutes = [
   {
     href: '/gallery',
     label: 'Gallery',
-    description: 'Photos from our workshops, hackathons and meetups.',
+    description: 'Photos from our workshops, hackathons, meetups and club life.',
     placement: 'primary',
     group: 'explore',
     priority: 0.7,
@@ -113,6 +113,7 @@ export type SiteRouteHref = (typeof siteRoutes)[number]['href'];
 export const adminRoutes = [
   { href: '/admin', label: 'Dashboard' },
   { href: '/admin/events', label: 'Events' },
+  { href: '/admin/gallery', label: 'Gallery' },
   { href: '/admin/team', label: 'Team' },
   { href: '/admin/recruitment', label: 'Recruitment' },
   { href: '/admin/sponsorships', label: 'Sponsorships' },

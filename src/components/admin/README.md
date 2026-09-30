@@ -12,6 +12,8 @@ Planned building blocks:
 - **Event editor** — details, registration link and poster; for past events the
   recap, photos and the final "add to timeline" step. Its preview renders the
   _same_ public sections the site uses, so preview and production cannot drift.
+- **Gallery manager** — bulk-upload standalone club photos with a category and alt
+  text; lists standalone photos only (event photos are managed in the event editor).
 - **Team editor** — name, position, photo, tier, core flag and ordering.
 - **Recruitment panel** — open/closed toggle, roles PDF and Google Form link.
 - **Sponsorship inbox** — list, detail and status.

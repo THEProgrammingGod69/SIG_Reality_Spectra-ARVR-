@@ -14,24 +14,25 @@ group at **VIT Pune**.
 
 **Public visitors never log in.** Six public pages:
 
-| Page           | Shows                                                                                           |
-| -------------- | ----------------------------------------------------------------------------------------------- |
-| `/` Home       | Hero (name + one-line intro) · mission, vision and short "about us" · core team members         |
-| `/about`       | Club details · every team member (name, photo, position) arranged by hierarchy                  |
-| `/events`      | Current event on top (details + registration link) · timeline of past events with photos        |
-| `/gallery`     | All past-event photos, filterable by category (workshops, hackathons, meetups, …)               |
-| `/recruitment` | The club's domains, always · roles PDF and Google Form link, **only while recruitment is open** |
-| `/contact`     | Contact details · sponsorship/collaboration request form (goes to the admin panel)              |
+| Page           | Shows                                                                                                             |
+| -------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `/` Home       | Hero (name + one-line intro) · mission, vision and short "about us" · core team members                           |
+| `/about`       | Club details · every team member (name, photo, position) arranged by hierarchy                                    |
+| `/events`      | Current event on top (details + registration link) · timeline of past events with photos                          |
+| `/gallery`     | All photos — event photos and standalone club photos — filterable by category (workshops, hackathons, meetups, …) |
+| `/recruitment` | The club's domains, always · roles PDF and Google Form link, **only while recruitment is open**                   |
+| `/contact`     | Contact details · sponsorship/collaboration request form (goes to the admin panel)                                |
 
-**Admins** (2–3 allowlisted Google accounts) sign in at `/admin` to manage four
+**Admins** (2–3 allowlisted Google accounts) sign in at `/admin` to manage five
 things:
 
 | Admin page            | Does                                                                                                                                                                                           |
 | --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `/admin/events`       | Add the current event (details + registration link). Once it ends it is kept for later; the admin adds a recap and photos and puts it on the timeline. Past events can also be added directly. |
+| `/admin/gallery`      | Upload standalone club photos with a category. Photos of timeline events reach the gallery automatically.                                                                                      |
 | `/admin/team`         | Add members with name, position and photo. Core members also appear on the home page; everyone appears on About.                                                                               |
 | `/admin/recruitment`  | Open/close recruitment, upload the roles and responsibilities PDF, set the Google Form link.                                                                                                   |
-| `/admin/sponsorships` | Read sponsorship requests submitted from `/contact`.                                                                                                                                           |
+| `/admin/sponsorships` | Read sponsorship requests submitted from `/contact` (admin inbox only — no email).                                                                                                             |     |
 
 - **Admin changes must appear on the live site immediately after save, with NO
   redeploy.** This is the single hardest constraint in the project and it drives
@@ -39,8 +40,9 @@ things:
 - **No traditional database.** Data lives in Upstash Redis (JSON records) and
   Vercel Blob (images and the recruitment PDF), behind a repository layer so
   Postgres can replace Redis later without touching a single UI file.
-- **The gallery has no data of its own.** It is built from the photos of
-  timeline events, grouped by event category — one upload, two places.
+- **The gallery has two sources.** The photos of timeline events (uploaded once,
+  in the event) and standalone club photos (uploaded in `/admin/gallery`), shown
+  together and grouped by one shared category list.
 - **Registration and applications happen elsewhere.** Events link out to their
   registration page (typically VIERP); recruitment links out to a Google Form.
 - **Handover matters.** The club committee changes every year. A coordinator who
@@ -71,7 +73,6 @@ a lab that builds real things, or a gaming landing page?
 | Validation         | Zod (shared schemas)                                            |
 | Admin auth         | Auth.js — Google provider, JWT sessions, email allowlist in env |
 | Forms              | react-hook-form + Zod                                           |
-| Email              | Resend                                                          |
 | Spam protection    | Cloudflare Turnstile + honeypot                                 |
 | Analytics          | Vercel Analytics                                                |
 | Testing            | Playwright (E2E) + Vitest (schemas/utils)                       |
@@ -99,6 +100,8 @@ These are not style preferences. Breaking one is a bug.
 
 4. **Animate only `transform` and `opacity`. Respect `prefers-reduced-motion`
    everywhere.** Every motion primitive degrades to a simple fade, or to nothing.
+   There are **no exceptions**: a vendored effect that animates `filter`, `width`,
+   `height` or position is rewritten or rejected (docs/DECISIONS.md, D-009).
 
 5. **Every stage ends with `pnpm lint`, `pnpm typecheck` and `pnpm build`
    passing** — plus `pnpm test` and `pnpm test:e2e`. `pnpm check` runs the lot.
@@ -230,6 +233,7 @@ test fails if a dynamic `[param]` folder appears under `(site)`.
 | `/admin`              | never   | dashboard                                         | 6        |
 | `/admin/login`        | never   | —                                                 | 6        |
 | `/admin/events`       | never   | events                                            | 7        |
+| `/admin/gallery`      | never   | standalone gallery photos                         | 7        |
 | `/admin/team`         | never   | team members                                      | 8        |
 | `/admin/recruitment`  | never   | recruitment settings                              | 8        |
 | `/admin/sponsorships` | never   | sponsorship requests                              | 8        |
@@ -245,6 +249,7 @@ upload flow in `src/lib/data/README.md`; diagrams in `docs/ARCHITECTURE.md`.
 | ----------------------------- | ------------- | -------------------- | ---------------------------- | --------------------------------- |
 | SiteInfo, Domain, ContactInfo | `src/content` | Git                  | — (build time)               | Home, About, Recruitment, Contact |
 | Event (+ photos)              | Redis + Blob  | `/admin/events`      | `events`                     | Events, Gallery                   |
+| GalleryPhoto (standalone)     | Redis + Blob  | `/admin/gallery`     | `gallery`                    | Gallery                           |
 | TeamMember                    | Redis + Blob  | `/admin/team`        | `team`                       | Home (core), About (all)          |
 | RecruitmentSettings           | Redis + Blob  | `/admin/recruitment` | `recruitment`                | Recruitment, nav CTA              |
 | SponsorshipRequest            | Redis         | `/contact` form      | — (admin only, never cached) | —                                 |
@@ -253,8 +258,11 @@ upload flow in `src/lib/data/README.md`; diagrams in `docs/ARCHITECTURE.md`.
   ended; _awaiting timeline_ = ended but not on the timeline (admin-only, kept for
   later use); _timeline_ = `inTimeline`, which requires a past end and at least
   one photo. There is no manual ordering — the timeline is chronological.
-- **The gallery has no data of its own:** it is the photos of timeline events,
-  grouped by event category.
+- **The gallery has two sources** and shows them together, newest first, grouped
+  by category: the photos of timeline events (category taken from the event) and
+  standalone `GalleryPhoto` records. Events and gallery photos share one
+  `Category` enum, so the filters mean the same thing everywhere. The gallery page
+  carries both the `events` and `gallery` cache tags.
 - **Recruitment** can only be opened when both the roles PDF and the Google Form
   link are set. Domains stay visible whether it is open or not.
 - **Team hierarchy** comes from each member's `tier`, then `order`; `isCore`
@@ -294,7 +302,7 @@ validated by `src/lib/env.ts` at startup.
 Variables belonging to stages that are not built yet are **optional in the schema
 but shape-checked** — a malformed URL fails immediately, while a missing one only
 fails when the feature that needs it actually runs, via `requireEnv()`. That is
-why `pnpm build` passes before the Upstash, Google and Resend accounts exist.
+why `pnpm build` passes before the Upstash and Google accounts exist.
 
 `src/lib/env.ts` is `server-only`: importing it from a Client Component is a build
 error, so a secret cannot reach the browser by accident. Browser-safe values live
@@ -315,7 +323,7 @@ One stage per session. `/clear` between stages. Commit and tag each stage
 | 4     | Static content layer + page shells (Home, About, Recruitment, Contact) + SEO | Not started |
 | 5     | Data layer: schemas, repository, browser uploads, cache tags                 | Not started |
 | 6     | Admin authentication + panel shell + dashboard                               | Not started |
-| 7     | Events and gallery — admin ↔ public                                          | Not started |
+| 7     | Events and gallery (event photos + standalone photos) — admin ↔ public       | Not started |
 | 8     | Team, recruitment and sponsorship requests — admin ↔ public                  | Not started |
 | 9     | Animation polish, performance, accessibility, security headers               | Not started |
 | 10    | Testing, deployment, nightly backup + orphan sweep, handover                 | Not started |
@@ -341,23 +349,49 @@ updated to match; `docs/ARCHITECTURE.md` is the current design.
 
 ---
 
-## 11. Component registries and design tooling
+## 11. Design decisions in force
+
+The full reasoning is in [`docs/DECISIONS.md`](./docs/DECISIONS.md). What a
+contributor must know before writing UI:
+
+| Topic             | Decision                                                                                                                |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| Hero              | **Orbit Lab**: dark lab, low spectrum horizon, rings, one wireframe headset (D-001)                                     |
+| Fonts             | **Space Grotesk** (display), **Inter** (body), **JetBrains Mono** (labels); via `next/font`, four files at most (D-002) |
+| Caption colour    | `text-subtle` is **`#797F8D`** (≥ 4.5:1 on bg, surface and raised); captions only (D-003)                               |
+| Palette           | The Style Board tokens; the spectrum is light, at most ~10% of any screen                                               |
+| Component source  | **React Bits only** (D-004); the events timeline is built in-house                                                      |
+| Motion            | Rule 4 has no exceptions (D-009); TrueFocus is replaced by our own `FocusText`                                          |
+| WebGL             | One context in the hero, at most two heavy WebGL components per page; no `ogl` (D-010, D-011)                           |
+| Hero text         | The name is real text at first paint; the intro plays around it, skippable, once per session (D-010)                    |
+| Navigation        | PillNav on desktop (patched to `next/link`), StaggeredMenu on mobile; no Dock (D-012)                                   |
+| Home              | Hero, mission/vision/about, core team. No stat counters in v1 (D-007)                                                   |
+| Contact           | One page: details and the sponsorship form (D-006)                                                                      |
+| Sponsorship inbox | Admin panel only; no email integration (D-008)                                                                          |
+| Repository        | Stays private while React Bits code is inside it (D-014)                                                                |
+
+---
+
+## 12. Component registries and design tooling
 
 `.mcp.json` registers the **shadcn MCP server**, and `components.json` configures
-the shadcn CLI plus the component registries it can pull from. Both are committed
+the shadcn CLI plus the one component registry the project uses. Both are committed
 so every contributor gets the same tooling.
 
 ### Registries
 
-| Registry           | Source                                | What it is                    |
-| ------------------ | ------------------------------------- | ----------------------------- |
-| shadcn (`@shadcn`) | built in                              | Admin-panel primitives        |
-| `@react-bits`      | `https://reactbits.dev/r/{name}.json` | 172 animated React components |
+| Registry           | Source                                | What it is                     |
+| ------------------ | ------------------------------------- | ------------------------------ |
+| shadcn (`@shadcn`) | built in                              | Admin-panel primitives         |
+| `@react-bits`      | `https://reactbits.dev/r/{name}.json` | 200+ animated React components |
+
+**No other registry is configured** (D-004). Aceternity UI and Magic UI are not used;
+adding a source of vendored code needs a new entry in `docs/DECISIONS.md` first.
 
 ```bash
 pnpm exec shadcn search @react-bits -q "scroll"   # browse
-pnpm exec shadcn view @react-bits/ScrollReveal-TS-TW   # read before adding
-pnpm exec shadcn add @react-bits/ScrollReveal-TS-TW --path src/components/motion
+pnpm exec shadcn view @react-bits/StarBorder-TS-TW   # read the source before adding
+pnpm exec shadcn add @react-bits/StarBorder-TS-TW --path src/components/motion
 ```
 
 **Always pick the `-TS-TW` variant.** Every ReactBits component ships in four
@@ -380,36 +414,39 @@ silently leak into the public design system. ReactBits items are
 ### Vendored code is a starting point, not a drop-in
 
 `shadcn add` copies source into our repo; from that moment we own it and our
-rules apply. Every ReactBits component must be reviewed against sections 3 and 4
-before it ships. Real examples found in the registry:
+rules apply. Every ReactBits component must be **read** and reviewed against
+sections 3 and 4 before it ships — the registry's dependency list is not
+trustworthy on its own. Real examples:
 
-- `ScrollReveal` animates `filter: blur()` and `rotate`. Rule 4 allows only
-  `transform` and `opacity` — the blur has to go or be justified and measured.
-- The same component's cleanup calls `ScrollTrigger.getAll().forEach(t => t.kill())`,
-  which kills **every** ScrollTrigger on the page, not just its own. That will
-  break other scroll animations. Scope cleanup to the instance it created.
-- None of them handle `prefers-reduced-motion`. Wrap or extend them so they do.
-- They carry raw Tailwind colour and size utilities. Re-tokenize per rule 1.
+- **TrueFocus** animates `filter: blur()` and the frame's `x`, `y`, `width` and
+  `height`. Rule 4 forbids all of it, so we build `FocusText` instead.
+- **ScrollReveal** animates `filter: blur()` and its cleanup calls
+  `ScrollTrigger.getAll().forEach(t => t.kill())`, killing **every** ScrollTrigger
+  on the page. Not used; our `<Reveal>` covers it.
+- **Lanyard** lists no dependencies, but imports a physics engine and `meshline`
+  and needs `card.glb` and `lanyard.png`, which `shadcn add` does not copy.
+- **MagicRings** creates its own WebGL renderer, so it counts as its own context.
+- **PillNav** depends on `react-router-dom`; it must be patched to `next/link` and
+  `usePathname`.
+- None handle `prefers-reduced-motion`; wrap or extend them.
+- They carry raw Tailwind colour and size utilities; re-tokenize per rule 1.
 - They register GSAP plugins at module scope, so they must be client components
   and should be dynamically imported where they are not above the fold.
 
-Check the ReactBits licence before shipping and keep attribution if it requires it.
+The shortlist and the rejected list are in `docs/DECISIONS.md` (D-013). React Bits
+is licensed **MIT + Commons Clause**: fine to use in the website, not to
+redistribute; this is why the repository stays private (D-014).
 
-### Dependency alignment
+### Dependency policy
 
-Of the 172 components, roughly 118 use only what we already ship — GSAP (34),
-Motion (20), three/R3F (23), Lenis (1) — or have zero runtime dependencies (41).
+React Bits' components split by what they need: GSAP, Motion, three/R3F and Lenis
+(already in the stack), no dependencies, or something else.
 
-**47 of them depend on `ogl`**, a WebGL library that is _not_ in the locked stack
-(Aurora, Galaxy, Iridescence, LightRays, Orb, Particles, Plasma, Prism, Threads,
-Silk-likes and similar full-screen shader backgrounds). Adopting one means
-shipping OGL _alongside_ three.js. Against the Stage 2 budget — 50+ fps on a
-mid-range Android and a hero chunk kept out of the initial bundle — that is a
-real cost. Do not add an OGL component without raising it first; prefer the
-three/R3F equivalent, since R3F is already in the stack.
-
-`AeroShards`/`ShapeWaves` need `vgpu`, `FallingText` needs `matter-js`,
-`InfiniteMenu` needs `gl-matrix`. Same rule: raise before adopting.
+**About a quarter depend on `ogl`**, a second WebGL library that is _not_ in the
+locked stack. It is **not used** (D-011): the same moods are built in the R3F scene.
+`vgpu`, `matter-js`, `gl-matrix`, `postprocessing`, `face-api.js` and
+`@use-gesture/react` are likewise off the table unless a new decision says
+otherwise.
 
 ### Figma MCP
 
@@ -433,13 +470,13 @@ current list.
 This is the intended **Stage 3** path: if the club produces a Figma file, read it
 with `figma-design-to-code` and derive the design tokens from it rather than
 eyeballing screenshots. It is blocked on the same input as the rest of Stage 3 —
-see `docs/OPEN_ITEMS.md` item 10. Note that Code Connect and shared team
+see `docs/OPEN_ITEMS.md` (the Stage 3 inputs). Note that Code Connect and shared team
 libraries may not be available on a starter seat; check before planning around
 them.
 
 ---
 
-## 12. Open inputs
+## 13. Open inputs
 
 Several decisions are still outstanding and block specific stages. They are
 tracked in `docs/OPEN_ITEMS.md`. Check it before starting a stage; if an input is

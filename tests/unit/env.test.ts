@@ -20,7 +20,7 @@ describe('serverEnvSchema', () => {
 
     expect(parsed.UPSTASH_REDIS_REST_URL).toBeUndefined();
     expect(parsed.AUTH_SECRET).toBeUndefined();
-    expect(parsed.RESEND_API_KEY).toBeUndefined();
+    expect(parsed.TURNSTILE_SECRET_KEY).toBeUndefined();
   });
 
   it('rejects a site URL that is not a URL', () => {

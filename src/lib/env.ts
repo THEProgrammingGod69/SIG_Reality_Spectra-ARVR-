@@ -70,12 +70,9 @@ export const serverEnvSchema = z.object({
   /** Comma-separated allowlist. These accounts, and only these, can reach /admin. */
   ADMIN_EMAILS: commaSeparatedEmails.optional(),
 
-  // ---- Stage 8: sponsorship requests, email and spam protection -----------
-  RESEND_API_KEY: z.string().min(1).optional(),
-  /** Club inbox that is alerted when a sponsorship request arrives. */
-  SPONSORSHIP_NOTIFY_EMAIL: z.email().optional(),
-  /** Verified Resend sender. Must be on a verified domain in production. */
-  EMAIL_FROM: z.email().optional(),
+  // ---- Stage 8: sponsorship requests and spam protection -------------------
+  // Requests are stored and read in /admin/sponsorships. There is deliberately
+  // no email integration; see docs/DECISIONS.md (D-008).
   TURNSTILE_SECRET_KEY: z.string().min(1).optional(),
 
   // ---- Stage 10: scheduled jobs --------------------------------------------

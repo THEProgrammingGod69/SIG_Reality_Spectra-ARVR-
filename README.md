@@ -80,17 +80,17 @@ footer, page metadata and the route smoke tests all read from it.
 
 ## Sitemap
 
-| Public page    | Shows                                                                     |
-| -------------- | ------------------------------------------------------------------------- |
-| `/`            | Hero, mission / vision / about, core team                                 |
-| `/about`       | Club details and every team member by hierarchy                           |
-| `/events`      | Current event with registration link, timeline of past events with photos |
-| `/gallery`     | Past-event photos by category (workshops, hackathons, meetups, …)         |
-| `/recruitment` | Domains always; roles PDF and Google Form only while recruitment is open  |
-| `/contact`     | Contact details and the sponsorship request form                          |
+| Public page    | Shows                                                                                    |
+| -------------- | ---------------------------------------------------------------------------------------- |
+| `/`            | Hero, mission / vision / about, core team                                                |
+| `/about`       | Club details and every team member by hierarchy                                          |
+| `/events`      | Current event with registration link, timeline of past events with photos                |
+| `/gallery`     | Event photos and standalone club photos, by category (workshops, hackathons, meetups, …) |
+| `/recruitment` | Domains always; roles PDF and Google Form only while recruitment is open                 |
+| `/contact`     | Contact details and the sponsorship request form                                         |
 
-**Admin** — `/admin` (dashboard), `/admin/login`, `/admin/events`, `/admin/team`,
-`/admin/recruitment`, `/admin/sponsorships`. Never linked from the public site.
+**Admin** — `/admin` (dashboard), `/admin/login`, `/admin/events`, `/admin/gallery`,
+`/admin/team`, `/admin/recruitment`, `/admin/sponsorships`. Never linked from the public site.
 
 There are no per-record URLs: events, photos and team members render inline on
 their list pages.
@@ -117,7 +117,8 @@ The site is built in ten stages, one per session, each tagged in Git
 
 Every page currently renders a placeholder that names the stage which fills it
 in. Inputs still needed from the club are tracked in
-[`docs/OPEN_ITEMS.md`](./docs/OPEN_ITEMS.md).
+[`docs/OPEN_ITEMS.md`](./docs/OPEN_ITEMS.md), and the reasoning behind design and
+product choices in [`docs/DECISIONS.md`](./docs/DECISIONS.md).
 
 ---
 
@@ -125,5 +126,5 @@ in. Inputs still needed from the club are tracked in
 
 Next.js 16 (App Router) · TypeScript strict · Tailwind CSS v4 · React Three Fiber
 · GSAP + ScrollTrigger · Motion · Lenis · Upstash Redis · Vercel Blob · Zod ·
-Auth.js · react-hook-form · Resend · Cloudflare Turnstile · Playwright · Vitest ·
+Auth.js · react-hook-form · Cloudflare Turnstile · Playwright · Vitest ·
 deployed on Vercel.
