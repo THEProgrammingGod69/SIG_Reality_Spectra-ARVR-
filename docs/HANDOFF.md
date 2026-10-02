@@ -11,10 +11,10 @@ old conversation. Read in this order: this file → `CLAUDE.md` → `docs/DECISI
 | Repo          | github.com/THEProgrammingGod69/SIG_Reality_Spectra-ARVR- (private), `main`                                                     |
 | Local folder  | `D:\Academic Nottes VIT\SIG\SIG_Draft_Code`                                                                                    |
 | Hosting       | **Netlify** (D-025)                                                                                                            |
-| Last commit   | `f05ad06` — Stage 4 (tag `stage-4`, pushed)                                                                                    |
-| Rollback tags | `stage-1` – `stage-4`, `architecture-v2`, `architecture-v3`                                                                    |
-| Done          | Stages 1–4 committed, tagged, pushed. **Stage 5 built and green, not yet committed** (Arnav's go)                              |
-| Next          | Commit + tag `stage-5` on Arnav's go; then **Stage 6 — admin auth + shell** (brief below)                                      |
+| Last commit   | `e852ab6` — Stage 5 (tag `stage-5`, pushed)                                                                                    |
+| Rollback tags | `stage-1` – `stage-5`, `architecture-v2`, `architecture-v3`                                                                    |
+| Done          | Stages 1–5, all committed, tagged and pushed                                                                                   |
+| Next          | **Stage 6 — admin auth + shell** (brief below). Start only when Arnav says go                                                  |
 | Gates         | `pnpm check` + `pnpm test:e2e` green (186 unit, 62 e2e, also on the production build); `pnpm test:live` waits for the accounts |
 
 ## Start of the next chat
