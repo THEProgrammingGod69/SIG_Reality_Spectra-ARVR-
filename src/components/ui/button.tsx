@@ -158,12 +158,20 @@ export function Button({
 }
 
 type ButtonLinkProps = SharedProps &
-  Omit<AnchorHTMLAttributes<HTMLAnchorElement>, 'className' | 'children' | 'href'> & {
-    /** A typed site route, or an absolute URL when `external`. */
-    href: Route;
-    /** Opens in a new tab with `rel="noopener noreferrer"` and an ↗ cue. */
-    external?: boolean;
-  };
+  Omit<AnchorHTMLAttributes<HTMLAnchorElement>, 'className' | 'children' | 'href'> &
+  (
+    | {
+        /** A typed site route (typo-checked by `typedRoutes`). */
+        href: Route;
+        external?: false;
+      }
+    | {
+        /** Any absolute URL, e.g. one from src/content. */
+        href: string;
+        /** Opens in a new tab with `rel="noopener noreferrer"` and an ↗ cue. */
+        external: true;
+      }
+  );
 
 export function ButtonLink({
   variant = 'primary',
@@ -195,7 +203,8 @@ export function ButtonLink({
       {content}
     </a>
   ) : (
-    <Link href={href} className={classes} {...rest}>
+    // Internal by the union above, so `href` is a typed Route here.
+    <Link href={href as Route} className={classes} {...rest}>
       {content}
     </Link>
   );

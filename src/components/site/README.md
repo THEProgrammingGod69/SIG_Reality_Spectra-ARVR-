@@ -15,7 +15,8 @@ The public site's chrome, built in **Stage 3** and rendered by
 Rules:
 
 - Links come from `siteRoutes` (`src/lib/site.ts`); nothing here hardcodes a page.
-- Contact channels render only when set (`contactChannels`), so no placeholder
+- Contact channels come from `src/content/contact.json` (`siteChannels` in
+  `src/lib/content.ts`) and render only when set, so no placeholder
   link ever ships. Nothing here links to `/admin` (rule 6; an e2e test checks).
 - The header is fixed and overlays the page; a page that opens with a
   full-bleed section marks it `data-full-bleed` so `<main>` drops its top padding.

@@ -2,6 +2,7 @@ import { SmoothScroll } from '@/components/motion/smooth-scroll';
 import { RecruitmentBanner } from '@/components/site/recruitment-banner';
 import { SiteFooter } from '@/components/site/site-footer';
 import { SiteHeader } from '@/components/site/site-header';
+import { interimRecruitment, siteChannels } from '@/lib/content';
 
 /**
  * Public site shell (Stage 3): skip link, recruitment banner slot, fixed
@@ -13,7 +14,7 @@ import { SiteHeader } from '@/components/site/site-header';
  * (`data-full-bleed`, the home hero), which runs underneath the header.
  *
  * Lenis (`SmoothScroll`) runs on the public site only; the admin panel keeps
- * native scrolling.
+ * native scrolling. Content reaches the (client) header as plain props.
  */
 export default function SiteLayout({ children }: LayoutProps<'/'>) {
   return (
@@ -29,7 +30,7 @@ export default function SiteLayout({ children }: LayoutProps<'/'>) {
       </a>
 
       <RecruitmentBanner />
-      <SiteHeader />
+      <SiteHeader channels={siteChannels} recruitmentOpen={interimRecruitment.open} />
 
       <main
         id="main-content"

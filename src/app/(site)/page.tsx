@@ -1,40 +1,46 @@
-import type { Metadata } from 'next';
-
-import { Reveal } from '@/components/motion/reveal';
+import { AboutIntro } from '@/components/sections/about-intro';
+import { DomainOverview } from '@/components/sections/domain-overview';
 import { Hero } from '@/components/sections/hero/hero';
-import { Badge } from '@/components/ui/badge';
-import { Heading } from '@/components/ui/heading';
-import { Section } from '@/components/ui/section';
-import { Text } from '@/components/ui/text';
+import { MissionVision } from '@/components/sections/mission-vision';
+import { TeamSection } from '@/components/sections/team-section';
+import { contactInfo, domainGroups, profileUrls, siteInfo } from '@/lib/content';
+import { publicEnv } from '@/lib/env.public';
+import { pageMetadata } from '@/lib/metadata';
 import { getRoute } from '@/lib/site';
+import { jsonLdScript, organizationJsonLd } from '@/lib/structured-data';
 
 const route = getRoute('/');
 
-export const metadata: Metadata = {
-  // Home keeps the root layout's default title (no '| SIG Reality Spectra' suffix).
-  description: route.description,
-  alternates: { canonical: route.href },
-};
+export const metadata = pageMetadata(route, { description: siteInfo.positioning });
 
 export default function HomePage() {
   return (
     <>
-      <Hero />
+      <script
+        type="application/ld+json"
+        // Generated from validated content and escaped by jsonLdScript.
+        dangerouslySetInnerHTML={{
+          __html: jsonLdScript(
+            organizationJsonLd({
+              siteUrl: publicEnv.NEXT_PUBLIC_SITE_URL,
+              description: siteInfo.positioning,
+              slogan: siteInfo.motto,
+              email: contactInfo.email,
+              profiles: profileUrls,
+            }),
+          ),
+        }}
+      />
 
-      {/* TEMPORARY (Stage 2): stands in for mission, vision and the core team,
-          which Stage 4 builds. It also gives the hero's scroll-out somewhere
-          to hand over to. */}
-      <Section labelledBy="home-next" width="prose">
-        <Reveal>
-          <Heading level={2} id="home-next">
-            Mission, vision and the core team
-          </Heading>
-          <Text size="lg" tone="muted" className="mt-4">
-            {route.description}
-          </Text>
-          <Badge className="mt-10">Placeholder — built in Stage 4</Badge>
-        </Reveal>
-      </Section>
+      <Hero tagline={siteInfo.tagline} />
+      <AboutIntro motto={siteInfo.motto} about={siteInfo.about.short} />
+      <MissionVision mission={siteInfo.mission} vision={siteInfo.vision} />
+      <DomainOverview groups={domainGroups} />
+      <TeamSection
+        id="core-team"
+        title="Core team"
+        lead="The people who lead the club across its domains."
+      />
     </>
   );
 }

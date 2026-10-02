@@ -10,10 +10,27 @@ old conversation. Read in this order: this file → `CLAUDE.md` → `docs/DECISI
 | ------------- | ---------------------------------------------------------------------------------------- |
 | Repo          | github.com/THEProgrammingGod69/SIG_Reality_Spectra-ARVR- (private), `main`               |
 | Local folder  | `D:\Academic Nottes VIT\SIG\SIG_Draft_Code`                                              |
-| Rollback tags | `stage-1`, `architecture-v2`, `architecture-v3`, `stage-2`; `stage-3` once committed     |
-| Done          | Stages 1–2 (committed); **Stage 3** (design system + UI shell) — built, all gates green  |
-| Next          | Commit + tag `stage-3` + push (Arnav's go), then Stage 4 — static content + page shells  |
-| Gates         | `pnpm check` + `pnpm test:e2e` green (72 unit, 40 e2e; e2e also on the production build) |
+| Rollback tags | `stage-1` – `stage-3`, `architecture-v2`, `architecture-v3`; `stage-4` once committed    |
+| Done          | Stages 1–3 (committed); **Stage 4** (content layer + pages + SEO) — built, gates green   |
+| Next          | Commit + tag `stage-4` + push (Arnav's go), then Stage 5 — data layer (needs accounts)   |
+| Gates         | `pnpm check` + `pnpm test:e2e` green (93 unit, 57 e2e; e2e also on the production build) |
+
+## Stage 4 — what was built
+
+- `src/content/*.json` (site, domains, contact, interim recruitment) validated by
+  `src/lib/schemas/content.ts`, read through server-only `src/lib/content.ts`;
+  a bad file fails the build naming file and field (D-023).
+- Pages: Home (hero one-liner, who we are under the horizon glow, mission and
+  vision, domains overview, core-team empty state), About (story, at a glance,
+  mission and vision, team empty state), Recruitment (interim open status with
+  Apply now + QR, all ten domains by group), Contact (details with "Coming soon"
+  placeholders, map placeholder, Instagram/WhatsApp with QR codes, honest
+  sponsorship notice).
+- QR codes generated from the links on the server (`qrcode`), verified to decode.
+- SEO: `pageMetadata()` per page (title, canonical, OpenGraph, Twitter),
+  `sitemap.xml`, Organization JSON-LD on Home.
+- `pnpm check:launch` — fails while contact placeholders remain (Stage 10 gate).
+- Decisions D-023 (content + QR), D-024 (interim recruitment, placeholders).
 
 ## Stage 3 — what was built
 

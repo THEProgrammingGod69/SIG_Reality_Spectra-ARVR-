@@ -23,6 +23,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Eyebrow, Text } from '@/components/ui/text';
 import { contrastRatio, WCAG_AA_TEXT } from '@/lib/contrast';
 import { readCssVar } from '@/lib/motion/tokens';
+import { clubCredit } from '@/lib/site';
 
 import { DevPageHeader, DevPanel } from '../_components/dev-panel';
 
@@ -124,7 +125,7 @@ export function UiPlayground() {
             <Text size="sm" tone="subtle">
               Subtle — captions and metadata only (D-003).
             </Text>
-            <Eyebrow>Special Interest Group · VIT Pune</Eyebrow>
+            <Eyebrow>{clubCredit}</Eyebrow>
           </div>
         </div>
       </DevPanel>

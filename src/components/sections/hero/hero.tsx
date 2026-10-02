@@ -1,7 +1,7 @@
 import { ButtonLink } from '@/components/ui/button';
 import { Container } from '@/components/ui/container';
 import { Eyebrow, Text } from '@/components/ui/text';
-import { getRoute, siteConfig } from '@/lib/site';
+import { clubCredit, getRoute, siteConfig } from '@/lib/site';
 
 import { HeroStage } from './hero-stage';
 import { HeroStill } from './hero-still';
@@ -25,16 +25,14 @@ const recruitmentRoute = getRoute('/recruitment');
  * orbit-lab-scene.tsx), so the bottom padding of 14svh keeps the buttons
  * above the crest.
  *
- * Copy: the one-line intro is the Stage 1 tagline until the club supplies the
- * real line (docs/OPEN_ITEMS.md #4). The "recruitment open" badge arrives with
- * recruitment settings in Stage 8.
+ * The one-line intro comes from src/content/site.json, passed in by the page.
  */
-export function Hero() {
+export function Hero({ tagline }: { tagline: string }) {
   return (
     <HeroStage labelledBy={TITLE_ID} still={<HeroStill />}>
       <Container className="flex flex-col justify-end pt-header pb-[max(4rem,14svh)] [@media(min-aspect-ratio:23/20)]:justify-center [@media(min-aspect-ratio:23/20)]:pb-24">
         <div className="max-w-xl">
-          <Eyebrow>Special Interest Group · {siteConfig.parentOrganisation}</Eyebrow>
+          <Eyebrow>{clubCredit}</Eyebrow>
 
           <HeroTitle
             id={TITLE_ID}
@@ -43,7 +41,7 @@ export function Hero() {
           />
 
           <Text size="lg" className="mt-6 max-w-md">
-            {siteConfig.tagline}
+            {tagline}
           </Text>
 
           <div className="mt-10 flex flex-wrap items-center gap-3">

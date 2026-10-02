@@ -32,6 +32,8 @@ the call and it was made on the reasoning shown).
 | D-020 | Site shell: React Bits nav and effects rebuilt; header overlays the page     | lead       |
 | D-021 | Logo: the original badge ships as raster; the pack's dark badge is rejected  | lead       |
 | D-022 | Rule 4 covers colour: no colour or background transitions                    | lead       |
+| D-023 | Content layer in `src/content`; QR codes generated from the links            | lead       |
+| D-024 | Interim recruitment, honest placeholders, no fake sponsorship form           | team       |
 
 ---
 
@@ -379,3 +381,51 @@ would be the first crack. Overlays give the same feel on the compositor.
 reaches WCAG's 3:1 for component boundaries on every surface; `--color-border`
 (1.5:1) is for decorative hairlines only. A unit test audits every pairing the
 design system uses.
+
+## D-023 — Content layer in `src/content`; QR codes generated from the links
+
+**Choice.** The club's approved copy (content brief, October 2026) lives in four
+JSON files in `src/content` — `site.json`, `domains.json`, `contact.json` and the
+interim `recruitment.json` — each validated by one Zod schema in
+`src/lib/schemas/content.ts` and read through `src/lib/content.ts`.
+
+- The loader parses every file when it loads, during `next build`, so a typo
+  fails the build with the file and field named (demonstrated once, then
+  reverted).
+- It is `server-only`. Client components (header, mobile menu) receive plain
+  props from the layout, so neither Zod nor the JSON is shipped to browsers.
+- `src/lib/site.ts` keeps only structural constants (name, parent organisation,
+  the sitemap). The Stage 1 `tagline`/`description` and the Stage 3
+  `contactChannels` placeholder were removed — the content files are the only
+  copy. `clubCredit` and `pageMetadata()` replaced hand-repeated strings and the
+  per-page metadata block.
+- QR codes (Instagram, WhatsApp community, application form) are **generated on
+  the server from the stored link** with the `qrcode` library, rendered as one
+  SVG path in token colours. A QR can therefore never point somewhere other
+  than the link beside it, and changing a link updates its QR. They show from
+  `md` up; phones get the buttons. The supplied QR PDFs were decoded to confirm
+  the links; the Instagram share-tracking query (`?stkn=…`) was removed.
+
+## D-024 — Interim recruitment, honest placeholders, no fake sponsorship form
+
+**Choices (Arnav, Stage 4).**
+
+1. **Interim recruitment now.** `src/content/recruitment.json` holds `open` and
+   the Google Form link; the Recruitment page shows "Apply now" and a QR while
+   open, and the header CTA shows an "open now" dot. Its shape matches the
+   Stage 8 `RecruitmentSettings` record, which replaces it (admin-managed, plus
+   the roles PDF) without changing the page.
+2. **Placeholders for missing contact details**, the map included. A missing
+   value is `null`, rendered as "Coming soon" text — never a fake link — and
+   the map shows a placeholder panel. `pnpm check:launch` fails while any of
+   email, phone, address or map link is still null, so placeholders cannot
+   survive to go-live (Stage 10). Optional extras (LinkedIn, GitHub, a map
+   embed) are simply hidden until set.
+3. **The WhatsApp community link is public** on the site.
+4. **Domains split** as confirmed: Technical — Training & Workshops, Web
+   Development, XR Development; Non-technical — the other seven.
+
+**Lead call.** The sponsorship request form needs its server action, Turnstile
+and the admin inbox (Stage 8). Rather than ship a form that looks real but goes
+nowhere, the Contact page shows an honest "opens soon" notice with the club's
+channels; Stage 8 replaces it with the form.

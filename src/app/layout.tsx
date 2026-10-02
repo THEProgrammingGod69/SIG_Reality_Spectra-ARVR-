@@ -1,7 +1,9 @@
 import type { Metadata, Viewport } from 'next';
 import { Inter, JetBrains_Mono, Space_Grotesk } from 'next/font/google';
 
+import { siteInfo } from '@/lib/content';
 import { publicEnv } from '@/lib/env.public';
+import { defaultTitle, OG_LOCALE, titleTemplate } from '@/lib/metadata';
 import { siteConfig } from '@/lib/site';
 
 import './globals.css';
@@ -33,32 +35,24 @@ const mono = JetBrains_Mono({
 });
 
 /**
- * Root metadata. Every page inherits this and overrides only what it needs.
- * `metadataBase` makes relative OpenGraph image paths resolve correctly. The
- * favicon and Apple icon are `icon.png` and `apple-icon.png` beside this file;
- * Stage 9 adds the generated OpenGraph images.
+ * Root metadata: the defaults for pages that set none (404, admin). Public
+ * pages state their own complete set through `pageMetadata()`. `metadataBase`
+ * makes relative URLs absolute. The favicon and Apple icon are `icon.png` and
+ * `apple-icon.png` beside this file; Stage 9 adds generated OpenGraph images.
  */
 export const metadata: Metadata = {
   metadataBase: new URL(publicEnv.NEXT_PUBLIC_SITE_URL),
-  title: {
-    default: `${siteConfig.name} — ${siteConfig.tagline}`,
-    template: `%s | ${siteConfig.name}`,
-  },
-  description: siteConfig.description,
+  title: { default: defaultTitle, template: titleTemplate },
+  description: siteInfo.positioning,
   applicationName: siteConfig.name,
   openGraph: {
     type: 'website',
     siteName: siteConfig.name,
-    title: `${siteConfig.name} — ${siteConfig.tagline}`,
-    description: siteConfig.description,
-    url: publicEnv.NEXT_PUBLIC_SITE_URL,
-    locale: 'en_IN',
+    locale: OG_LOCALE,
+    title: defaultTitle,
+    description: siteInfo.positioning,
   },
-  twitter: {
-    card: 'summary_large_image',
-    title: `${siteConfig.name} — ${siteConfig.tagline}`,
-    description: siteConfig.description,
-  },
+  twitter: { card: 'summary_large_image', title: defaultTitle, description: siteInfo.positioning },
 };
 
 export const viewport: Viewport = {

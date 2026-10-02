@@ -11,7 +11,7 @@ import { cn } from '@/lib/cn';
  */
 
 type CardProps = HTMLAttributes<HTMLElement> & {
-  as?: 'article' | 'section' | 'div' | 'li';
+  as?: 'article' | 'section' | 'aside' | 'div' | 'li';
   /** Rim light: a thin spectrum line along the top edge, for highlighted cards. */
   featured?: boolean;
   /** Lift and border glow on hover / keyboard focus, for cards that link somewhere. */

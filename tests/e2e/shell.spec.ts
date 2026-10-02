@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-import { primaryNavRoutes, siteConfig, siteRoutes } from '@/lib/site';
+import { clubCredit, primaryNavRoutes, siteConfig, siteRoutes } from '@/lib/site';
 
 /**
  * Stage 3 acceptance for the site shell: header (PillNav + CTA), mobile menu,
@@ -88,8 +88,9 @@ test.describe('mobile menu', () => {
       'page',
     );
 
-    // Tab past the last link wraps to the toggle; the page behind is inert.
-    await menu.getByRole('link', { name: siteRoutes.at(-1)!.label, exact: true }).focus();
+    // Tab past the menu's last link (pages, then channels) wraps to the toggle;
+    // the page behind is inert.
+    await menu.getByRole('link').last().focus();
     await page.keyboard.press('Tab');
     await expect(close).toBeFocused();
     await expect(main).toHaveJSProperty('inert', true);
@@ -133,7 +134,7 @@ test.describe('footer and brand', () => {
     await page.goto('/contact');
     const footer = page.getByRole('contentinfo');
 
-    await expect(footer).toContainText(`Special Interest Group · ${siteConfig.parentOrganisation}`);
+    await expect(footer).toContainText(clubCredit);
     for (const route of siteRoutes) {
       await expect(footer.getByRole('link', { name: route.label, exact: true })).toBeVisible();
     }

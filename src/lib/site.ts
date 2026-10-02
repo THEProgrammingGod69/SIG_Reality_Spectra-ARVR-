@@ -6,41 +6,22 @@
  * entry here and one `page.tsx` — nothing else has a hardcoded list of routes.
  */
 
+/**
+ * Structural constants only. The club's copy — one-liner, positioning,
+ * mission, vision, about, domains, contact channels — lives in `src/content`
+ * and is read through `src/lib/content.ts` (Stage 4).
+ */
 export const siteConfig = {
   name: 'SIG Reality Spectra',
   shortName: 'SIG Reality Spectra',
-  /** Used in <title> templates and structured data. */
+  /** Used in <title> templates, credits and structured data. */
   parentOrganisation: 'VIT Pune',
-  tagline: 'The AR/VR/XR club of VIT Pune',
-  description:
-    'SIG Reality Spectra is the AR, VR and XR special interest group at VIT Pune. We run workshops, hackathons and meetups, and build extended-reality projects together.',
+  /** What the club is, in the words used for titles and structured data. */
+  kind: 'Special Interest Group',
 } as const;
 
-/**
- * Contact channels. `null` means "not supplied yet" (docs/OPEN_ITEMS.md #7):
- * the footer and mobile menu render only the channels that are set, so no
- * placeholder link ever ships. Stage 4 moves these into src/content.
- *
- * The site repository is private (D-014), so it is not a public GitHub link.
- */
-export const contactChannels: {
-  readonly email: string | null;
-  readonly socials: readonly { readonly label: string; readonly href: string | null }[];
-} = {
-  email: null,
-  socials: [
-    { label: 'LinkedIn', href: null },
-    { label: 'Instagram', href: null },
-    { label: 'GitHub', href: null },
-  ],
-};
-
-/** The social links that are actually set, ready to render. */
-export function socialLinks() {
-  return contactChannels.socials.filter(
-    (social): social is { label: string; href: string } => social.href !== null,
-  );
-}
+/** "Special Interest Group · VIT Pune" — the subtle club credit (hero, menu, footer). */
+export const clubCredit = `${siteConfig.kind} · ${siteConfig.parentOrganisation}`;
 
 /** Where a route is surfaced in the site chrome. */
 export type NavPlacement = 'primary' | 'cta';
@@ -55,11 +36,11 @@ export type SiteRoute = {
   readonly label: string;
   /** Page <title>. Falls back to `label` when omitted. */
   readonly title?: string;
-  /** Page meta description. Also shown on the Stage 1 placeholder pages. */
+  /** Page meta description (Home uses the content positioning line instead). */
   readonly description: string;
   readonly placement: NavPlacement;
   readonly group: NavGroup;
-  /** `sitemap.xml` priority. Wired up in Stage 4. */
+  /** `sitemap.xml` priority. */
   readonly priority: number;
 };
 
@@ -75,8 +56,7 @@ export const siteRoutes = [
     href: '/',
     label: 'Home',
     title: 'SIG Reality Spectra',
-    description:
-      'The AR/VR/XR club of VIT Pune — who we are, what we stand for, and our core team.',
+    description: 'Who we are, what we stand for, our ten domains and our core team.',
     placement: 'primary',
     group: 'explore',
     priority: 1,
@@ -119,7 +99,8 @@ export const siteRoutes = [
   {
     href: '/recruitment',
     label: 'Recruitment',
-    description: "Explore the club's domains and apply whenever recruitment is open.",
+    description:
+      "Explore the club's ten domains, technical and non-technical, and apply while recruitment is open.",
     placement: 'cta',
     group: 'involve',
     priority: 0.9,

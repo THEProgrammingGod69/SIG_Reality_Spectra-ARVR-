@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 
+import site from '@/content/site.json';
 import { siteConfig } from '@/lib/site';
 
 /**
@@ -24,7 +25,7 @@ test.describe('hero without JavaScript', () => {
     await page.goto('/');
 
     await expect(page.getByRole('heading', heroName())).toBeVisible();
-    await expect(page.getByText(siteConfig.tagline).first()).toBeVisible();
+    await expect(page.getByText(site.tagline).first()).toBeVisible();
     await expect(page.getByRole('link', { name: 'Explore events' })).toBeVisible();
     await expect(page.getByRole('link', { name: 'Join the club' })).toBeVisible();
     await expect(page.getByTestId('hero-still')).toBeVisible();

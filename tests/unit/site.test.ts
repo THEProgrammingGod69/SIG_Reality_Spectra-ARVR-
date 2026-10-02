@@ -5,13 +5,12 @@ import { describe, expect, it } from 'vitest';
 
 import {
   adminRoutes,
-  contactChannels,
+  clubCredit,
   ctaNavRoutes,
   getRoute,
   primaryNavRoutes,
   siteConfig,
   siteRoutes,
-  socialLinks,
 } from '@/lib/site';
 
 const APP_SITE_DIR = join(process.cwd(), 'src', 'app', '(site)');
@@ -32,33 +31,12 @@ function fileExists(path: string): boolean {
 }
 
 describe('siteConfig', () => {
-  it('has the club name and tagline filled in', () => {
+  it('keeps the club name exactly as the brand brief spells it', () => {
     expect(siteConfig.name).toBe('SIG Reality Spectra');
-    expect(siteConfig.tagline.length).toBeGreaterThan(0);
-    expect(siteConfig.description.length).toBeGreaterThan(50);
-  });
-});
-
-describe('contactChannels', () => {
-  it('holds no placeholder values — unknown channels are null, not TODO links', () => {
-    const values = [contactChannels.email, ...contactChannels.socials.map((s) => s.href)];
-    for (const value of values) {
-      if (value === null) continue;
-      expect(value).not.toMatch(/todo|example\.|placeholder/i);
-      expect(value).toMatch(/^(https:\/\/|[^@\s]+@[^@\s]+\.[a-z]+$)/i);
-    }
   });
 
-  it('never links the private site repository (D-014)', () => {
-    for (const social of contactChannels.socials) {
-      expect(social.href ?? '').not.toContain('SIG_Reality_Spectra-ARVR-');
-    }
-  });
-
-  it('socialLinks() returns only the channels that are set', () => {
-    const set = contactChannels.socials.filter((s) => s.href !== null).length;
-    expect(socialLinks()).toHaveLength(set);
-    for (const link of socialLinks()) expect(link.href).toMatch(/^https:\/\//);
+  it('builds the club credit from its parts', () => {
+    expect(clubCredit).toBe('Special Interest Group · VIT Pune');
   });
 });
 

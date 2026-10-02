@@ -1,0 +1,43 @@
+{
+  "email": null,
+  "phone": null,
+  "address": null,
+  "map": {
+    "url": null,
+    "embedUrl": null
+  },
+  "socials": [
+    {
+      "id": "instagram",
+      "label": "Instagram",
+      "handle": "@sig_realityspectra",
+      "href": "https://www.instagram.com/sig_realityspectra/",
+      "action": "Follow on Instagram",
+      "qr": true
+    },
+    {
+      "id": "whatsapp",
+      "label": "WhatsApp Community",
+      "handle": null,
+      "href": "https://chat.whatsapp.com/KhonedxfgIuDWW25tjOfka",
+      "action": "Join the community",
+      "qr": true
+    },
+    {
+      "id": "linkedin",
+      "label": "LinkedIn",
+      "handle": null,
+      "href": null,
+      "action": "Follow on LinkedIn",
+      "qr": false
+    },
+    {
+      "id": "github",
+      "label": "GitHub",
+      "handle": null,
+      "href": null,
+      "action": "See our code",
+      "qr": false
+    }
+  ]
+}

@@ -8,9 +8,12 @@ import { lockScroll } from '@/components/motion/scroll-lock';
 import { Container } from '@/components/ui/container';
 import { Eyebrow } from '@/components/ui/text';
 import { cn } from '@/lib/cn';
+import type { Channels } from '@/lib/content';
 import { gsap, gsapEase } from '@/lib/motion/gsap';
 import { readMotionTokens } from '@/lib/motion/tokens';
-import { contactChannels, siteConfig, siteRoutes, socialLinks } from '@/lib/site';
+import { clubCredit, siteRoutes } from '@/lib/site';
+
+import { ChannelLinks } from './channel-links';
 
 /**
  * Mobile menu (D-012) — our version of React Bits' StaggeredMenu.
@@ -241,13 +244,12 @@ const twoDigits = (n: number) => String(n).padStart(2, '0');
 export function MobileMenuPanel({
   menu,
   rootRef,
+  channels,
 }: {
   menu: MobileMenuState;
   rootRef: MobileMenuRefs['root'];
+  channels: Channels;
 }) {
-  const socials = socialLinks();
-  const email = contactChannels.email;
-
   return (
     <div
       ref={rootRef}
@@ -300,33 +302,8 @@ export function MobileMenuPanel({
           </ol>
 
           <div className="mt-auto flex flex-col gap-4">
-            {email || socials.length > 0 ? (
-              <ul data-menu-extra className="flex flex-wrap gap-x-6 gap-y-2 text-body-sm">
-                {email ? (
-                  <li>
-                    <a href={`mailto:${email}`} className="text-(--color-text)">
-                      {email}
-                    </a>
-                  </li>
-                ) : null}
-                {socials.map((social) => (
-                  <li key={social.label}>
-                    <a
-                      href={social.href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-(--color-muted) hover:text-(--color-text)"
-                    >
-                      {social.label}
-                      <span className="sr-only"> (opens in a new tab)</span>
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            ) : null}
-            <Eyebrow data-menu-extra>
-              Special Interest Group · {siteConfig.parentOrganisation}
-            </Eyebrow>
+            <ChannelLinks data-menu-extra channels={channels} className="gap-x-6" />
+            <Eyebrow data-menu-extra>{clubCredit}</Eyebrow>
           </div>
         </Container>
       </nav>

@@ -1,17 +1,15 @@
 import type { MetadataRoute } from 'next';
 
-import { publicEnv } from '@/lib/env.public';
+import { absoluteUrl } from '@/lib/env.public';
 
 /**
  * `robots.txt`.
  *
- * The admin panel and the admin-only API (upload tokens) are excluded from crawling now
- * rather than later. Admin routes also set `robots: noindex` in their metadata —
- * the two are complementary, not redundant: this stops crawling, that stops
- * indexing of anything already discovered.
- *
- * Stage 4 adds `sitemap.ts`; the reference below is written now so `robots.txt`
- * does not need editing then.
+ * The admin panel, the admin-only API (upload tokens) and the /dev tools are
+ * excluded from crawling. Admin routes also set `robots: noindex` in their
+ * metadata — the two are complementary, not redundant: this stops crawling,
+ * that stops indexing of anything already discovered. The sitemap is
+ * `sitemap.ts`.
  */
 export default function robots(): MetadataRoute.Robots {
   return {
@@ -22,6 +20,6 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ['/admin', '/admin/', '/api/', '/dev/'],
       },
     ],
-    sitemap: new URL('/sitemap.xml', publicEnv.NEXT_PUBLIC_SITE_URL).toString(),
+    sitemap: absoluteUrl('/sitemap.xml'),
   };
 }

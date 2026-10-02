@@ -18,6 +18,7 @@ Design-system primitives, built in **Stage 3**. See every one, in every state, a
 | `empty-state.tsx`      | `EmptyState` — every list's "nothing here yet" (rule 9)                                                                   |
 | `icon.tsx`             | `Icon` — Lucide at sm · md · lg, stroke 1.5, decorative unless labelled                                                   |
 | `logo.tsx`             | `BrandMark`, `BrandBadge` — the club logo via `next/image`                                                                |
+| `qr-code.tsx`          | `QrCode` — server-only SVG QR generated from a link, token colours (D-023)                                                |
 | `page-placeholder.tsx` | TEMPORARY — deleted once every route has real content                                                                     |
 
 Rules:

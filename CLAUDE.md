@@ -203,9 +203,12 @@ src/
     contrast.ts      WCAG contrast maths for the token audit and /dev/ui
     env.ts           server env, validated with Zod (server-only)
     env.public.ts    NEXT_PUBLIC_* env, safe in the browser
-    site.ts          sitemap, nav and club config — single source of truth
+    site.ts          sitemap, nav and structural club constants — single source of truth
+    content.ts       the validated src/content files (server-only)          (Stage 4)
+    metadata.ts      pageMetadata(): title, canonical, OpenGraph per page   (Stage 4)
+    structured-data.ts  schema.org JSON-LD for the club                     (Stage 4)
   assets/            imported static assets (brand logo images)        (Stage 3)
-  content/           site info, domains, contact — JSON, validated at build time
+  content/           site, domains, contact, interim recruitment — JSON, validated at build time
 tests/
   unit/              Vitest — schemas and pure utilities
   e2e/               Playwright
@@ -297,6 +300,7 @@ pnpm format:check  # Prettier check
 pnpm test          # Vitest (unit)
 pnpm test:e2e      # Playwright (first run: pnpm exec playwright install chromium)
 pnpm check         # lint + typecheck + test + build
+pnpm check:launch  # fails while any contact detail is still a placeholder (go-live gate)
 ```
 
 ---
@@ -327,7 +331,7 @@ One stage per session. `/clear` between stages. Commit and tag each stage
 | 1     | Foundation, architecture, project rules                                      | **Done**    |
 | 2     | Animation system + AR/VR landing hero                                        | **Done**    |
 | 3     | Design system + UI shell                                                     | **Done**    |
-| 4     | Static content layer + page shells (Home, About, Recruitment, Contact) + SEO | Not started |
+| 4     | Static content layer + page shells (Home, About, Recruitment, Contact) + SEO | **Done**    |
 | 5     | Data layer: schemas, repository, browser uploads, cache tags                 | Not started |
 | 6     | Admin authentication + panel shell + dashboard                               | Not started |
 | 7     | Events and gallery (event photos + standalone photos) — admin ↔ public       | Not started |
@@ -343,14 +347,17 @@ updated to match; `docs/ARCHITECTURE.md` is the current design.
 
 - `src/components/ui/page-placeholder.tsx` — delete once every route has content.
 - The admin shell in `src/app/admin/layout.tsx` — replaced in Stage 6.
-- The placeholder section under the hero in `src/app/(site)/page.tsx` — replaced
-  by mission, vision and core team in Stage 4.
-- The hero's tagline copy — the real one-line intro arrives in Stage 4 (OPEN_ITEMS #4).
+- `src/content/recruitment.json` and its `InterimRecruitment` schema — replaced
+  by the admin-managed RecruitmentSettings in Stage 8 (D-024).
+- `src/components/sections/sponsorship-notice.tsx` — replaced by the
+  sponsorship request form in Stage 8 (D-024).
+- The empty state in `src/components/sections/team-section.tsx` — Stage 8 passes
+  the team members in.
+- "Coming soon" contact placeholders — filled in `src/content/contact.json`;
+  `pnpm check:launch` fails until they are (Stage 10 gate).
 
 **Deliberately not built yet, so a later stage owns it cleanly:**
 
-- `sitemap.ts` — Stage 4, with the static content layer (the sitemap is fixed:
-  there are no per-record URLs).
 - `proxy.ts` — Stage 6, together with authentication.
 - `api/admin/upload` — Stage 5, with the repository's `media.ts`.
 - `api/cron/nightly` and the Vercel cron schedule — Stage 10.
@@ -384,6 +391,9 @@ contributor must know before writing UI:
 | Shell             | Fixed header over the page; `data-full-bleed` sections run under it. PillNav (`lg`+) and MobileMenu rebuilt from React Bits (D-020)                             |
 | Logo              | Original badge + white-ring mark, raster via `next/image`; masters in `references/brand` (D-021)                                                                |
 | Rule 4 and colour | No colour/background transitions: hover colour is instant, overlays fade with opacity (D-022)                                                                   |
+| Content           | Copy lives only in `src/content/*.json`, read through `src/lib/content.ts` (server-only); client components get props (D-023)                                   |
+| QR codes          | Generated on the server from the stored link (`<QrCode>`); shown from `md` up, buttons on phones (D-023)                                                        |
+| Placeholders      | Missing contact details are `null` → "Coming soon", never a fake link; no fake sponsorship form (D-024)                                                         |
 | Contrast          | Every token pairing is audited for WCAG AA by `tests/unit/contrast.test.ts`; control borders use `--color-subtle`                                               |
 
 ---

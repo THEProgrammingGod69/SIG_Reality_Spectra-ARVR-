@@ -1,0 +1,62 @@
+[
+  {
+    "id": "training-workshops",
+    "name": "Training & Workshops",
+    "group": "technical",
+    "description": "Designing practical learning experiences that help members move from concepts to confident, hands-on application through workshops, sessions, and skill-building initiatives."
+  },
+  {
+    "id": "web-development",
+    "name": "Web Development",
+    "group": "technical",
+    "description": "Building modern, responsive, and purposeful web experiences while developing strong foundations in frontend, backend, interfaces, and real-world product development."
+  },
+  {
+    "id": "xr-development",
+    "name": "XR Development",
+    "group": "technical",
+    "description": "Exploring extended reality through AR, VR, and immersive experiences that blend technology, interaction, storytelling, and experimentation."
+  },
+  {
+    "id": "publicity-outreach",
+    "name": "Publicity & Outreach",
+    "group": "non-technical",
+    "description": "Connecting the club with students, communities, and collaborators through strategic promotion, outreach initiatives, partnerships, and audience engagement."
+  },
+  {
+    "id": "content-social-media",
+    "name": "Content & Social Media",
+    "group": "non-technical",
+    "description": "Shaping the club's voice across digital platforms through thoughtful storytelling, campaigns, copy, and social content that informs, engages, and builds community."
+  },
+  {
+    "id": "multimedia-management",
+    "name": "Multimedia Management",
+    "group": "non-technical",
+    "description": "Planning and producing visual media — including photography, video, editing, and event coverage — to document the club and communicate its work with impact."
+  },
+  {
+    "id": "finance",
+    "name": "Finance",
+    "group": "non-technical",
+    "description": "Supporting sustainable execution through budgeting, expense planning, financial records, resource allocation, and responsible management of the club's operational needs."
+  },
+  {
+    "id": "management",
+    "name": "Management",
+    "group": "non-technical",
+    "description": "Coordinating people, timelines, responsibilities, and execution so that ideas move smoothly from planning to completion with accountability and clarity."
+  },
+  {
+    "id": "pr-sponsorship",
+    "name": "PR & Sponsorship",
+    "group": "non-technical",
+    "description": "Building professional relationships with external organisations, partners, speakers, and sponsors while creating mutually valuable opportunities for collaboration."
+  },
+  {
+    "id": "aesthetics",
+    "name": "Aesthetics",
+    "group": "non-technical",
+    "description": "Crafting the club's visual identity across branding, design, event presentation, interfaces, and creative direction so every touchpoint feels coherent and memorable."
+  }
+]

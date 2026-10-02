@@ -44,7 +44,7 @@ export function BrandMark({
 export function BrandBadge({
   className,
   sizes = '6rem',
-  alt = `${siteConfig.name} — Special Interest Group, ${siteConfig.parentOrganisation}`,
+  alt = `${siteConfig.name} — ${siteConfig.kind}, ${siteConfig.parentOrganisation}`,
   preload = false,
 }: LogoProps) {
   return (

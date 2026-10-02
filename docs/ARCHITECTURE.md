@@ -92,7 +92,11 @@ Server Action is admin-only and re-checks the session.
 | GalleryPhoto (standalone)     | Redis + Blob  | `/admin/gallery`     | `gallery`      | Gallery                           |
 | TeamMember                    | Redis + Blob  | `/admin/team`        | `team`         | Home (core only), About (all)     |
 | RecruitmentSettings           | Redis + Blob  | `/admin/recruitment` | `recruitment`  | Recruitment, nav call to action   |
-| SponsorshipRequest            | Redis         | `/contact` form      | none           | `/admin/sponsorships` only        |
+
+Until Stage 8, recruitment status and the form link come from the interim
+`src/content/recruitment.json` (D-024); the Recruitment page reads the same
+fields, so the switch changes no page.
+| SponsorshipRequest | Redis | `/contact` form | none | `/admin/sponsorships` only |
 
 ```mermaid
 erDiagram

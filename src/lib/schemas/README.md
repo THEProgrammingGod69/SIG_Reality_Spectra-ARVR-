@@ -4,15 +4,15 @@ One schema per editable entity, and that single schema is used by the admin
 form, the Server Action and the public renderer. There is never a second,
 slightly different copy of a field's rules.
 
-| File             | Schemas                       | Edited via           | Stage |
-| ---------------- | ----------------------------- | -------------------- | ----- |
-| `content.ts`     | SiteInfo, Domain, ContactInfo | Git (`src/content`)  | 4     |
-| `category.ts`    | Category (shared enum)        | —                    | 5     |
-| `event.ts`       | Event, EventPhoto             | `/admin/events`      | 5     |
-| `gallery.ts`     | GalleryPhoto                  | `/admin/gallery`     | 5     |
-| `team.ts`        | TeamMember                    | `/admin/team`        | 5     |
-| `recruitment.ts` | RecruitmentSettings           | `/admin/recruitment` | 5     |
-| `sponsorship.ts` | SponsorshipRequest            | `/contact` form      | 5     |
+| File             | Schemas                                                           | Edited via           | Stage |
+| ---------------- | ----------------------------------------------------------------- | -------------------- | ----- |
+| `content.ts`     | SiteInfo, Domain, ContactInfo, InterimRecruitment (until Stage 8) | Git (`src/content`)  | 4 ✅  |
+| `category.ts`    | Category (shared enum)                                            | —                    | 5     |
+| `event.ts`       | Event, EventPhoto                                                 | `/admin/events`      | 5     |
+| `gallery.ts`     | GalleryPhoto                                                      | `/admin/gallery`     | 5     |
+| `team.ts`        | TeamMember                                                        | `/admin/team`        | 5     |
+| `recruitment.ts` | RecruitmentSettings                                               | `/admin/recruitment` | 5     |
+| `sponsorship.ts` | SponsorshipRequest                                                | `/contact` form      | 5     |
 
 ## Planned fields
 

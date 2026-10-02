@@ -15,14 +15,14 @@ should be raised rather than worked around with a placeholder that ships.
 | --- | --------------------------------------------- | --------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 1   | **A real mid-range Android phone** to test on | The 50+ fps low-tier budget cannot be signed off from a desktop | Open — Stage 2 is built; only this sign-off remains. Open `/?hero-tier=low` on the phone (dev server on the LAN), scroll the hero, and note the fps; the low tier is tuned in `HERO_TIER_BUDGET` (`src/lib/motion/hero-tier.ts`) |
 
-## Blocking Stage 4 — static content
+## Before go-live — remaining contact details
 
-| #   | Item                                                                               | Status |
-| --- | ---------------------------------------------------------------------------------- | ------ |
-| 4   | Club name as displayed and the **one-line intro** for the hero                     | Open   |
-| 5   | **Mission**, **vision** and the short and long **about us** copy                   | Open   |
-| 6   | **List of the club's domains**, with a short description of each                   | Open   |
-| 7   | **Contact details**: official club email, phone, address or map link, social links | Open   |
+Stage 4 shipped with "Coming soon" placeholders for these (D-024). `pnpm check:launch`
+fails until they are filled in `src/content/contact.json`.
+
+| #   | Item                                                                                                                                    | Status                                 |
+| --- | --------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
+| 7   | **Official club email**, **phone**, **address** and a **Google Maps link** (embed optional); LinkedIn / GitHub org if the club has them | Open — Instagram and WhatsApp supplied |
 
 ## Blocking Stage 5 — data layer
 
@@ -52,12 +52,12 @@ should be raised rather than worked around with a placeholder that ships.
 
 ## Blocking Stage 8 — team, recruitment and sponsorships
 
-| #   | Item                                                                    | Status |
-| --- | ----------------------------------------------------------------------- | ------ |
-| 19  | **Team list**: name, position, photo, hierarchy level, core or not      | Open   |
-| 20  | **Roles and responsibilities PDF** and the current **Google Form** link | Open   |
-| 21  | **Is recruitment open right now?**                                      | Open   |
-| 22  | Cloudflare Turnstile site key and secret                                | Open   |
+| #   | Item                                                                    | Status                                              |
+| --- | ----------------------------------------------------------------------- | --------------------------------------------------- |
+| 19  | **Team list**: name, position, photo, hierarchy level, core or not      | Open                                                |
+| 20  | **Roles and responsibilities PDF** and the current **Google Form** link | Form link supplied (interim, D-024); roles PDF open |
+| 21  | **Is recruitment open right now?**                                      | Yes — interim `recruitment.json` (D-024)            |
+| 22  | Cloudflare Turnstile site key and secret                                | Open                                                |
 
 ## Blocking Stage 10 — go live
 
@@ -84,6 +84,9 @@ should be raised rather than worked around with a placeholder that ships.
 | Gallery: event photos only, or also standalone                      | Both (D-005); item 18 above covers the first photos                                                                                                                               |
 | #2 Logo with transparent background, light/dark variants and a mark | Club brand pack, Oct 2026 — raster masters in `references/brand`; original badge + white-ring mark ship via `next/image` (D-021). A hand-drawn vector mark remains a nice-to-have |
 | #3 VIT branding rules                                               | None apply: VIT is the college name only, with no logo or rules. It appears as plain text in the club credit line (footer, hero eyebrow, menu)                                    |
+| #4 Club name and one-line intro                                     | Content brief, Oct 2026 — `src/content/site.json` (D-023)                                                                                                                         |
+| #5 Mission, vision, short and long about                            | Content brief — `src/content/site.json`                                                                                                                                           |
+| #6 Domains with descriptions                                        | Content brief — ten domains in `src/content/domains.json`, split technical / non-technical (D-024)                                                                                |
 
 ---
 
