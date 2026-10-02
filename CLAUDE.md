@@ -61,25 +61,25 @@ a lab that builds real things, or a gaming landing page?
 
 ## 2. Locked tech stack — do not substitute
 
-| Layer              | Choice                                                                               |
-| ------------------ | ------------------------------------------------------------------------------------ |
-| Framework          | Next.js 16 (App Router) + TypeScript strict                                          |
-| Package manager    | pnpm                                                                                 |
-| Styling            | Tailwind CSS v4 + shadcn/ui (**admin only**); `cn()` = clsx + tailwind-merge (D-019) |
-| Icons              | lucide-react, 1.5 stroke, via `<Icon>` (D-019)                                       |
-| 3D                 | React Three Fiber + `@react-three/drei`                                              |
-| Scroll/timeline    | GSAP + ScrollTrigger                                                                 |
-| UI micro-animation | Motion (formerly Framer Motion)                                                      |
-| Smooth scroll      | Lenis                                                                                |
-| Data               | Upstash Redis (serverless KV, created directly on upstash.com — D-025)               |
-| Files              | Cloudflare R2 (S3-compatible), signed with `aws4fetch` — D-025                       |
-| Validation         | Zod (shared schemas)                                                                 |
-| Admin auth         | Auth.js — Google provider, JWT sessions, email allowlist in env                      |
-| Forms              | react-hook-form + Zod                                                                |
-| Spam protection    | Cloudflare Turnstile + honeypot                                                      |
-| Analytics          | Chosen in Stage 9 (Vercel Analytics does not run on Netlify — D-025)                 |
-| Testing            | Playwright (E2E) + Vitest (schemas/utils)                                            |
-| Hosting            | Netlify + club-owned GitHub org (D-025)                                              |
+| Layer              | Choice                                                                                       |
+| ------------------ | -------------------------------------------------------------------------------------------- |
+| Framework          | Next.js 16 (App Router) + TypeScript strict                                                  |
+| Package manager    | pnpm                                                                                         |
+| Styling            | Tailwind CSS v4 + shadcn/ui (**admin only**); `cn()` = clsx + tailwind-merge (D-019)         |
+| Icons              | lucide-react, 1.5 stroke, via `<Icon>` (D-019)                                               |
+| 3D                 | React Three Fiber + `@react-three/drei`                                                      |
+| Scroll/timeline    | GSAP + ScrollTrigger                                                                         |
+| UI micro-animation | Motion (formerly Framer Motion)                                                              |
+| Smooth scroll      | Lenis                                                                                        |
+| Data               | Upstash Redis (serverless KV, created directly on upstash.com — D-025)                       |
+| Files              | Cloudflare R2 (S3-compatible), signed with `aws4fetch` — D-025                               |
+| Validation         | Zod (shared schemas)                                                                         |
+| Admin auth         | Auth.js (`next-auth@5.0.0-beta.32`, pinned) — Google, JWT sessions, allowlist in env (D-030) |
+| Forms              | react-hook-form + Zod                                                                        |
+| Spam protection    | Cloudflare Turnstile + honeypot                                                              |
+| Analytics          | Chosen in Stage 9 (Vercel Analytics does not run on Netlify — D-025)                         |
+| Testing            | Playwright (E2E) + Vitest (schemas/utils)                                                    |
+| Hosting            | Netlify + club-owned GitHub org (D-025)                                                      |
 
 If a library looks like a better fit mid-build, raise it — do not silently swap it.
 
@@ -117,7 +117,8 @@ These are not style preferences. Breaking one is a bug.
 7. **Every admin route is `noindex, nofollow`** and disallowed in `robots.txt`.
 
 8. **Never trust the proxy alone.** `proxy.ts` guards `/admin/*`, _and_ every
-   server action re-checks the session itself.
+   server action re-checks the session itself — by wrapping its body in
+   `adminAction()` (`src/lib/auth/admin-action.ts`).
 
 9. **Nothing an admin does may make the public site look broken.** Cards use
    fixed aspect ratios, titles are line-clamped, grids use `auto-fill minmax`,
@@ -184,9 +185,10 @@ This project runs **Next.js 16.3.5**. Several APIs changed from 14/15. Check
 src/
   app/
     (site)/          public routes — one folder per sitemap page
-    admin/           admin routes (noindex, never linked publicly)
+    admin/           admin routes (noindex, never linked publicly): login/ + (panel)/  (Stage 6)
     dev/             developer tools: /dev/ui, /dev/motion — 404 in production
-    api/admin/upload presigned-upload route, fails closed until Stage 6  (Stage 5)
+    api/admin/upload presigned-upload route (Stage 5)
+    api/auth/        Auth.js endpoints (Stage 6)
     api/cron/nightly backup + orphan sweep, CRON_SECRET  (Stage 10)
     globals.css      design tokens live here, in @theme
     robots.ts
@@ -196,11 +198,14 @@ src/
     motion/          reusable animation primitives     (Stage 2)
     three/           R3F scenes                        (Stage 2)
     sections/        composed page sections            (Stage 2/4)
-    admin/           admin components, shadcn/ui       (Stages 6–8)
+    admin/           admin shell, toasts, unsaved-changes guard; ui/ = reviewed shadcn (Stages 6–8)
   lib/
     data/            repository layer — ONLY place that touches Redis/R2      (Stage 5)
     schemas/         Zod schemas: one per entity, shared by forms and data   (Stage 5)
-    auth/            session check (stub until Stage 6), Auth.js config
+    auth/            Auth.js config, access policy, session checks, adminAction()   (Stage 6)
+    action-result.ts the one result shape admin Server Actions return     (Stage 6)
+    integrations.ts  which outside services have credentials (dashboard)  (Stage 6)
+    dates.ts         dates in the club's time zone                        (Stage 6)
     motion/          motion tokens reader, GSAP setup, hero device tiers (Stage 2)
     cn.ts            the one class-name helper (public UI and shadcn admin)
     contrast.ts      WCAG contrast maths for the token audit and /dev/ui
@@ -212,6 +217,7 @@ src/
     structured-data.ts  schema.org JSON-LD for the club                     (Stage 4)
   assets/            imported static assets (brand logo images)        (Stage 3)
   content/           site, domains, contact, interim recruitment — JSON, validated at build time
+  proxy.ts           the /admin guard (Next 16's renamed middleware)       (Stage 6)
 scripts/             seed.mts — pnpm seed [--demo]                            (Stage 5)
 tests/
   unit/              Vitest — schemas, utilities, data layer on in-memory adapters
@@ -344,7 +350,7 @@ One stage per session. `/clear` between stages. Commit and tag each stage
 | 3     | Design system + UI shell                                                     | **Done**    |
 | 4     | Static content layer + page shells (Home, About, Recruitment, Contact) + SEO | **Done**    |
 | 5     | Data layer: schemas, repository, browser uploads, cache tags                 | **Done**    |
-| 6     | Admin authentication + panel shell + dashboard                               | Not started |
+| 6     | Admin authentication + panel shell + dashboard                               | **Done**    |
 | 7     | Events and gallery (event photos + standalone photos) — admin ↔ public       | Not started |
 | 8     | Team, recruitment and sponsorship requests — admin ↔ public                  | Not started |
 | 9     | Animation polish, performance, accessibility, security headers               | Not started |
@@ -357,12 +363,13 @@ updated to match; `docs/ARCHITECTURE.md` is the current design.
 **Temporary scaffolding, to delete as it is replaced:**
 
 - `src/components/ui/page-placeholder.tsx` — delete once every route has content.
-- The admin shell in `src/app/admin/layout.tsx` — replaced in Stage 6.
 - `src/content/recruitment.json` — replaced by the admin-managed
   RecruitmentSettings in Stage 8 (D-024); it is already validated by that
   record's schema (D-028), and `pnpm seed` copies it into Redis.
-- The `getAdminSession()` stub in `src/lib/auth/session.ts` — Stage 6 gives it a
-  real body (Auth.js); until then every admin entry point fails closed.
+- `PlannedTool` in `src/components/admin/admin-page.tsx` — each tool page's
+  "Built in Stage N" state, replaced by its screens in Stages 7–8.
+- Placeholder credentials (temporary admin `dryerisdry@gmail.com`, no Google
+  keys, no Upstash/R2) — the swap list is at the top of `docs/OPEN_ITEMS.md`.
 - `src/components/sections/sponsorship-notice.tsx` — replaced by the
   sponsorship request form in Stage 8 (D-024).
 - The empty state in `src/components/sections/team-section.tsx` — Stage 8 passes
@@ -372,7 +379,6 @@ updated to match; `docs/ARCHITECTURE.md` is the current design.
 
 **Deliberately not built yet, so a later stage owns it cleanly:**
 
-- `proxy.ts` — Stage 6, together with authentication.
 - `api/cron/nightly` and its Netlify scheduled function — Stage 10.
 
 ---
@@ -413,6 +419,8 @@ contributor must know before writing UI:
 | Team              | Core team, then one secretary per domain; About only (D-027)                                                                                                    |
 | Recruitment PDF   | Optional: recruitment opens with the form link; "coming soon" until the PDF is uploaded (D-028)                                                                 |
 | Data layer        | One generic repository over `RecordStore` + `ObjectStorage` ports; atomic Lua writes; public reads `'use cache'` (D-029)                                        |
+| Admin access      | Google sign-in + allowlist re-checked per request; development sign-in locally only; three locks (D-030)                                                        |
+| Admin UI          | Reviewed shadcn subset on token aliases (no `accent`/`muted`); in-house toasts; `useUnsavedChanges` + `GuardedLink` (D-030)                                     |
 
 ---
 

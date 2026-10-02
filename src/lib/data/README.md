@@ -3,7 +3,8 @@
 **The only code in this project allowed to import `@upstash/redis` or
 `aws4fetch`** (the R2 request signer). A `no-restricted-imports` ESLint rule
 enforces it, so breaking it fails `pnpm lint`. The app imports from
-`@/lib/data` (`index.ts`) and nothing deeper.
+`@/lib/data` (`index.ts`) and nothing deeper; the one exception is
+`errors.ts`, plain classes that `src/lib/action-result.ts` reads on the client.
 
 Design: D-025 (Netlify, Upstash, R2) and D-029 (this layer).
 
@@ -32,8 +33,11 @@ Design: D-025 (Netlify, Upstash, R2) and D-029 (this layer).
 // A public page (server component):
 const { current, timeline } = await getPublicEvents(); // inside <Suspense>
 
-// A Server Action (Stage 6+), after checking the session itself (rule 8):
-const event = await repositories().events.update(id, expectedUpdatedAt, changes, session.email);
+// A Server Action: adminAction() re-checks the session (rule 8) and turns a
+// DataError into an ActionResult for the form (src/lib/auth/README.md).
+return adminAction((admin) =>
+  repositories().events.update(id, expectedUpdatedAt, changes, admin.email),
+);
 ```
 
 - **Public reads** are `'use cache'` + `cacheTag` + `cacheLife('hours')` and

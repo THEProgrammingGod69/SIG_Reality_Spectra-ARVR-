@@ -14,7 +14,8 @@ import {
 } from '@/lib/site';
 
 const APP_SITE_DIR = join(process.cwd(), 'src', 'app', '(site)');
-const APP_ADMIN_DIR = join(process.cwd(), 'src', 'app', 'admin');
+/** The panel's pages; the sign-in page sits outside it, in src/app/admin/login. */
+const APP_ADMIN_DIR = join(process.cwd(), 'src', 'app', 'admin', '(panel)');
 
 /** `/about` -> `src/app/(site)/about/page.tsx`; `/` -> `src/app/(site)/page.tsx`. */
 function pageFileFor(href: string): string {

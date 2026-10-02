@@ -25,7 +25,10 @@ cp .env.example .env.local
 pnpm dev
 ```
 
-Open <http://localhost:3000>.
+Open <http://localhost:3000>. The admin panel is at `/admin` (never linked from
+the site): with `AUTH_SECRET` and `ADMIN_EMAILS` set, `pnpm dev` offers a
+development sign-in until Google sign-in is configured
+([`docs/SETUP_AUTH.md`](./docs/SETUP_AUTH.md)).
 
 `.env.local` can stay mostly blank for now. Every variable belongs to the stage
 that introduces it, and the app only fails when a feature that needs one actually
@@ -113,7 +116,7 @@ The site is built in ten stages, one per session, each tagged in Git
 | 3     | Design system + UI shell                                                     | **Done**    |
 | 4     | Static content layer + page shells (Home, About, Recruitment, Contact) + SEO | **Done**    |
 | 5     | Data layer: schemas, repository, browser uploads, cache tags                 | **Done**    |
-| 6     | Admin authentication + panel shell + dashboard                               | Not started |
+| 6     | Admin authentication + panel shell + dashboard                               | **Done**    |
 | 7     | Events and gallery — admin ↔ public                                          | Not started |
 | 8     | Team, recruitment and sponsorship requests — admin ↔ public                  | Not started |
 | 9     | Animation polish, performance, accessibility, security headers               | Not started |

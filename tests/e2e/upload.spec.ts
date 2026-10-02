@@ -1,8 +1,9 @@
 import { expect, test } from '@playwright/test';
 
 /**
- * /api/admin/upload hands out upload URLs, so it must fail closed. Until Stage 6
- * adds sign-in there is no admin, and every request is refused (rule 8).
+ * /api/admin/upload hands out upload URLs, so it must fail closed: without an
+ * admin session every request is refused (rule 8). The signed-in case is in
+ * admin.spec.ts.
  */
 const request = {
   target: 'gallery-photo',

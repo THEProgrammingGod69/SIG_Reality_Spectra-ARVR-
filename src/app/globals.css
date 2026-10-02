@@ -100,7 +100,9 @@
      The mobile menu panel lives inside the header's layer, under its top row;
      Modal uses the native <dialog> top layer, which sits above every z-index. */
   --z-header: 40;
+  --z-overlay: 50; /* admin sheets and dialogs */
   --z-skip: 60;
+  --z-toast: 70; /* admin notifications, above dialogs */
 
   /* Base — the lab darkness */
   --color-void: #000000;
@@ -152,6 +154,7 @@
   --stagger: 70ms; /* lists, grids, words */
   --motion-rise: 1.5rem; /* how far an entering element travels */
   --dur-ambient: 6s; /* slow decorative loops (StarBorder, skeleton shimmer) */
+  --dur-toast: 6s; /* how long an admin notification stays (not motion: kept under reduced motion) */
 
   /* Ambient animations — transform and opacity only (rule 4). The global
      reduced-motion rule below stops them. */
@@ -190,6 +193,35 @@
   }
 }
 
+/* =============================================================================
+   shadcn/ui colour names — ADMIN PANEL ONLY (D-030)
+   =============================================================================
+   The vendored shadcn components in src/components/admin/ui use these names.
+   Each points at a token above, so the panel follows the palette and changing a
+   token still changes everything. The public site keeps using token names.
+
+   shadcn's `accent` and `muted` are deliberately NOT mapped: those names are
+   our violet accent and our muted text. After `shadcn add`, rewrite the
+   component's `bg-accent` hover fills and `bg-muted` to `bg-secondary`
+   (see src/components/admin/ui/README.md).
+   ============================================================================= */
+@theme inline {
+  --color-background: var(--color-bg);
+  --color-foreground: var(--color-text);
+  --color-card: var(--color-surface);
+  --color-card-foreground: var(--color-text);
+  --color-popover: var(--color-surface-raised);
+  --color-popover-foreground: var(--color-text);
+  --color-primary: var(--color-accent);
+  --color-primary-foreground: var(--color-accent-contrast);
+  --color-secondary: var(--color-surface-raised);
+  --color-secondary-foreground: var(--color-text);
+  --color-muted-foreground: var(--color-muted);
+  --color-destructive: var(--color-danger);
+  --color-input: var(--color-subtle);
+  --color-ring: var(--color-accent);
+}
+
 /* Reduced motion collapses every motion token, so anything that reads them —
    CSS transitions, GSAP tweens, Motion animations — becomes instant. */
 @media (prefers-reduced-motion: reduce) {
@@ -206,6 +238,14 @@
 @layer base {
   html {
     color-scheme: dark;
+  }
+
+  /* A bare `border` draws a hairline in the border token, not currentColor
+     (the shadcn components rely on it; public components set colours anyway). */
+  *,
+  ::before,
+  ::after {
+    border-color: var(--color-border);
   }
 
   /* Native smooth scrolling for in-page anchors when JavaScript (and so Lenis)

@@ -1,7 +1,27 @@
 # `src/components/admin`
 
-Admin-panel components, built on shadcn/ui. shadcn/ui is used **here only** —
-the public site uses the primitives in `src/components/ui`.
+The admin panel's components (D-030). shadcn/ui is used **here only** (in
+`ui/`); the public site uses the primitives in `src/components/ui`, and the
+admin may reuse those too (`EmptyState`, `Skeleton`, `Icon`, `BrandMark`).
+
+| File                   | Does                                                                                    |
+| ---------------------- | --------------------------------------------------------------------------------------- |
+| `admin-shell.tsx`      | The panel frame: sidebar or top bar, the page, toasts, the unsaved-changes guard        |
+| `admin-navigation.tsx` | Navigation, signed-in email, sign-out — the sidebar (`lg`+) and the mobile sheet        |
+| `admin-page.tsx`       | `AdminPageHeader` (title and description from `adminRoutes`); `PlannedTool` (temporary) |
+| `toaster.tsx`          | `ToastProvider`, `useToast()`: `toast(message)`, `notify(actionResult, success)`        |
+| `unsaved-changes.tsx`  | `useUnsavedChanges(isDirty)`, `GuardedLink`, `useLeaveGuard()`                          |
+| `ui/`                  | Reviewed shadcn/ui primitives (see its README)                                          |
+
+## Building a tool screen (Stages 7–8)
+
+- Start the page with `<AdminPageHeader href="/admin/…" />`.
+- Forms: react-hook-form + the entity's `XInputSchema`; call
+  `useUnsavedChanges(formState.isDirty)`.
+- Save through a Server Action wrapped in `adminAction()` and report the
+  result with `useToast().notify(result, 'Saved')`; on `reason: 'conflict'`,
+  offer a reload; show `result.issues` beside their fields.
+- Navigate within the panel with `GuardedLink`, never a bare `Link`.
 
 Planned building blocks:
 
@@ -20,4 +40,4 @@ Planned building blocks:
 - **Recruitment panel** — open/closed toggle, roles PDF and Google Form link.
 - **Sponsorship inbox** — list, detail and status.
 
-Built in **Stage 6** (shell) and **Stages 7–8** (features).
+Built in **Stage 6** (shell) and **Stages 7–8** (tools).

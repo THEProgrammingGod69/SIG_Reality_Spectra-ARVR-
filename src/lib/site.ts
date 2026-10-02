@@ -109,15 +109,51 @@ export const siteRoutes = [
 
 export type SiteRouteHref = (typeof siteRoutes)[number]['href'];
 
-/** Admin routes. Never linked from the public site and always `noindex`. */
+/**
+ * Admin routes: the panel's navigation and page headings. Never linked from
+ * the public site and always `noindex`. `/admin/login` is not listed: it is
+ * outside the panel.
+ */
 export const adminRoutes = [
-  { href: '/admin', label: 'Dashboard' },
-  { href: '/admin/events', label: 'Events' },
-  { href: '/admin/gallery', label: 'Gallery' },
-  { href: '/admin/team', label: 'Team' },
-  { href: '/admin/recruitment', label: 'Recruitment' },
-  { href: '/admin/sponsorships', label: 'Sponsorships' },
+  {
+    href: '/admin',
+    label: 'Dashboard',
+    description: 'What needs attention: upcoming events, the timeline, requests and recruitment.',
+  },
+  {
+    href: '/admin/events',
+    label: 'Events',
+    description:
+      'Add the current event, then complete it with a recap and photos for the timeline.',
+  },
+  {
+    href: '/admin/gallery',
+    label: 'Gallery',
+    description: 'Upload standalone club photos. Photos of timeline events appear automatically.',
+  },
+  {
+    href: '/admin/team',
+    label: 'Team',
+    description: 'The core team and the secretary of each domain, as shown on About.',
+  },
+  {
+    href: '/admin/recruitment',
+    label: 'Recruitment',
+    description: 'Open or close recruitment, set the application form and the roles PDF.',
+  },
+  {
+    href: '/admin/sponsorships',
+    label: 'Sponsorships',
+    description: 'Sponsorship and collaboration requests sent from the Contact page.',
+  },
 ] as const;
+
+export type AdminRouteHref = (typeof adminRoutes)[number]['href'];
+
+export function getAdminRoute(href: AdminRouteHref) {
+  // The href type guarantees a match.
+  return adminRoutes.find((route) => route.href === href)!;
+}
 
 export const primaryNavRoutes = siteRoutes.filter((route) => route.placement === 'primary');
 export const ctaNavRoutes = siteRoutes.filter((route) => route.placement === 'cta');

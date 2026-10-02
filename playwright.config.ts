@@ -1,8 +1,22 @@
+import { existsSync } from 'node:fs';
+
 import { defineConfig, devices } from '@playwright/test';
 
 const PORT = Number(process.env.PORT ?? 3000);
 const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? `http://localhost:${PORT}`;
 const isCI = Boolean(process.env.CI);
+
+/*
+ * The admin tests sign in with the development sign-in as the first address in
+ * ADMIN_EMAILS (D-030). Locally the tests and the dev server read the same
+ * .env.local; where there is none (CI), a throwaway secret and test admin are
+ * set here and inherited by the server. The production-build run switches the
+ * development sign-in on explicitly — something no Netlify deploy accepts.
+ */
+if (existsSync('.env.local')) process.loadEnvFile('.env.local');
+process.env.AUTH_SECRET ||= 'e2e-only-secret-never-used-outside-the-test-run';
+process.env.ADMIN_EMAILS ||= 'e2e-admin@example.org';
+if (isCI) process.env.AUTH_DEV_SIGN_IN = 'true';
 
 export default defineConfig({
   testDir: './tests/e2e',

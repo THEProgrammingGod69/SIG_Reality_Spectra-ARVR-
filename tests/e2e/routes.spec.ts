@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-import { adminRoutes, siteRoutes } from '@/lib/site';
+import { siteRoutes } from '@/lib/site';
 
 /**
  * Stage 1 acceptance: every route in the sitemap actually loads.
@@ -26,24 +26,6 @@ test.describe('public routes', () => {
 
     await expect(page.getByRole('link', { name: 'Skip to content' })).toBeAttached();
     await expect(page.locator('main#main-content')).toBeVisible();
-  });
-});
-
-test.describe('admin routes', () => {
-  for (const route of adminRoutes) {
-    test(`${route.href} loads and is marked noindex`, async ({ page }) => {
-      const response = await page.goto(route.href);
-
-      expect(response?.status()).toBe(200);
-      // Admin must never be indexable, at any stage.
-      await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', /noindex/);
-    });
-  }
-
-  test('the public site links to /admin from nowhere', async ({ page }) => {
-    await page.goto('/');
-
-    await expect(page.locator('a[href^="/admin"]')).toHaveCount(0);
   });
 });
 

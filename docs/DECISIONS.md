@@ -8,37 +8,38 @@ bottom; never edit an old one — supersede it with a new entry.
 **Decided by** is either _team_ (the club decided) or _lead_ (the club delegated
 the call and it was made on the reasoning shown).
 
-| ID    | Decision                                                                     | Decided by |
-| ----- | ---------------------------------------------------------------------------- | ---------- |
-| D-001 | Hero direction: **Orbit Lab**                                                | lead       |
-| D-002 | Fonts: **Space Grotesk · Inter · JetBrains Mono**                            | lead       |
-| D-003 | Caption colour `text-subtle` is **`#797F8D`**                                | team       |
-| D-004 | Vendored components come from **React Bits only**                            | lead       |
-| D-005 | Gallery shows **event photos and standalone club photos**                    | team       |
-| D-006 | Contact and sponsorship are **one page**                                     | team       |
-| D-007 | No stat counters on Home in v1                                               | lead       |
-| D-008 | No email: sponsorship requests live in the admin inbox                       | lead       |
-| D-009 | Rule 4 has **no exceptions**; blur/layout-animating effects are rewritten    | lead       |
-| D-010 | The hero has **one WebGL context**, and its name is real text at first paint | lead       |
-| D-011 | No `ogl`, no second WebGL library                                            | lead       |
-| D-012 | Navigation: PillNav on desktop, StaggeredMenu on mobile                      | lead       |
-| D-013 | Component shortlist and rejections                                           | lead       |
-| D-014 | Repo stays private while vendored React Bits code is inside                  | lead       |
-| D-015 | Style Board colours adopted in Stage 2 ("tokens before hero")                | lead       |
-| D-016 | MagicRings is ported into the R3F scene, not used as its own canvas          | lead       |
-| D-017 | The static hero still is an inline SVG drawn from tokens, not a WebP         | lead       |
-| D-018 | Hero scroll-out: pinned 150vh on 3D tiers only, handing over dimmed          | lead       |
-| D-019 | Stage 3 additions: Lucide icons and one `cn()` helper                        | lead       |
-| D-020 | Site shell: React Bits nav and effects rebuilt; header overlays the page     | lead       |
-| D-021 | Logo: the original badge ships as raster; the pack's dark badge is rejected  | lead       |
-| D-022 | Rule 4 covers colour: no colour or background transitions                    | lead       |
-| D-023 | Content layer in `src/content`; QR codes generated from the links            | lead       |
-| D-024 | Interim recruitment, honest placeholders, no fake sponsorship form           | team       |
-| D-025 | Hosting on **Netlify**; files in **Cloudflare R2**; Upstash used directly    | team, lead |
-| D-026 | Categories: hackathon · competition · workshop · other                       | team       |
-| D-027 | Team: core + domain secretaries only; no team section on Home                | team       |
-| D-028 | Recruitment opens with the form alone; the roles PDF is optional             | team       |
-| D-029 | Data layer: one generic repository over two storage ports                    | lead       |
+| ID    | Decision                                                                       | Decided by |
+| ----- | ------------------------------------------------------------------------------ | ---------- |
+| D-001 | Hero direction: **Orbit Lab**                                                  | lead       |
+| D-002 | Fonts: **Space Grotesk · Inter · JetBrains Mono**                              | lead       |
+| D-003 | Caption colour `text-subtle` is **`#797F8D`**                                  | team       |
+| D-004 | Vendored components come from **React Bits only**                              | lead       |
+| D-005 | Gallery shows **event photos and standalone club photos**                      | team       |
+| D-006 | Contact and sponsorship are **one page**                                       | team       |
+| D-007 | No stat counters on Home in v1                                                 | lead       |
+| D-008 | No email: sponsorship requests live in the admin inbox                         | lead       |
+| D-009 | Rule 4 has **no exceptions**; blur/layout-animating effects are rewritten      | lead       |
+| D-010 | The hero has **one WebGL context**, and its name is real text at first paint   | lead       |
+| D-011 | No `ogl`, no second WebGL library                                              | lead       |
+| D-012 | Navigation: PillNav on desktop, StaggeredMenu on mobile                        | lead       |
+| D-013 | Component shortlist and rejections                                             | lead       |
+| D-014 | Repo stays private while vendored React Bits code is inside                    | lead       |
+| D-015 | Style Board colours adopted in Stage 2 ("tokens before hero")                  | lead       |
+| D-016 | MagicRings is ported into the R3F scene, not used as its own canvas            | lead       |
+| D-017 | The static hero still is an inline SVG drawn from tokens, not a WebP           | lead       |
+| D-018 | Hero scroll-out: pinned 150vh on 3D tiers only, handing over dimmed            | lead       |
+| D-019 | Stage 3 additions: Lucide icons and one `cn()` helper                          | lead       |
+| D-020 | Site shell: React Bits nav and effects rebuilt; header overlays the page       | lead       |
+| D-021 | Logo: the original badge ships as raster; the pack's dark badge is rejected    | lead       |
+| D-022 | Rule 4 covers colour: no colour or background transitions                      | lead       |
+| D-023 | Content layer in `src/content`; QR codes generated from the links              | lead       |
+| D-024 | Interim recruitment, honest placeholders, no fake sponsorship form             | team       |
+| D-025 | Hosting on **Netlify**; files in **Cloudflare R2**; Upstash used directly      | team, lead |
+| D-026 | Categories: hackathon · competition · workshop · other                         | team       |
+| D-027 | Team: core + domain secretaries only; no team section on Home                  | team       |
+| D-028 | Recruitment opens with the form alone; the roles PDF is optional               | team       |
+| D-029 | Data layer: one generic repository over two storage ports                      | lead       |
+| D-030 | Admin access: Auth.js beta pinned, development sign-in, reviewed shadcn subset | team, lead |
 
 ---
 
@@ -542,3 +543,53 @@ a future Postgres move have one design to follow:
 - **The upload route fails closed** until Stage 6: `getAdminSession()` is a
   stub that always returns null, and the route also refuses cross-site
   requests. Public reads never include `updatedBy` (an admin's email).
+
+## D-030 — Admin access: Auth.js beta pinned, development sign-in, reviewed shadcn subset
+
+**Choices (Arnav, Stage 6).** The club's Google account is not available yet,
+so Stage 6 is built with **placeholder credentials**: Google sign-in is fully
+built and switches on when `AUTH_GOOGLE_ID`/`AUTH_GOOGLE_SECRET` are set, and
+the **temporary admin is `dryerisdry@gmail.com`** until the club's accounts
+replace it (OPEN_ITEMS swap list). To use the panel meanwhile, a
+**development sign-in** (option 1 of three offered) signs in as an
+allowlisted email without a password.
+
+**Lead calls.**
+
+- **Auth.js is `next-auth@5.0.0-beta.32`, pinned exactly.** v5 has no stable
+  release; it is the version that supports the App Router and Next 16 and the
+  one the Auth.js docs describe. Pinning stops an unreviewed beta update.
+  Upgrade deliberately, re-running the admin e2e suite.
+- **The development sign-in cannot reach a deployed site.** It exists only
+  under `next dev` or with `AUTH_DEV_SIGN_IN=true`, never where Netlify sets
+  `CONTEXT`; `env.ts` fails a Netlify build that sets the flag; a session made
+  by it is rejected wherever it is disabled; it still checks the allowlist.
+  The e2e suite uses it (CI sets the flag for the production-build run).
+- **The allowlist is re-checked on every request**, not only at sign-in, so
+  removing an address from `ADMIN_EMAILS` locks that admin out at once. Google
+  sign-ins also need a verified email.
+- **Three locks** (rule 8): `proxy.ts` redirects signed-out visitors to
+  `/admin/login` (remembering the page, but only ever returning to an
+  `/admin` path — no open redirect), the panel layout checks again, and every
+  Server Action goes through `adminAction()`.
+- **One action result.** `adminAction()` re-checks the session and turns the
+  data layer's errors into an `ActionResult` (`src/lib/action-result.ts`) the
+  forms and toasts read the same way: per-field issues, "changed by someone
+  else", "sign in again".
+- **shadcn subset, reviewed.** Button, Badge, Card, Input, Label, Separator,
+  Sheet and AlertDialog, rewritten to our rules: imports from `@/lib/cn` (the
+  CLI had added an unrelated npm package named `cn`, removed), no colour
+  transitions (D-022), and no tw-animate-css entrances (not installed, so
+  sheets and dialogs open instantly; Stage 9 may add transform/opacity ones).
+  shadcn's colour names (`background`, `primary`, …) are aliases of our
+  tokens in `globals.css`; `accent` and `muted` are not, because our tokens
+  already use those names. Skeleton and EmptyState come from the public UI.
+- **Toasts are built in-house** (Motion, transform/opacity) because sonner
+  animates `height` (rule 4). Errors stay until dismissed.
+- **Unsaved-changes guard**: forms register with `useUnsavedChanges(isDirty)`;
+  the browser warns on close/reload, and the panel's links and sign-out ask
+  first (Next.js cannot block a client navigation, so the panel's own
+  navigation goes through `GuardedLink`).
+- **Setup checklist on the dashboard** (`src/lib/integrations.ts`) lists every
+  outside service and whether its credentials are set, so placeholders stay
+  visible until they are replaced.

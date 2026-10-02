@@ -6,47 +6,83 @@ old conversation. Read in this order: this file → `CLAUDE.md` → `docs/DECISI
 
 ## State (as of 2026-10-02)
 
-| Item          | Value                                                                                                                          |
-| ------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| Repo          | github.com/THEProgrammingGod69/SIG_Reality_Spectra-ARVR- (private), `main`                                                     |
-| Local folder  | `D:\Academic Nottes VIT\SIG\SIG_Draft_Code`                                                                                    |
-| Hosting       | **Netlify** (D-025)                                                                                                            |
-| Last commit   | `e852ab6` — Stage 5 (tag `stage-5`, pushed)                                                                                    |
-| Rollback tags | `stage-1` – `stage-5`, `architecture-v2`, `architecture-v3`                                                                    |
-| Done          | Stages 1–5, all committed, tagged and pushed                                                                                   |
-| Next          | **Stage 6 — admin auth + shell** (brief below). Start only when Arnav says go                                                  |
-| Gates         | `pnpm check` + `pnpm test:e2e` green (186 unit, 62 e2e, also on the production build); `pnpm test:live` waits for the accounts |
+| Item          | Value                                                                                         |
+| ------------- | --------------------------------------------------------------------------------------------- |
+| Repo          | github.com/THEProgrammingGod69/SIG_Reality_Spectra-ARVR- (private), `main`                    |
+| Local folder  | `D:\Academic Nottes VIT\SIG\SIG_Draft_Code`                                                   |
+| Hosting       | **Netlify** (D-025)                                                                           |
+| Last commit   | `3d9317a` — handoff after Stage 5 (tag `stage-5` on `e852ab6`, pushed)                        |
+| Rollback tags | `stage-1` – `stage-5`, `architecture-v2`, `architecture-v3`                                   |
+| Done          | Stages 1–5 committed and tagged. **Stage 6 built and green, not yet committed** (Arnav's go)  |
+| Next          | Commit + tag `stage-6` on Arnav's go; then **Stage 7 — events and gallery** (brief below)     |
+| Gates         | `pnpm check` + `pnpm test:e2e` green (see Stage 6 below); `pnpm test:live` waits for accounts |
+| Credentials   | **Placeholders** (D-030): swap list at the top of `docs/OPEN_ITEMS.md`                        |
 
 ## Start of the next chat
 
-1. Read this file, then `CLAUDE.md`, `docs/DECISIONS.md` (D-001 – D-029),
+1. Read this file, then `CLAUDE.md`, `docs/DECISIONS.md` (D-001 – D-030),
    `docs/ARCHITECTURE.md`, `docs/OPEN_ITEMS.md`, `src/lib/data/README.md`,
-   `src/lib/schemas/README.md` and `src/lib/auth/README.md`.
-2. Report which Stage 6 inputs are still missing, then wait for Arnav's go.
+   `src/lib/schemas/README.md`, `src/lib/auth/README.md` and
+   `src/components/admin/README.md`.
+2. Report which Stage 7 inputs are still missing, then wait for Arnav's go.
 
-## Stage 6 brief — admin authentication, panel shell, dashboard
+Working locally: `.env.local` has a generated `AUTH_SECRET` and
+`ADMIN_EMAILS="dryerisdry@gmail.com"`; `pnpm dev` → `/admin` → "Sign in
+(development)".
 
-1. **Auth.js** (Google provider, JWT sessions, 8-hour expiry, no database
-   adapter). Sign-in allowed only for `ADMIN_EMAILS`. `/admin/login` page.
-2. **`src/lib/auth/session.ts`**: replace the stub body of `getAdminSession()`
-   (keep the signature — the upload route already calls it). Add a
-   `requireAdmin()` for Server Actions that throws on no session.
-3. **`proxy.ts`** guarding `/admin/*` (except `/admin/login`) — and every
-   Server Action re-checks (rule 8).
-4. **Admin shell** (shadcn/ui, `src/components/admin`): sidebar with the five
-   tools, signed-in email, sign-out, toasts, unsaved-changes guard; replaces
-   the Stage 1 `src/app/admin/layout.tsx`. Still `noindex`, still unlinked.
-5. **Dashboard** `/admin`: upcoming events, events awaiting the timeline, new
-   sponsorship requests, recruitment status — uncached reads through
-   `repositories()`, inside `<Suspense>`.
-6. A shared way for Server Actions to turn `DataError`s into form/toast
-   messages (`InvalidDataError.issues` per field, `ConflictError` → reload).
-7. Tests: signed-out redirects, non-allowlisted account refused, the upload
-   route still 401 without a session; dashboard empty states.
+## Stage 7 brief — events and gallery, admin ↔ public
 
-**Inputs needed (OPEN_ITEMS):** #13 Google OAuth client on the club account,
-#14 `ADMIN_EMAILS`; and #8–#10 (Netlify variables, Upstash, R2) so the
-dashboard has real data — `docs/SETUP_STORAGE.md` walks through them.
+1. **Uploader** (`src/components/admin`): new record id in the browser, WebP
+   compression, `/api/admin/upload` ticket, PUT to R2 with progress and retry,
+   width/height measured, alt text required; poster crop locked to one ratio.
+2. **/admin/events**: list by phase (draft, current, awaiting, timeline);
+   editor for details, registration link and poster; for ended events the
+   recap, photos (≤ 60) and "add to timeline"; add past events directly;
+   delete with confirmation. Server Actions through `adminAction()`; forms on
+   react-hook-form + `EventInputSchema`; `useUnsavedChanges`; conflict →
+   reload.
+3. **/admin/gallery**: bulk upload standalone photos with category and alt
+   text; edit caption/category; delete.
+4. **/events** (public): current events on top with registration link, the
+   timeline with photos (`getPublicEvents()` inside `<Suspense>`); empty states.
+5. **/gallery** (public): both sources, newest first, category filters, load
+   more; fixed aspect ratios; survives 0, 1, 3, 40 items (rule 9).
+6. Tests: save → visible on the public page at the next load; phases; uploads
+   checked; layouts at 0/1/40 items.
+
+**Inputs needed (OPEN_ITEMS):** #15 past events with photos, #16 a sample
+registration link, #17 poster aspect ratio, #18 first standalone photos; and
+**#9 Upstash + #10 R2** — without them the editors cannot save, so Stage 7
+would need a local in-memory store mode to be tested end to end (decide at the
+start of Stage 7).
+
+## Stage 6 — what was built
+
+- **Auth.js** `next-auth@5.0.0-beta.32` (pinned): Google provider (switches on
+  with its keys), JWT sessions for 8 hours, allowlist re-checked every request,
+  verified Google emails only. `/api/auth/[...nextauth]`.
+- **Development sign-in** (option 1, D-030): allowlisted email, no password;
+  only under `next dev` or `AUTH_DEV_SIGN_IN=true`, never on Netlify (env
+  guard, CONTEXT check, session rejected where disabled).
+- **Three locks**: `src/proxy.ts` (redirect to `/admin/login?callbackUrl=`, no
+  open redirect), the `(panel)` layout, `adminAction()` in every Server
+  Action. `ActionResult` + `toActionFailure()` in `src/lib/action-result.ts`.
+- **Admin shell**: sidebar (`lg`+) / top bar + sheet, signed-in email,
+  sign-out, "view the live site"; in-house toasts (`useToast`, `notify`);
+  unsaved-changes guard (`useUnsavedChanges`, `GuardedLink`).
+- **Dashboard**: upcoming events, events awaiting the timeline, new requests,
+  recruitment status (honest "data store not connected" state without
+  Upstash), and a **Setup** checklist from `src/lib/integrations.ts`.
+- **Tool pages** render inside the panel with `PlannedTool` ("Built in Stage
+  7/8") until their screens exist.
+- **shadcn subset** reviewed against the rules; colour aliases in
+  `globals.css`; tokens `--z-overlay`, `--z-toast`, `--dur-toast`.
+- Upload route: 503 with a clear message when R2 is not configured.
+- Fixed: blank `NEXT_PUBLIC_*` values in `.env.local` no longer fail the build.
+- Docs: D-030, `docs/SETUP_AUTH.md`, placeholder swap list in OPEN_ITEMS.
+- Tests: auth policy, action results, toasts, env guard (unit); signed-out
+  redirects, allowlist refusal, sign-in/out, callback safety, dashboard, tool
+  pages, mobile menu, upload route signed in (e2e).
 
 ## Stage 5 — what was built
 

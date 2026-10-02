@@ -103,6 +103,12 @@ export const serverEnvSchema = z
     AUTH_GOOGLE_SECRET: z.string().min(1).optional(),
     /** Comma-separated allowlist. These accounts, and only these, can reach /admin. */
     ADMIN_EMAILS: commaSeparatedEmails.optional(),
+    /**
+     * "true" turns the development sign-in on in a production build (the
+     * end-to-end tests' CI run). `next dev` has it on anyway. Refused on Netlify
+     * by the guard below, so it can never reach a deployed site (D-030).
+     */
+    AUTH_DEV_SIGN_IN: z.enum(['true', 'false']).optional(),
 
     // ---- Stage 8: sponsorship requests and spam protection -------------------
     // Requests are stored and read in /admin/sponsorships. There is deliberately
@@ -122,6 +128,13 @@ export const serverEnvSchema = z
     // production must never quietly run on a test copy. Netlify sets CONTEXT, so
     // a wrongly scoped variable fails the deploy instead of mixing the two.
     if (value.CONTEXT === undefined) return;
+    if (value.AUTH_DEV_SIGN_IN === 'true') {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['AUTH_DEV_SIGN_IN'],
+        message: 'The development sign-in is never allowed on a Netlify deploy',
+      });
+    }
     const isLive = value.CONTEXT === 'production';
     if (isLive !== (value.DATA_NAMESPACE === 'prod')) {
       ctx.addIssue({

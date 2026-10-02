@@ -1,5 +1,6 @@
 import { getAdminSession } from '@/lib/auth/session';
 import { DataError, repositories } from '@/lib/data';
+import { isConfigured } from '@/lib/integrations';
 
 /**
  * POST /api/admin/upload — a short-lived URL the admin panel uploads one file
@@ -25,10 +26,14 @@ export async function POST(request: Request) {
     return reply({ error: 'Cross-site requests are not allowed.' }, 403);
   }
 
-  // Never trust the proxy alone (rule 8). Until Stage 6 this always fails closed.
+  // Never trust the proxy alone (rule 8): the route checks the session itself.
   const session = await getAdminSession();
   if (session === null) {
     return reply({ error: 'Sign in as an admin to upload files.' }, 401);
+  }
+
+  if (!isConfigured('r2')) {
+    return reply({ error: 'File storage is not configured on this site yet.' }, 503);
   }
 
   let body: unknown;

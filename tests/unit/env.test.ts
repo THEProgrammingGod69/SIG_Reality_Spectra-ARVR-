@@ -47,6 +47,15 @@ describe('serverEnvSchema', () => {
       }
     });
 
+    it('fails a Netlify deploy that turns the development sign-in on', () => {
+      const deploy = { CONTEXT: 'deploy-preview', DATA_NAMESPACE: 'preview' };
+      expect(serverEnvSchema.safeParse({ ...deploy, AUTH_DEV_SIGN_IN: 'true' }).success).toBe(
+        false,
+      );
+      expect(serverEnvSchema.safeParse(deploy).success).toBe(true);
+      expect(serverEnvSchema.safeParse({ AUTH_DEV_SIGN_IN: 'true' }).success).toBe(true);
+    });
+
     it('does not apply the guard off Netlify (local builds, tests)', () => {
       expect(serverEnvSchema.safeParse({ DATA_NAMESPACE: 'prod' }).success).toBe(true);
     });

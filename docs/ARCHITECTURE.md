@@ -303,15 +303,15 @@ member or the recruitment settings as live.
 
 ## 7. Security
 
-| Layer          | Control                                                                                                                 |
-| -------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| Public surface | No links to `/admin` · `noindex` on admin · `robots.txt` disallows `/admin` and `/api/` · CSP and security headers      |
-| Identity       | Google sign-in via Auth.js · `ADMIN_EMAILS` allowlist · 8-hour JWT sessions · no user table                             |
-| Route guard    | `proxy.ts` blocks `/admin/*` without a session                                                                          |
-| Action guard   | Every admin Server Action and the upload route re-check the session (401); the upload route refuses cross-site requests |
-| Public form    | Honeypot · Cloudflare Turnstile · 3 requests per IP per hour · Zod                                                      |
-| Data           | Zod on every write and read · stale-write rejection · server-only env module                                            |
-| Scheduled job  | `/api/cron/nightly` accepts only `Authorization: Bearer $CRON_SECRET`                                                   |
+| Layer          | Control                                                                                                                                                           |
+| -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Public surface | No links to `/admin` · `noindex` on admin · `robots.txt` disallows `/admin` and `/api/` · CSP and security headers                                                |
+| Identity       | Google sign-in via Auth.js · `ADMIN_EMAILS` allowlist, re-checked on every request · 8-hour JWT sessions · no user table · local-only development sign-in (D-030) |
+| Route guard    | `proxy.ts` sends `/admin/*` without a session to `/admin/login`, returning only to `/admin` paths; the panel layout checks again                                  |
+| Action guard   | Every admin Server Action runs inside `adminAction()`, which re-checks the session; the upload route checks it too (401) and refuses cross-site requests          |
+| Public form    | Honeypot · Cloudflare Turnstile · 3 requests per IP per hour · Zod                                                                                                |
+| Data           | Zod on every write and read · stale-write rejection · server-only env module                                                                                      |
+| Scheduled job  | `/api/cron/nightly` accepts only `Authorization: Bearer $CRON_SECRET`                                                                                             |
 
 Sponsorship requests are stored and read in the admin panel only. There is no
 email integration, so there is no mail provider account, sending domain or
@@ -383,3 +383,15 @@ Recorded in [`DECISIONS.md`](./DECISIONS.md) D-025 – D-029:
 - **Recruitment** opens with the form link alone; the roles PDF is optional.
 - **Writes** are one atomic Lua script per save instead of MULTI/EXEC, and the
   data layer is one generic repository over two storage ports.
+
+## 12. Revision 5 — Stage 6, admin access
+
+Recorded in [`DECISIONS.md`](./DECISIONS.md) D-030:
+
+- Built with **placeholder credentials**: Google sign-in switches on when its
+  keys are set; until then a **development sign-in** works on a developer's
+  machine only. Temporary admin: `dryerisdry@gmail.com`.
+- The panel lives under `src/app/admin/(panel)`; `/admin/login` is outside it.
+- Admin Server Actions return an `ActionResult` through `adminAction()`.
+- The dashboard reads the data store per request and lists which outside
+  services still lack credentials.

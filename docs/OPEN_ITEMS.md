@@ -9,6 +9,25 @@ should be raised rather than worked around with a placeholder that ships.
 
 ---
 
+## Placeholder credentials to swap before go-live
+
+The club's accounts are not available yet (Stage 6, D-030), so the site is
+built with these placeholders. When the real details arrive, replace each one,
+then confirm the dashboard's **Setup** card shows everything configured.
+
+| What                        | Placeholder now                                      | Replace with                                  | Guide                    |
+| --------------------------- | ---------------------------------------------------- | --------------------------------------------- | ------------------------ |
+| `ADMIN_EMAILS`              | `dryerisdry@gmail.com` (temporary, Arnav)            | The club's 2–3 admin Google accounts (#14)    | `SETUP_AUTH.md`          |
+| `AUTH_GOOGLE_ID`, `_SECRET` | empty — Google sign-in off, dev sign-in only locally | OAuth client on the club Google account (#13) | `SETUP_AUTH.md`          |
+| `AUTH_SECRET`               | generated in your `.env.local` only                  | A fresh secret per Netlify deploy context     | `SETUP_AUTH.md`          |
+| Upstash Redis variables     | empty — dashboard says "Data store not connected"    | Club Upstash database (#9)                    | `SETUP_STORAGE.md`       |
+| R2 variables                | empty — uploads answer 503                           | Club R2 bucket and token (#10)                | `SETUP_STORAGE.md`       |
+| Turnstile keys              | empty                                                | Club Cloudflare Turnstile site (#22, Stage 8) | Stage 8                  |
+| `CRON_SECRET`               | empty                                                | A generated secret (Stage 10)                 | Stage 10                 |
+| Contact details             | "Coming soon" in `src/content/contact.json`          | Club email, phone, address, map link (#7)     | `pnpm check:launch` gate |
+
+---
+
 ## Blocking Stage 2 — animation system and landing hero
 
 | #   | Item                                          | Why it blocks                                                   | Status                                                                                                                                                                                                                           |
@@ -37,12 +56,12 @@ later stage needs them. Step-by-step setup: [`SETUP_STORAGE.md`](./SETUP_STORAGE
 | 10  | **Cloudflare R2** bucket on the club account: API token, public URL (r2.dev or custom domain) and the CORS rule                        | Open                                              |
 | 26  | First deploy with data: an admin save shows on the public page at the next reload, from any instance (Netlify + `updateTag`, D-025)    | Open — check when Stage 6/7 first save on Netlify |
 
-## Blocking Stage 6 — admin auth
+## Admin sign-in (Stage 6 built with placeholders)
 
-| #   | Item                                                                                                     | Status |
-| --- | -------------------------------------------------------------------------------------------------------- | ------ |
-| 13  | Google Cloud OAuth client under the **club** Google account, with localhost and production callback URLs | Open   |
-| 14  | `ADMIN_EMAILS` — the 2–3 accounts that get admin access                                                  | Open   |
+| #   | Item                                                                                                     | Status                                                               |
+| --- | -------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| 13  | Google Cloud OAuth client under the **club** Google account, with localhost and production callback URLs | Open — Google sign-in is built and switches on with the keys (D-030) |
+| 14  | `ADMIN_EMAILS` — the 2–3 accounts that get admin access                                                  | Placeholder: `dryerisdry@gmail.com` until the club accounts exist    |
 
 ## Blocking Stage 7 — events and gallery
 
