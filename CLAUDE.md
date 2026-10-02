@@ -16,8 +16,8 @@ group at **VIT Pune**.
 
 | Page           | Shows                                                                                                             |
 | -------------- | ----------------------------------------------------------------------------------------------------------------- |
-| `/` Home       | Hero (name + one-line intro) · mission, vision and short "about us" · core team members                           |
-| `/about`       | Club details · every team member (name, photo, position) arranged by hierarchy                                    |
+| `/` Home       | Hero (name + one-line intro) · mission, vision and short "about us" · domains overview (no team, D-027)           |
+| `/about`       | Club details · the core team, then the secretary of each domain (name, photo, position), D-027                    |
 | `/events`      | Current event on top (details + registration link) · timeline of past events with photos                          |
 | `/gallery`     | All photos — event photos and standalone club photos — filterable by category (workshops, hackathons, meetups, …) |
 | `/recruitment` | The club's domains, always · roles PDF and Google Form link, **only while recruitment is open**                   |
@@ -30,7 +30,7 @@ things:
 | --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `/admin/events`       | Add the current event (details + registration link). Once it ends it is kept for later; the admin adds a recap and photos and puts it on the timeline. Past events can also be added directly. |
 | `/admin/gallery`      | Upload standalone club photos with a category. Photos of timeline events reach the gallery automatically.                                                                                      |
-| `/admin/team`         | Add members with name, position and photo. Core members also appear on the home page; everyone appears on About.                                                                               |
+| `/admin/team`         | Add members with name, position and photo: the core team, and one secretary per domain (D-027). They appear on About.                                                                          |
 | `/admin/recruitment`  | Open/close recruitment, upload the roles and responsibilities PDF, set the Google Form link.                                                                                                   |
 | `/admin/sponsorships` | Read sponsorship requests submitted from `/contact` (admin inbox only — no email).                                                                                                             |     |
 
@@ -38,8 +38,10 @@ things:
   redeploy.** This is the single hardest constraint in the project and it drives
   the entire data and caching design.
 - **No traditional database.** Data lives in Upstash Redis (JSON records) and
-  Vercel Blob (images and the recruitment PDF), behind a repository layer so
+  Cloudflare R2 (images and the recruitment PDF), behind a repository layer so
   Postgres can replace Redis later without touching a single UI file.
+- **Hosted on Netlify** (D-025). Upstash and R2 are used directly, not through a
+  hosting marketplace, so they move with the club, not with the host.
 - **The gallery has two sources.** The photos of timeline events (uploaded once,
   in the event) and standalone club photos (uploaded in `/admin/gallery`), shown
   together and grouped by one shared category list.
@@ -69,15 +71,15 @@ a lab that builds real things, or a gaming landing page?
 | Scroll/timeline    | GSAP + ScrollTrigger                                                                 |
 | UI micro-animation | Motion (formerly Framer Motion)                                                      |
 | Smooth scroll      | Lenis                                                                                |
-| Data               | Upstash Redis (serverless KV, via Vercel Marketplace)                                |
-| Images             | Vercel Blob                                                                          |
+| Data               | Upstash Redis (serverless KV, created directly on upstash.com — D-025)               |
+| Files              | Cloudflare R2 (S3-compatible), signed with `aws4fetch` — D-025                       |
 | Validation         | Zod (shared schemas)                                                                 |
 | Admin auth         | Auth.js — Google provider, JWT sessions, email allowlist in env                      |
 | Forms              | react-hook-form + Zod                                                                |
 | Spam protection    | Cloudflare Turnstile + honeypot                                                      |
-| Analytics          | Vercel Analytics                                                                     |
+| Analytics          | Chosen in Stage 9 (Vercel Analytics does not run on Netlify — D-025)                 |
 | Testing            | Playwright (E2E) + Vitest (schemas/utils)                                            |
-| Hosting            | Vercel + club-owned GitHub org                                                       |
+| Hosting            | Netlify + club-owned GitHub org (D-025)                                              |
 
 If a library looks like a better fit mid-build, raise it — do not silently swap it.
 
@@ -92,7 +94,7 @@ These are not style preferences. Breaking one is a bug.
    must change the whole site. No raw hex or magic px inside a component.
 
 2. **All data access goes through `src/lib/data`.** UI never imports the Redis or
-   Blob client directly. This is enforced by a `no-restricted-imports` ESLint
+   R2 client directly. This is enforced by a `no-restricted-imports` ESLint
    rule, so violating it fails `pnpm lint`.
 
 3. **One Zod schema per admin-editable entity**, used by the admin form, the
@@ -125,8 +127,9 @@ These are not style preferences. Breaking one is a bug.
 10. **A write that does not revalidate its cache tags is an incomplete write.**
 
 11. **Files never travel through a Server Action.** Admin uploads go browser →
-    Blob with a short-lived token from `/api/admin/upload`; a Server Action then
-    attaches the URLs to the record and calls `updateTag`. See
+    R2 with a short-lived presigned URL from `/api/admin/upload`; a Server Action
+    then attaches the URLs to the record (verifying each file) and calls
+    `updateTag`. See
     `src/lib/data/README.md`.
 
 12. **"Now" is never cached.** Whether an event is current or past is decided at
@@ -183,7 +186,7 @@ src/
     (site)/          public routes — one folder per sitemap page
     admin/           admin routes (noindex, never linked publicly)
     dev/             developer tools: /dev/ui, /dev/motion — 404 in production
-    api/admin/upload browser-upload token route          (Stage 5)
+    api/admin/upload presigned-upload route, fails closed until Stage 6  (Stage 5)
     api/cron/nightly backup + orphan sweep, CRON_SECRET  (Stage 10)
     globals.css      design tokens live here, in @theme
     robots.ts
@@ -195,9 +198,9 @@ src/
     sections/        composed page sections            (Stage 2/4)
     admin/           admin components, shadcn/ui       (Stages 6–8)
   lib/
-    data/            repository layer — ONLY place that touches Redis/Blob
-    schemas/         Zod schemas
-    auth/            Auth.js config
+    data/            repository layer — ONLY place that touches Redis/R2      (Stage 5)
+    schemas/         Zod schemas: one per entity, shared by forms and data   (Stage 5)
+    auth/            session check (stub until Stage 6), Auth.js config
     motion/          motion tokens reader, GSAP setup, hero device tiers (Stage 2)
     cn.ts            the one class-name helper (public UI and shadcn admin)
     contrast.ts      WCAG contrast maths for the token audit and /dev/ui
@@ -209,8 +212,9 @@ src/
     structured-data.ts  schema.org JSON-LD for the club                     (Stage 4)
   assets/            imported static assets (brand logo images)        (Stage 3)
   content/           site, domains, contact, interim recruitment — JSON, validated at build time
+scripts/             seed.mts — pnpm seed [--demo]                            (Stage 5)
 tests/
-  unit/              Vitest — schemas and pure utilities
+  unit/              Vitest — schemas, utilities, data layer on in-memory adapters
   e2e/               Playwright
 references/          design + animation inputs, never shipped
 docs/                handover documentation
@@ -232,36 +236,36 @@ Six public pages with no per-record URLs, and one admin area. Five primary links
 plus the Recruitment call to action, so the navbar still works at 360px. A unit
 test fails if a dynamic `[param]` folder appears under `(site)`.
 
-| Route                 | Nav     | Data it reads                                     | Built in |
-| --------------------- | ------- | ------------------------------------------------- | -------- |
-| `/`                   | primary | site info (Git) · core team (Redis)               | 2, 4, 8  |
-| `/about`              | primary | site info (Git) · full team (Redis)               | 4, 8     |
-| `/events`             | primary | events (Redis/Blob)                               | 7        |
-| `/gallery`            | primary | photos of timeline events (Redis/Blob)            | 7        |
-| `/contact`            | primary | contact info (Git) · writes sponsorship requests  | 4, 8     |
-| `/recruitment`        | CTA     | domains (Git) · recruitment settings (Redis/Blob) | 4, 8     |
-| `/admin`              | never   | dashboard                                         | 6        |
-| `/admin/login`        | never   | —                                                 | 6        |
-| `/admin/events`       | never   | events                                            | 7        |
-| `/admin/gallery`      | never   | standalone gallery photos                         | 7        |
-| `/admin/team`         | never   | team members                                      | 8        |
-| `/admin/recruitment`  | never   | recruitment settings                              | 8        |
-| `/admin/sponsorships` | never   | sponsorship requests                              | 8        |
+| Route                 | Nav     | Data it reads                                    | Built in |
+| --------------------- | ------- | ------------------------------------------------ | -------- |
+| `/`                   | primary | site info (Git)                                  | 2, 4     |
+| `/about`              | primary | site info (Git) · team (Redis/R2)                | 4, 8     |
+| `/events`             | primary | events (Redis/R2)                                | 7        |
+| `/gallery`            | primary | timeline event photos + club photos (Redis/R2)   | 7        |
+| `/contact`            | primary | contact info (Git) · writes sponsorship requests | 4, 8     |
+| `/recruitment`        | CTA     | domains (Git) · recruitment settings (Redis/R2)  | 4, 8     |
+| `/admin`              | never   | dashboard                                        | 6        |
+| `/admin/login`        | never   | —                                                | 6        |
+| `/admin/events`       | never   | events                                           | 7        |
+| `/admin/gallery`      | never   | standalone gallery photos                        | 7        |
+| `/admin/team`         | never   | team members                                     | 8        |
+| `/admin/recruitment`  | never   | recruitment settings                             | 8        |
+| `/admin/sponsorships` | never   | sponsorship requests                             | 8        |
 
 ---
 
 ## 7. Data model (Stages 5–8)
 
-Full field lists live in `src/lib/schemas/README.md`; keys, blob paths and the
+Full field lists live in `src/lib/schemas/README.md`; keys, file paths and the
 upload flow in `src/lib/data/README.md`; diagrams in `docs/ARCHITECTURE.md`.
 
 | Entity                        | Stored in     | Edited at            | Cache tag                    | Public reader                     |
 | ----------------------------- | ------------- | -------------------- | ---------------------------- | --------------------------------- |
 | SiteInfo, Domain, ContactInfo | `src/content` | Git                  | — (build time)               | Home, About, Recruitment, Contact |
-| Event (+ photos)              | Redis + Blob  | `/admin/events`      | `events`                     | Events, Gallery                   |
-| GalleryPhoto (standalone)     | Redis + Blob  | `/admin/gallery`     | `gallery`                    | Gallery                           |
-| TeamMember                    | Redis + Blob  | `/admin/team`        | `team`                       | Home (core), About (all)          |
-| RecruitmentSettings           | Redis + Blob  | `/admin/recruitment` | `recruitment`                | Recruitment, nav CTA              |
+| Event (+ photos)              | Redis + R2    | `/admin/events`      | `events`                     | Events, Gallery                   |
+| GalleryPhoto (standalone)     | Redis + R2    | `/admin/gallery`     | `gallery`                    | Gallery                           |
+| TeamMember                    | Redis + R2    | `/admin/team`        | `team`                       | About                             |
+| RecruitmentSettings           | Redis + R2    | `/admin/recruitment` | `recruitment`                | Recruitment, nav CTA              |
 | SponsorshipRequest            | Redis         | `/contact` form      | — (admin only, never cached) | —                                 |
 
 - **Event phases are derived, not stored:** _current_ = published and not yet
@@ -273,16 +277,20 @@ upload flow in `src/lib/data/README.md`; diagrams in `docs/ARCHITECTURE.md`.
   standalone `GalleryPhoto` records. Events and gallery photos share one
   `Category` enum, so the filters mean the same thing everywhere. The gallery page
   carries both the `events` and `gallery` cache tags.
-- **Recruitment** can only be opened when both the roles PDF and the Google Form
-  link are set. Domains stay visible whether it is open or not.
-- **Team hierarchy** comes from each member's `tier`, then `order`; `isCore`
-  additionally puts a member on the home page.
+- **Categories** are hackathon · competition · workshop · other (D-026).
+- **Recruitment** opens with the Google Form link alone; the roles PDF is
+  optional and the page says it is "coming soon" until uploaded (D-028).
+  Domains stay visible whether it is open or not.
+- **Team hierarchy**: `tier` is `core` (the office-bearers) or `secretary` (one
+  per domain, with its `domainId`), then `order`. Coordinators and volunteers
+  are not listed (D-027).
 
-Redis keys are namespaced by `REDIS_KEY_PREFIX`, which **must differ between
-production and preview** so preview deployments can never touch live club data.
-Multi-key writes use transactions so indexes cannot drift. Updates carry an
+Redis keys and R2 files are namespaced by `DATA_NAMESPACE`, which **must differ
+between production and preview** so preview deployments can never touch live
+club data; on Netlify the build enforces `prod` for production only. Every
+write is one atomic Lua script, so indexes cannot drift. Updates carry an
 `updatedAt` optimistic-concurrency check and reject stale edits with a clear
-message rather than silently clobbering someone else's change.
+message rather than silently clobbering someone else's change (D-029).
 
 ---
 
@@ -298,7 +306,9 @@ pnpm typecheck     # next typegen && tsc --noEmit
 pnpm format        # Prettier write
 pnpm format:check  # Prettier check
 pnpm test          # Vitest (unit)
+pnpm test:live     # data layer against the real Upstash + R2 (needs .env.local)
 pnpm test:e2e      # Playwright (first run: pnpm exec playwright install chromium)
+pnpm seed          # copy recruitment.json into Redis if unset; --demo adds sample data
 pnpm check         # lint + typecheck + test + build
 pnpm check:launch  # fails while any contact detail is still a placeholder (go-live gate)
 ```
@@ -313,7 +323,8 @@ validated by `src/lib/env.ts` at startup.
 Variables belonging to stages that are not built yet are **optional in the schema
 but shape-checked** — a malformed URL fails immediately, while a missing one only
 fails when the feature that needs it actually runs, via `requireEnv()`. That is
-why `pnpm build` passes before the Upstash and Google accounts exist.
+why `pnpm build` passes before the Upstash, R2 and Google accounts exist. Account
+setup: `docs/SETUP_STORAGE.md`.
 
 `src/lib/env.ts` is `server-only`: importing it from a Client Component is a build
 error, so a secret cannot reach the browser by accident. Browser-safe values live
@@ -332,7 +343,7 @@ One stage per session. `/clear` between stages. Commit and tag each stage
 | 2     | Animation system + AR/VR landing hero                                        | **Done**    |
 | 3     | Design system + UI shell                                                     | **Done**    |
 | 4     | Static content layer + page shells (Home, About, Recruitment, Contact) + SEO | **Done**    |
-| 5     | Data layer: schemas, repository, browser uploads, cache tags                 | Not started |
+| 5     | Data layer: schemas, repository, browser uploads, cache tags                 | **Done**    |
 | 6     | Admin authentication + panel shell + dashboard                               | Not started |
 | 7     | Events and gallery (event photos + standalone photos) — admin ↔ public       | Not started |
 | 8     | Team, recruitment and sponsorship requests — admin ↔ public                  | Not started |
@@ -347,8 +358,11 @@ updated to match; `docs/ARCHITECTURE.md` is the current design.
 
 - `src/components/ui/page-placeholder.tsx` — delete once every route has content.
 - The admin shell in `src/app/admin/layout.tsx` — replaced in Stage 6.
-- `src/content/recruitment.json` and its `InterimRecruitment` schema — replaced
-  by the admin-managed RecruitmentSettings in Stage 8 (D-024).
+- `src/content/recruitment.json` — replaced by the admin-managed
+  RecruitmentSettings in Stage 8 (D-024); it is already validated by that
+  record's schema (D-028), and `pnpm seed` copies it into Redis.
+- The `getAdminSession()` stub in `src/lib/auth/session.ts` — Stage 6 gives it a
+  real body (Auth.js); until then every admin entry point fails closed.
 - `src/components/sections/sponsorship-notice.tsx` — replaced by the
   sponsorship request form in Stage 8 (D-024).
 - The empty state in `src/components/sections/team-section.tsx` — Stage 8 passes
@@ -359,8 +373,7 @@ updated to match; `docs/ARCHITECTURE.md` is the current design.
 **Deliberately not built yet, so a later stage owns it cleanly:**
 
 - `proxy.ts` — Stage 6, together with authentication.
-- `api/admin/upload` — Stage 5, with the repository's `media.ts`.
-- `api/cron/nightly` and the Vercel cron schedule — Stage 10.
+- `api/cron/nightly` and its Netlify scheduled function — Stage 10.
 
 ---
 
@@ -380,7 +393,7 @@ contributor must know before writing UI:
 | WebGL             | One context in the hero, at most two heavy WebGL components per page; no `ogl` (D-010, D-011)                                                                   |
 | Hero text         | The name is real text at first paint; the intro plays around it, skippable, once per session (D-010)                                                            |
 | Navigation        | PillNav on desktop (patched to `next/link`), StaggeredMenu on mobile; no Dock (D-012)                                                                           |
-| Home              | Hero, mission/vision/about, core team. No stat counters in v1 (D-007)                                                                                           |
+| Home              | Hero, mission/vision/about, domains; no team section (D-027). No stat counters in v1 (D-007)                                                                    |
 | Contact           | One page: details and the sponsorship form (D-006)                                                                                                              |
 | Sponsorship inbox | Admin panel only; no email integration (D-008)                                                                                                                  |
 | Repository        | Stays private while React Bits code is inside it (D-014)                                                                                                        |
@@ -395,6 +408,11 @@ contributor must know before writing UI:
 | QR codes          | Generated on the server from the stored link (`<QrCode>`); shown from `md` up, buttons on phones (D-023)                                                        |
 | Placeholders      | Missing contact details are `null` → "Coming soon", never a fake link; no fake sponsorship form (D-024)                                                         |
 | Contrast          | Every token pairing is audited for WCAG AA by `tests/unit/contrast.test.ts`; control borders use `--color-subtle`                                               |
+| Hosting and files | Netlify; Upstash Redis and Cloudflare R2 used directly; one `DATA_NAMESPACE` per environment (D-025)                                                            |
+| Categories        | Hackathon · competition · workshop · other, shared by events and gallery photos (D-026)                                                                         |
+| Team              | Core team, then one secretary per domain; About only (D-027)                                                                                                    |
+| Recruitment PDF   | Optional: recruitment opens with the form link; "coming soon" until the PDF is uploaded (D-028)                                                                 |
+| Data layer        | One generic repository over `RecordStore` + `ObjectStorage` ports; atomic Lua writes; public reads `'use cache'` (D-029)                                        |
 
 ---
 

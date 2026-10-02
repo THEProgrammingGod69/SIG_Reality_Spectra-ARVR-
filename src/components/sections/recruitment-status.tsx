@@ -1,3 +1,5 @@
+import { FileText } from 'lucide-react';
+
 import { Badge } from '@/components/ui/badge';
 import { ButtonLink } from '@/components/ui/button';
 import { Card, CardBody } from '@/components/ui/card';
@@ -6,23 +8,24 @@ import { QrCode } from '@/components/ui/qr-code';
 import { Section } from '@/components/ui/section';
 import { Text } from '@/components/ui/text';
 import type { LiveSocial } from '@/lib/content';
-import type { InterimRecruitment } from '@/lib/schemas/content';
+import type { PublicRecruitment } from '@/lib/schemas/recruitment';
 
 import { SocialButtons } from './social-buttons';
 
 type RecruitmentStatusProps = {
-  recruitment: InterimRecruitment;
+  recruitment: PublicRecruitment;
   /** Where to follow the club while recruitment is closed. */
   socials: readonly LiveSocial[];
 };
 
 /**
  * Recruitment: open → the application form (button, and a QR code to scan
- * from a laptop screen); closed → a calm note and where to follow the club.
+ * from a laptop screen) and the roles-and-responsibilities PDF, or an honest
+ * "coming soon" line until it is uploaded (D-028); closed → a calm note and
+ * where to follow the club.
  *
- * INTERIM (D-024): status and form link come from src/content/recruitment.json.
- * Stage 8 feeds the same props from the admin-managed recruitment settings and
- * adds the roles-and-responsibilities PDF.
+ * INTERIM (D-024): the props come from src/content/recruitment.json. Stage 8
+ * feeds the same shape from the admin-managed settings (`getRecruitment()`).
  */
 export function RecruitmentStatus({ recruitment, socials }: RecruitmentStatusProps) {
   const formUrl = recruitment.open ? recruitment.formUrl : null;
@@ -44,9 +47,26 @@ export function RecruitmentStatus({ recruitment, socials }: RecruitmentStatusPro
                 : 'Follow the club to hear when the next recruitment drive opens.'}
             </Text>
             {formUrl ? (
-              <ButtonLink href={formUrl} external variant="star" size="lg" className="self-start">
-                Apply now
-              </ButtonLink>
+              <div className="flex flex-col gap-4">
+                <ButtonLink href={formUrl} external variant="star" size="lg" className="self-start">
+                  Apply now
+                </ButtonLink>
+                {recruitment.rolesPdfUrl ? (
+                  <ButtonLink
+                    href={recruitment.rolesPdfUrl}
+                    external
+                    variant="secondary"
+                    icon={FileText}
+                    className="self-start"
+                  >
+                    Roles &amp; responsibilities (PDF)
+                  </ButtonLink>
+                ) : (
+                  <Text size="sm" tone="muted">
+                    The roles and responsibilities document is coming soon.
+                  </Text>
+                )}
+              </div>
             ) : (
               <SocialButtons socials={socials} />
             )}

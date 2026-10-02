@@ -13,12 +13,7 @@ import {
   siteInfo,
   socialLinks,
 } from '@/lib/content';
-import {
-  ContactInfoSchema,
-  DomainsSchema,
-  InterimRecruitmentSchema,
-  SiteInfoSchema,
-} from '@/lib/schemas/content';
+import { ContactInfoSchema, DomainsSchema, SiteInfoSchema } from '@/lib/schemas/content';
 
 /**
  * The Git-edited content: every file validates, the schemas reject what would
@@ -159,8 +154,7 @@ describe('interim recruitment', () => {
     expect(interimRecruitment.formUrl).toMatch(/^https:\/\//);
   });
 
-  it('cannot be open without a form link', () => {
-    expect(InterimRecruitmentSchema.safeParse({ open: true, formUrl: null }).success).toBe(false);
-    expect(InterimRecruitmentSchema.safeParse({ open: false, formUrl: null }).success).toBe(true);
+  it('parses into the admin-managed record’s shape, with no roles PDF yet (D-028)', () => {
+    expect(interimRecruitment.rolesPdfUrl).toBeNull();
   });
 });

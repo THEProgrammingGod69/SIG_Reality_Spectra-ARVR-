@@ -13,14 +13,14 @@ their reasons, are in [`DECISIONS.md`](./DECISIONS.md).
 
 **Public side — six pages, no login**
 
-| Page           | Content                                                                                                                   |
-| -------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| `/` Home       | Hero (club name + one-line intro) · mission, vision and short "about us" · core team members                              |
-| `/about`       | Club details · all team members (name, photo, position) arranged by hierarchy                                             |
-| `/events`      | Current event on top (details + registration link) · timeline of past events with photos                                  |
-| `/gallery`     | Every photo — from timeline events and standalone club photos — filterable by category: workshops, hackathons, meetups, … |
-| `/recruitment` | The club's domains, always visible · roles PDF + Google Form link, **only while recruitment is open**                     |
-| `/contact`     | Contact details · sponsorship/collaboration request form                                                                  |
+| Page           | Content                                                                                                             |
+| -------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `/` Home       | Hero (club name + one-line intro) · mission, vision and short "about us" · domains overview (no team, D-027)        |
+| `/about`       | Club details · the core team, then the secretary of each domain (name, photo, position)                             |
+| `/events`      | Current event on top (details + registration link) · timeline of past events with photos                            |
+| `/gallery`     | Every photo — from timeline events and standalone club photos — filterable by category: hackathons, competitions, … |
+| `/recruitment` | The club's domains, always visible · Google Form link while recruitment is open, plus the roles PDF once uploaded   |
+| `/contact`     | Contact details · sponsorship/collaboration request form                                                            |
 
 **Admin side — five tools, Google sign-in with an allowlist**
 
@@ -28,7 +28,7 @@ their reasons, are in [`DECISIONS.md`](./DECISIONS.md).
 | --------------------- | --------------------------------------------------------------------------------------------------------------------------- |
 | `/admin/events`       | Add the current event · complete ended events with a recap and photos · put them on the timeline · add past events directly |
 | `/admin/gallery`      | Upload standalone club photos with a category and alt text; remove them. Event photos are managed in the event              |
-| `/admin/team`         | Add, edit, reorder and remove members; mark core members                                                                    |
+| `/admin/team`         | Add, edit, reorder and remove members: the core team, and one secretary per domain                                          |
 | `/admin/recruitment`  | Open/close recruitment · upload the roles PDF · set the Google Form link                                                    |
 | `/admin/sponsorships` | Read requests sent from `/contact` and mark their status — the admin inbox is the only channel, there is no email           |
 
@@ -45,14 +45,14 @@ flowchart TB
   A["Admins<br/>2–3 allowlisted Google accounts"] --> EDGE
   G["Maintainers<br/>edit src/content in Git"] -. push → build .-> EDGE
 
-  EDGE["Vercel · edge network · HTTPS"]
+  EDGE["Netlify · CDN · HTTPS"]
 
   subgraph APP["Next.js 16 application (App Router, Cache Components)"]
     PUB["Public pages<br/>static shell + cached reads"]
     ADM["Admin pages<br/>dynamic, noindex"]
     PROXY["proxy.ts<br/>guards /admin/*"]
     SA["Server Actions<br/>session check · Zod · write · updateTag"]
-    UP["/api/admin/upload<br/>issues browser-upload tokens"]
+    UP["/api/admin/upload<br/>issues presigned upload URLs"]
     CRON["/api/cron/nightly<br/>backup + orphan sweep"]
     CONTENT["src/content<br/>site info · domains · contact"]
   end
@@ -64,15 +64,15 @@ flowchart TB
   PUB --> SA
   PUB -. build time .-> CONTENT
 
-  REPO["Repository layer · src/lib/data<br/>the only code that touches Redis or Blob"]
+  REPO["Repository layer · src/lib/data<br/>the only code that touches Redis or R2"]
   SA --> REPO
   PUB --> REPO
   UP --> REPO
   CRON --> REPO
 
   REPO --> REDIS[("Upstash Redis<br/>events · gallery · team · recruitment · sponsorships")]
-  REPO --> BLOB[("Vercel Blob<br/>event, gallery and team photos · roles PDF · backups")]
-  ADM -. direct upload with token .-> BLOB
+  REPO --> R2[("Cloudflare R2<br/>event, gallery and team photos · roles PDF · backups")]
+  ADM -. direct PUT to a presigned URL .-> R2
 
   PUB -. verify .-> TURN["Cloudflare Turnstile"]
   ADM -. sign-in .-> OAUTH["Google OAuth"]
@@ -88,15 +88,19 @@ Server Action is admin-only and re-checks the session.
 | Entity                        | Store         | Edited at            | Cache tag      | Read by                           |
 | ----------------------------- | ------------- | -------------------- | -------------- | --------------------------------- |
 | SiteInfo, Domain, ContactInfo | `src/content` | Git                  | — (build time) | Home, About, Recruitment, Contact |
-| Event + EventPhoto            | Redis + Blob  | `/admin/events`      | `events`       | Events, Gallery                   |
-| GalleryPhoto (standalone)     | Redis + Blob  | `/admin/gallery`     | `gallery`      | Gallery                           |
-| TeamMember                    | Redis + Blob  | `/admin/team`        | `team`         | Home (core only), About (all)     |
-| RecruitmentSettings           | Redis + Blob  | `/admin/recruitment` | `recruitment`  | Recruitment, nav call to action   |
+| Event + EventPhoto            | Redis + R2    | `/admin/events`      | `events`       | Events, Gallery                   |
+| GalleryPhoto (standalone)     | Redis + R2    | `/admin/gallery`     | `gallery`      | Gallery                           |
+| TeamMember                    | Redis + R2    | `/admin/team`        | `team`         | About                             |
+| RecruitmentSettings           | Redis + R2    | `/admin/recruitment` | `recruitment`  | Recruitment, nav call to action   |
+| SponsorshipRequest            | Redis         | `/contact` form      | none           | `/admin/sponsorships` only        |
 
 Until Stage 8, recruitment status and the form link come from the interim
-`src/content/recruitment.json` (D-024); the Recruitment page reads the same
-fields, so the switch changes no page.
-| SponsorshipRequest | Redis | `/contact` form | none | `/admin/sponsorships` only |
+`src/content/recruitment.json` (D-024), validated by the RecruitmentSettings
+input schema itself (D-028); the Recruitment page reads the same fields, so the
+switch changes no page.
+
+Every stored record also carries `createdAt`, `updatedAt` (its version for
+the stale-edit check) and `updatedBy`.
 
 ```mermaid
 erDiagram
@@ -112,7 +116,7 @@ erDiagram
     string venue
     enum mode
     string registrationUrl
-    string posterUrl
+    image poster
     bool published
     string recap
     bool inTimeline
@@ -125,10 +129,7 @@ erDiagram
   }
   GALLERY_PHOTO {
     string id
-    string url
-    string alt
-    int width
-    int height
+    image image
     enum category
     string caption
   }
@@ -136,9 +137,9 @@ erDiagram
     string id
     string name
     string position
-    string photoUrl
+    image photo
     enum tier
-    bool isCore
+    string domainId
     int order
   }
   RECRUITMENT_SETTINGS {
@@ -160,7 +161,7 @@ erDiagram
 The gallery page shows two sources together, grouped by category and newest
 first: the photos of events on the timeline (category taken from the event) and
 standalone `GALLERY_PHOTO` records. Events and gallery photos share one `Category`
-enum — workshop, hackathon, meetup, talk, competition, other — so the filters mean
+enum — hackathon, competition, workshop, other (D-026) — so the filters mean
 the same thing for both. Standalone photos can grow without limit, so the page
 renders the first batch and loads more on request, with blur placeholders and
 stored dimensions so nothing shifts as images arrive.
@@ -192,6 +193,9 @@ stateDiagram-v2
 | Awaiting timeline | admin only ("kept for later")         | ended and not on the timeline                       |
 | Timeline          | `/events` timeline, `/gallery`, admin | on the timeline — requires a past end and ≥ 1 photo |
 
+An event without an end time ends at the end of its start day, India Standard
+Time.
+
 ---
 
 ## 5. Caching and live updates
@@ -208,15 +212,16 @@ sequenceDiagram
   participant Page as Public page
 
   Admin->>SA: save event
-  SA->>SA: re-check session, Zod parse
-  SA->>Repo: update(id, data, updatedAt)
-  Repo->>Redis: MULTI · record + index · EXEC
+  SA->>SA: re-check session
+  SA->>Repo: update(id, updatedAt, changes)
+  Repo->>Repo: Zod parse · verify new files
+  Repo->>Redis: one Lua script — check version, write record + index
   alt updatedAt is stale
     Repo-->>SA: conflict
     SA-->>Admin: "someone else changed this — reload"
   else saved
     Repo-->>SA: ok
-    SA->>SA: updateTag('events')
+    Repo->>SA: updateTag('events')
     SA-->>Admin: "Live on site"
     Page->>Repo: next visit — cached read has expired
     Repo->>Redis: fresh read
@@ -225,8 +230,8 @@ sequenceDiagram
 
 | Page           | Rendering                                                              | Tags                |
 | -------------- | ---------------------------------------------------------------------- | ------------------- |
-| `/`            | static shell · cached core team                                        | `team`              |
-| `/about`       | static shell · cached team                                             | `team`              |
+| `/`            | fully static (Git content only)                                        | —                   |
+| `/about`       | static shell · cached team (core, then secretaries)                    | `team`              |
 | `/events`      | static shell · cached events · current/past split after `connection()` | `events`            |
 | `/gallery`     | static shell · cached timeline photos + cached standalone photos       | `events`, `gallery` |
 | `/recruitment` | static shell · cached settings                                         | `recruitment`       |
@@ -241,6 +246,11 @@ Rules:
   to the past exactly when its end passes, without any write.
 - **`updateTag` is called only from Server Actions** — it cannot run in route
   handlers. That shapes the upload flow below.
+- Public reads use `cacheLife('hours')`. Admin saves refresh them at once; the
+  lifetime only bounds changes made outside the panel (the seed script).
+- On Netlify, Cache Components and tag invalidation are supported by its
+  Next.js runtime (D-025); confirmed on the first deploy with data
+  (OPEN_ITEMS #26).
 
 ---
 
@@ -254,34 +264,35 @@ the gallery can take dozens of photos at once.
 sequenceDiagram
   participant UI as Admin uploader
   participant Tok as /api/admin/upload
-  participant Blob as Vercel Blob
+  participant R2 as Cloudflare R2
   participant SA as Server Action
   participant Repo as Repository
 
-  UI->>UI: compress image to WebP
-  UI->>Tok: request token (path, type, size)
-  Tok->>Tok: admin session? allowed type/size? path under this record?
-  Tok-->>UI: short-lived token
-  UI->>Blob: upload file directly
-  Blob-->>UI: public URL
+  UI->>UI: new record? generate its id · compress image to WebP
+  UI->>Tok: request upload (target, record id, type, size)
+  Tok->>Tok: same-site? admin session? allowed type and size?
+  Tok-->>UI: presigned PUT URL (5 min) under the record's folder
+  UI->>R2: PUT file directly
   UI->>SA: attach URLs to record
-  SA->>SA: re-check session, verify URLs are ours and under the record's path
+  SA->>SA: re-check session
   SA->>Repo: save
-  SA->>SA: updateTag(...)
+  Repo->>R2: HEAD each new file — ours, this record, type, size (delete if not)
+  Repo->>Repo: write · updateTag(...) · delete files no longer used
 ```
 
-| Upload        | Blob path                             | Limits                                |
-| ------------- | ------------------------------------- | ------------------------------------- |
-| Event poster  | `events/{eventId}/poster-{rand}.webp` | image, cropped to a fixed ratio       |
-| Event photos  | `events/{eventId}/photos/{rand}.webp` | images, ≤ 60 per event                |
-| Gallery photo | `gallery/{photoId}-{rand}.webp`       | image, alt text and category required |
-| Team photo    | `team/{memberId}-{rand}.webp`         | image, square crop                    |
-| Roles PDF     | `recruitment/roles-{rand}.pdf`        | PDF only                              |
-| Backups       | `backups/{yyyy-mm-dd}.json`           | written by the nightly job; 30 kept   |
+| Upload        | R2 key (under `{DATA_NAMESPACE}/`)    | Limits                                       |
+| ------------- | ------------------------------------- | -------------------------------------------- |
+| Event poster  | `events/{eventId}/poster/{rand}.webp` | image ≤ 5 MB, cropped to a fixed ratio       |
+| Event photos  | `events/{eventId}/photos/{rand}.webp` | images ≤ 5 MB, ≤ 60 per event                |
+| Gallery photo | `gallery/{photoId}/{rand}.webp`       | image ≤ 5 MB, alt text and category required |
+| Team photo    | `team/{memberId}/{rand}.webp`         | image ≤ 5 MB, square crop                    |
+| Roles PDF     | `recruitment/{rand}.pdf`              | PDF ≤ 10 MB                                  |
+| Backups       | `backups/{yyyy-mm-dd}.json`           | written by the nightly job; 30 kept          |
 
-For a **new** record (a new gallery photo, event or team member) the token route
-mints the record's id and returns it with the token, so the upload path is fixed
-before the file exists and the Server Action can check the URL against it.
+For a **new** record the admin UI generates the record's id in the browser
+before uploading, so the upload path is fixed before the file exists and the
+save can check every URL against it. A presigned PUT cannot cap a file's size,
+which is why the size and type are checked again on save.
 
 Deleting a record deletes its files; replacing a file deletes the old one. Files
 uploaded but never attached (a closed tab mid-upload) are removed by the nightly
@@ -292,15 +303,15 @@ member or the recruitment settings as live.
 
 ## 7. Security
 
-| Layer          | Control                                                                                                            |
-| -------------- | ------------------------------------------------------------------------------------------------------------------ |
-| Public surface | No links to `/admin` · `noindex` on admin · `robots.txt` disallows `/admin` and `/api/` · CSP and security headers |
-| Identity       | Google sign-in via Auth.js · `ADMIN_EMAILS` allowlist · 8-hour JWT sessions · no user table                        |
-| Route guard    | `proxy.ts` blocks `/admin/*` without a session                                                                     |
-| Action guard   | Every admin Server Action and the upload-token route re-check the session (401)                                    |
-| Public form    | Honeypot · Cloudflare Turnstile · 3 requests per IP per hour · Zod                                                 |
-| Data           | Zod on every write and read · stale-write rejection · server-only env module                                       |
-| Scheduled job  | `/api/cron/nightly` accepts only `Authorization: Bearer $CRON_SECRET`                                              |
+| Layer          | Control                                                                                                                 |
+| -------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| Public surface | No links to `/admin` · `noindex` on admin · `robots.txt` disallows `/admin` and `/api/` · CSP and security headers      |
+| Identity       | Google sign-in via Auth.js · `ADMIN_EMAILS` allowlist · 8-hour JWT sessions · no user table                             |
+| Route guard    | `proxy.ts` blocks `/admin/*` without a session                                                                          |
+| Action guard   | Every admin Server Action and the upload route re-check the session (401); the upload route refuses cross-site requests |
+| Public form    | Honeypot · Cloudflare Turnstile · 3 requests per IP per hour · Zod                                                      |
+| Data           | Zod on every write and read · stale-write rejection · server-only env module                                            |
+| Scheduled job  | `/api/cron/nightly` accepts only `Authorization: Bearer $CRON_SECRET`                                                   |
 
 Sponsorship requests are stored and read in the admin panel only. There is no
 email integration, so there is no mail provider account, sending domain or
@@ -310,11 +321,17 @@ delivery failure to handle; the dashboard shows a "new requests" count instead.
 
 ## 8. Environments
 
-| Environment | `REDIS_KEY_PREFIX` | Purpose                                        |
-| ----------- | ------------------ | ---------------------------------------------- |
-| Local       | `sig:dev`          | development                                    |
-| Preview     | `sig:preview`      | one deployment per pull request; e2e runs here |
-| Production  | `sig:prod`         | club domain; nightly backup and orphan sweep   |
+| Environment | `DATA_NAMESPACE` | Purpose                                                   |
+| ----------- | ---------------- | --------------------------------------------------------- |
+| Local       | `dev`            | development; `pnpm seed --demo` fills it with sample data |
+| Preview     | `preview`        | Netlify deploy previews and branch deploys                |
+| Production  | `prod`           | club domain; nightly backup and orphan sweep              |
+| Live tests  | `test-…`         | throwaway, created and removed by `pnpm test:live`        |
+
+One Upstash database and one R2 bucket serve every environment; the namespace
+prefixes every Redis key (`sig:{ns}:…`) and R2 object (`{ns}/…`). Netlify
+sets `CONTEXT` on each build, and the build fails if production is not
+`prod` or a preview is.
 
 ---
 
@@ -331,7 +348,7 @@ Removed as redundant with the new scope:
 
 Added:
 
-- Admin-managed **team members** with photos, hierarchy tier and core flag.
+- Admin-managed **team members** with photos and hierarchy tier.
 - **Past-event photos**, the timeline step, and the **gallery derived from them**.
 - **Recruitment PDF** alongside the Google Form link, with domains always visible.
 - `cacheComponents` enabled, which `cacheTag` requires.
@@ -345,9 +362,24 @@ Added:
 Recorded in [`DECISIONS.md`](./DECISIONS.md):
 
 - **Gallery has two sources.** New `GalleryPhoto` entity, `gallery` cache tag,
-  shared `Category` enum, `/admin/gallery` (a fifth admin tool), and a Blob path
-  `gallery/{photoId}-{rand}.webp`.
+  shared `Category` enum, `/admin/gallery` (a fifth admin tool), and its own
+  file path.
 - **No email.** Resend and its three environment variables are removed;
   sponsorship requests live in the admin inbox.
 - **One WebGL context in the hero, no `ogl`, no rule-4 exceptions.** These are
   constraints on the Stage 2 build rather than changes to this architecture.
+
+## 11. Revision 4 — Stage 5 on Netlify
+
+Recorded in [`DECISIONS.md`](./DECISIONS.md) D-025 – D-029:
+
+- **Hosting is Netlify**; files moved from Vercel Blob to **Cloudflare R2**
+  (presigned browser uploads); Upstash is used directly; the nightly job will
+  run from a Netlify scheduled function.
+- **`DATA_NAMESPACE`** replaces `REDIS_KEY_PREFIX` and covers R2 too.
+- **Categories** are hackathon, competition, workshop, other.
+- **Team** is the core team plus one secretary per domain, on About only; the
+  home page has no team section and the `isCore` flag is gone.
+- **Recruitment** opens with the form link alone; the roles PDF is optional.
+- **Writes** are one atomic Lua script per save instead of MULTI/EXEC, and the
+  data layer is one generic repository over two storage ports.

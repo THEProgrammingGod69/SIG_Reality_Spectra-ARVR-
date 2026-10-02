@@ -1,5 +1,20 @@
 import type { NextConfig } from 'next';
 
+/**
+ * The public origin of the club's R2 bucket (custom domain or r2.dev URL).
+ * Read here, at build time, so next/image accepts uploaded images; the value is
+ * validated with the rest of the environment in src/lib/env.ts.
+ */
+function mediaHostname(): string | null {
+  try {
+    return process.env.R2_PUBLIC_BASE_URL ? new URL(process.env.R2_PUBLIC_BASE_URL).hostname : null;
+  } catch {
+    return null;
+  }
+}
+
+const mediaHost = mediaHostname();
+
 const nextConfig: NextConfig = {
   /**
    * Statically typed <Link href> and router calls.
@@ -28,10 +43,14 @@ const nextConfig: NextConfig = {
 
   images: {
     /**
-     * Admin-uploaded images (event posters, event photos, team photos) are served
-     * from the club's public Vercel Blob store.
+     * Admin-uploaded images (event posters and photos, gallery and team photos)
+     * are served from the club's public R2 bucket: its r2.dev URL, or the custom
+     * domain in R2_PUBLIC_BASE_URL.
      */
-    remotePatterns: [{ protocol: 'https', hostname: '*.public.blob.vercel-storage.com' }],
+    remotePatterns: [
+      { protocol: 'https', hostname: '*.r2.dev' },
+      ...(mediaHost ? [{ protocol: 'https' as const, hostname: mediaHost }] : []),
+    ],
     // Next.js 16 default is [75]; the project renders every image at one quality.
     qualities: [75],
     formats: ['image/avif', 'image/webp'],

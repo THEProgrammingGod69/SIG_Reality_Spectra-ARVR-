@@ -6,69 +6,81 @@ old conversation. Read in this order: this file → `CLAUDE.md` → `docs/DECISI
 
 ## State (as of 2026-10-02)
 
-| Item          | Value                                                                                    |
-| ------------- | ---------------------------------------------------------------------------------------- |
-| Repo          | github.com/THEProgrammingGod69/SIG_Reality_Spectra-ARVR- (private), `main`               |
-| Local folder  | `D:\Academic Nottes VIT\SIG\SIG_Draft_Code`                                              |
-| Last commit   | `f05ad06` — Stage 4 (tag `stage-4`, pushed)                                              |
-| Rollback tags | `stage-1` – `stage-4`, `architecture-v2`, `architecture-v3`                              |
-| Done          | Stages 1–4, all committed, tagged and pushed                                             |
-| Next          | **Stage 5 — data layer** (brief below). Start only when Arnav says go                    |
-| Gates         | `pnpm check` + `pnpm test:e2e` green (93 unit, 57 e2e; e2e also on the production build) |
+| Item          | Value                                                                                                                          |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| Repo          | github.com/THEProgrammingGod69/SIG_Reality_Spectra-ARVR- (private), `main`                                                     |
+| Local folder  | `D:\Academic Nottes VIT\SIG\SIG_Draft_Code`                                                                                    |
+| Hosting       | **Netlify** (D-025)                                                                                                            |
+| Last commit   | `f05ad06` — Stage 4 (tag `stage-4`, pushed)                                                                                    |
+| Rollback tags | `stage-1` – `stage-4`, `architecture-v2`, `architecture-v3`                                                                    |
+| Done          | Stages 1–4 committed, tagged, pushed. **Stage 5 built and green, not yet committed** (Arnav's go)                              |
+| Next          | Commit + tag `stage-5` on Arnav's go; then **Stage 6 — admin auth + shell** (brief below)                                      |
+| Gates         | `pnpm check` + `pnpm test:e2e` green (186 unit, 62 e2e, also on the production build); `pnpm test:live` waits for the accounts |
 
 ## Start of the next chat
 
-1. Read this file, then `CLAUDE.md`, `docs/DECISIONS.md` (D-001 – D-024),
-   `docs/ARCHITECTURE.md`, `docs/OPEN_ITEMS.md`, `src/lib/data/README.md` and
-   `src/lib/schemas/README.md`. No need to re-read the Stage 2–4 source unless a
-   change touches it.
-2. Report which Stage 5 inputs are still missing, then wait for Arnav's go.
+1. Read this file, then `CLAUDE.md`, `docs/DECISIONS.md` (D-001 – D-029),
+   `docs/ARCHITECTURE.md`, `docs/OPEN_ITEMS.md`, `src/lib/data/README.md`,
+   `src/lib/schemas/README.md` and `src/lib/auth/README.md`.
+2. Report which Stage 6 inputs are still missing, then wait for Arnav's go.
 
-## Stage 5 brief — data layer (schemas, repository, uploads, cache tags)
+## Stage 6 brief — admin authentication, panel shell, dashboard
 
-Build the data layer only — **no admin UI** (Stage 6+) and no public page changes
-beyond what is needed to prove reads work. Field lists, keys and blob paths are
-already specified in `src/lib/schemas/README.md` and `src/lib/data/README.md`.
+1. **Auth.js** (Google provider, JWT sessions, 8-hour expiry, no database
+   adapter). Sign-in allowed only for `ADMIN_EMAILS`. `/admin/login` page.
+2. **`src/lib/auth/session.ts`**: replace the stub body of `getAdminSession()`
+   (keep the signature — the upload route already calls it). Add a
+   `requireAdmin()` for Server Actions that throws on no session.
+3. **`proxy.ts`** guarding `/admin/*` (except `/admin/login`) — and every
+   Server Action re-checks (rule 8).
+4. **Admin shell** (shadcn/ui, `src/components/admin`): sidebar with the five
+   tools, signed-in email, sign-out, toasts, unsaved-changes guard; replaces
+   the Stage 1 `src/app/admin/layout.tsx`. Still `noindex`, still unlinked.
+5. **Dashboard** `/admin`: upcoming events, events awaiting the timeline, new
+   sponsorship requests, recruitment status — uncached reads through
+   `repositories()`, inside `<Suspense>`.
+6. A shared way for Server Actions to turn `DataError`s into form/toast
+   messages (`InvalidDataError.issues` per field, `ConflictError` → reload).
+7. Tests: signed-out redirects, non-allowlisted account refused, the upload
+   route still 401 without a session; dashboard empty states.
 
-1. **Schemas** in `src/lib/schemas/`: `category.ts` (shared enum), `event.ts`,
-   `gallery.ts`, `team.ts`, `recruitment.ts`, `sponsorship.ts`. One schema per
-   entity (rule 3), inferred types exported, valid/invalid Vitest cases.
-   `RecruitmentSettings` must accept today's `src/content/recruitment.json`
-   shape so Stage 8 can swap it in (D-024).
-2. **Repository** in `src/lib/data/` (the only place importing `@upstash/redis` /
-   `@vercel/blob`; the ESLint rule already enforces it): `keys.ts` (all keys from
-   `REDIS_KEY_PREFIX`), `tags.ts`, `events.ts`, `gallery.ts`, `team.ts`,
-   `recruitment.ts`, `sponsorships.ts`, `media.ts`. Behind interfaces so Postgres
-   can replace Redis later.
-   - Multi-key writes in MULTI transactions; `updatedAt` optimistic concurrency
-     with a clear "changed by someone else" error.
-   - Validate with Zod on every write **and** read; skip + log corrupt records.
-   - Event phase derived at request time (current / awaiting timeline /
-     timeline), never stored; "now" never inside `'use cache'` (rule 12).
-3. **Caching:** public reads are `'use cache'` functions with `cacheTag`; write
-   helpers call `updateTag` (Server-Action-only) — a write without its tag is an
-   incomplete write (rule 10). Gallery reads carry `events` + `gallery`.
-4. **Uploads:** `/api/admin/upload` token route + `media.ts` (type/size limits,
-   path under the record, verify URLs on attach, delete on replace/remove).
-   Session check is a stub until Stage 6 adds Auth.js — must fail closed.
-5. **Seed script** (idempotent) and tests against a test key prefix: create → list
-   → update → delete leaves no orphaned keys or blobs. Next 16 notes in
-   CLAUDE.md §4 (`updateTag`, `cacheTag`, `connection()`).
-6. Docs: decisions, CLAUDE.md status, OPEN_ITEMS, READMEs. Gates, commit, tag
-   `stage-5` only on Arnav's go.
+**Inputs needed (OPEN_ITEMS):** #13 Google OAuth client on the club account,
+#14 `ADMIN_EMAILS`; and #8–#10 (Netlify variables, Upstash, R2) so the
+dashboard has real data — `docs/SETUP_STORAGE.md` walks through them.
 
-**Inputs needed before Stage 5 (OPEN_ITEMS #8–#12):**
+## Stage 5 — what was built
 
-| #   | Input                                                                                      |
-| --- | ------------------------------------------------------------------------------------------ |
-| 8   | Vercel project under the **club** account, repo connected                                  |
-| 9   | Upstash Redis via Vercel Marketplace, `vercel env pull` → `.env.local`                     |
-| 10  | Vercel Blob store, token in env                                                            |
-| 11  | Confirm categories: workshop · hackathon · meetup · talk · competition · other             |
-| 12  | Team hierarchy levels (e.g. faculty, leadership, leads, members) and what counts as "core" |
-
-Without #8–#10 the schemas, keys, tags and logic can still be built and unit-tested
-against an in-memory fake; live Redis/Blob tests wait for the accounts.
+- **Hosting moved to Netlify** (D-025): Upstash used directly, files in
+  **Cloudflare R2** (presigned PUT via `aws4fetch`), `DATA_NAMESPACE`
+  (replacing `REDIS_KEY_PREFIX`) prefixes Redis keys and R2 objects, and the
+  build refuses a production deploy not on `prod` or a preview on `prod`.
+  Netlify lists Cache Components as supported; confirm on the first real save
+  (OPEN_ITEMS #26).
+- **Schemas** (`src/lib/schemas`): shared `fields.ts` with `entitySchemas()`
+  (input + record from one field list), `category`, `image`, `upload`,
+  `event` (+ derived phases), `gallery`, `team`, `recruitment`,
+  `sponsorship`. `content.ts` reuses the shared fields; the
+  `InterimRecruitment` schema was deleted — `recruitment.json` is validated by
+  `RecruitmentInputSchema` (D-028).
+- **Repository** (`src/lib/data`, D-029): two ports (`RecordStore`,
+  `ObjectStorage`) with Upstash/R2 and in-memory adapters; one generic
+  repository (`entity.ts`) with validation on write and read, `updatedAt`
+  concurrency, file verification and cleanup, cache tags; atomic writes by a
+  Lua script. Public reads in `index.ts` are `'use cache'` + `cacheTag`;
+  `getPublicEvents()` splits current/timeline after `connection()`.
+- **Uploads**: `/api/admin/upload` (same-site + session check, fails closed via
+  the `getAdminSession()` stub), `media.ts` (tickets, HEAD-verified attach,
+  deletes). Limits: images 5 MB, PDF 10 MB.
+- **Product changes**: categories hackathon · competition · workshop · other
+  (D-026); team = core + domain secretaries, no team on Home (D-027);
+  recruitment opens with the form alone and the page says the roles PDF is
+  "coming soon" (D-028).
+- **Tools**: `pnpm seed [--demo]` (`scripts/seed.mts`), `pnpm test:live`
+  (store contract + full lifecycle against real Upstash/R2 in a throwaway
+  namespace, checking nothing is left behind). Setup guide:
+  `docs/SETUP_STORAGE.md`.
+- Tests: store contract, repositories, media, schemas, env guard (unit); upload
+  route fails closed, Home has no team, roles-PDF placeholder (e2e).
 
 ## Stage 4 — what was built
 

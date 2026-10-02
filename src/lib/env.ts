@@ -35,53 +35,104 @@ const commaSeparatedEmails = z
  * Exported so unit tests can assert the parsing rules (for example that
  * ADMIN_EMAILS is split, trimmed and lowercased) without mutating process.env.
  */
-export const serverEnvSchema = z.object({
-  NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
+export const serverEnvSchema = z
+  .object({
+    NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
 
-  // ---- Stage 1: foundation -------------------------------------------------
-  /** Canonical origin. Mirrored in `env.public.ts` for browser use. */
-  NEXT_PUBLIC_SITE_URL: z
-    .url({
-      protocol: /^https?$/,
-      error: 'Must be an absolute http(s) URL, e.g. https://example.com',
-    })
-    .default('http://localhost:3000'),
+    // ---- Stage 1: foundation -------------------------------------------------
+    /** Canonical origin. Mirrored in `env.public.ts` for browser use. */
+    NEXT_PUBLIC_SITE_URL: z
+      .url({
+        protocol: /^https?$/,
+        error: 'Must be an absolute http(s) URL, e.g. https://example.com',
+      })
+      .default('http://localhost:3000'),
 
-  // ---- Stage 5: data layer (Upstash Redis + Vercel Blob) -------------------
-  /** Upstash REST endpoint. Provided by the Vercel Marketplace integration. */
-  UPSTASH_REDIS_REST_URL: z.url().optional(),
-  UPSTASH_REDIS_REST_TOKEN: z.string().min(1).optional(),
-  /**
-   * Namespace for every Redis key. Production and Preview MUST differ so
-   * preview testing can never mutate live club data.
-   */
-  REDIS_KEY_PREFIX: z.string().min(1).default('sig:dev'),
-  /**
-   * Vercel Blob read/write token: event posters and photos, team photos, the
-   * recruitment PDF and nightly backups. Also signs browser-upload tokens.
-   */
-  BLOB_READ_WRITE_TOKEN: z.string().min(1).optional(),
+    // ---- Stage 5: data layer (Upstash Redis + Cloudflare R2) ----------------
+    /** Upstash REST endpoint and token, from the database page on upstash.com. */
+    UPSTASH_REDIS_REST_URL: z.url({ protocol: /^https$/ }).optional(),
+    UPSTASH_REDIS_REST_TOKEN: z.string().min(1).optional(),
+    /**
+     * Which copy of the club's data this deployment reads and writes. It prefixes
+     * every Redis key (`sig:{namespace}:…`) and every R2 object (`{namespace}/…`),
+     * so production, deploy previews and tests can share one database and one
+     * bucket without ever touching each other's records. Production is `prod`;
+     * see the Netlify guard below.
+     */
+    DATA_NAMESPACE: z
+      .string()
+      .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Lowercase words joined by hyphens, e.g. prod')
+      .max(40)
+      .default('dev'),
+    /**
+     * Cloudflare R2 (S3-compatible object storage): event posters and photos,
+     * gallery and team photos, the recruitment PDF and nightly backups. The API
+     * token needs "Object Read & Write" on this one bucket only.
+     */
+    R2_ACCOUNT_ID: z
+      .string()
+      .regex(/^[a-f0-9]{32}$/, 'The 32-character account id from the R2 overview page')
+      .optional(),
+    R2_ACCESS_KEY_ID: z.string().min(1).optional(),
+    R2_SECRET_ACCESS_KEY: z.string().min(1).optional(),
+    R2_BUCKET: z
+      .string()
+      .regex(/^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$/, 'An R2 bucket name')
+      .optional(),
+    /**
+     * The bucket's public origin: its r2.dev URL or a custom domain, with no
+     * trailing slash. Stored image and PDF URLs start with it.
+     */
+    R2_PUBLIC_BASE_URL: z
+      .url({ protocol: /^https$/, error: 'Must be an https:// origin' })
+      .refine((url) => new URL(url).pathname === '/' && !url.endsWith('/'), {
+        message: 'An origin only, with no path or trailing slash',
+      })
+      .optional(),
 
-  // ---- Stage 6: admin authentication --------------------------------------
-  /** Auth.js session signing secret. Generate with `openssl rand -base64 32`. */
-  AUTH_SECRET: z.string().min(32).optional(),
-  AUTH_GOOGLE_ID: z.string().min(1).optional(),
-  AUTH_GOOGLE_SECRET: z.string().min(1).optional(),
-  /** Comma-separated allowlist. These accounts, and only these, can reach /admin. */
-  ADMIN_EMAILS: commaSeparatedEmails.optional(),
+    /**
+     * Set by Netlify on every build and function: `production`,
+     * `deploy-preview`, `branch-deploy` or `dev`. Read only by the guard below.
+     */
+    CONTEXT: z.string().optional(),
 
-  // ---- Stage 8: sponsorship requests and spam protection -------------------
-  // Requests are stored and read in /admin/sponsorships. There is deliberately
-  // no email integration; see docs/DECISIONS.md (D-008).
-  TURNSTILE_SECRET_KEY: z.string().min(1).optional(),
+    // ---- Stage 6: admin authentication --------------------------------------
+    /** Auth.js session signing secret. Generate with `openssl rand -base64 32`. */
+    AUTH_SECRET: z.string().min(32).optional(),
+    AUTH_GOOGLE_ID: z.string().min(1).optional(),
+    AUTH_GOOGLE_SECRET: z.string().min(1).optional(),
+    /** Comma-separated allowlist. These accounts, and only these, can reach /admin. */
+    ADMIN_EMAILS: commaSeparatedEmails.optional(),
 
-  // ---- Stage 10: scheduled jobs --------------------------------------------
-  /**
-   * Shared secret Vercel Cron sends as a Bearer token. The nightly job (Redis
-   * backup to Blob + orphaned-upload sweep) rejects any request without it.
-   */
-  CRON_SECRET: z.string().min(16).optional(),
-});
+    // ---- Stage 8: sponsorship requests and spam protection -------------------
+    // Requests are stored and read in /admin/sponsorships. There is deliberately
+    // no email integration; see docs/DECISIONS.md (D-008).
+    TURNSTILE_SECRET_KEY: z.string().min(1).optional(),
+
+    // ---- Stage 10: scheduled jobs --------------------------------------------
+    /**
+     * Shared secret the Netlify scheduled function sends as a Bearer token. The
+     * nightly job (Redis backup to R2 + orphaned-upload sweep) rejects any
+     * request without it.
+     */
+    CRON_SECRET: z.string().min(16).optional(),
+  })
+  .superRefine((value, ctx) => {
+    // A deploy preview must never be able to write to the live club data, and
+    // production must never quietly run on a test copy. Netlify sets CONTEXT, so
+    // a wrongly scoped variable fails the deploy instead of mixing the two.
+    if (value.CONTEXT === undefined) return;
+    const isLive = value.CONTEXT === 'production';
+    if (isLive !== (value.DATA_NAMESPACE === 'prod')) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['DATA_NAMESPACE'],
+        message: isLive
+          ? 'Production deploys must use DATA_NAMESPACE="prod"'
+          : `Only production may use DATA_NAMESPACE="prod" (this is a ${value.CONTEXT} deploy)`,
+      });
+    }
+  });
 
 export type ServerEnv = z.infer<typeof serverEnvSchema>;
 
@@ -94,10 +145,14 @@ const skipValidation =
 
 function parseEnv(): ServerEnv {
   if (skipValidation) {
-    return serverEnvSchema.partial().parse({}) as ServerEnv;
+    return serverEnvSchema.parse({});
   }
 
-  const parsed = serverEnvSchema.safeParse(process.env);
+  // A variable copied blank from .env.example means "not set yet", not "".
+  const setValues = Object.fromEntries(
+    Object.entries(process.env).filter(([, value]) => value !== ''),
+  );
+  const parsed = serverEnvSchema.safeParse(setValues);
 
   if (!parsed.success) {
     const details = parsed.error.issues
@@ -122,7 +177,7 @@ export const env: ServerEnv = parseEnv();
  * travelling deep into the call stack.
  *
  * @example
- *   const token = requireEnv('BLOB_READ_WRITE_TOKEN', 'event photo uploads');
+ *   const token = requireEnv('R2_BUCKET', 'event photo uploads');
  */
 export function requireEnv<K extends keyof ServerEnv>(
   key: K,

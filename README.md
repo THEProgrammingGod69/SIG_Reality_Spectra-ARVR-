@@ -29,7 +29,8 @@ Open <http://localhost:3000>.
 
 `.env.local` can stay mostly blank for now. Every variable belongs to the stage
 that introduces it, and the app only fails when a feature that needs one actually
-runs. See the comments in `.env.example`.
+runs. See the comments in `.env.example`; the data accounts (Upstash Redis,
+Cloudflare R2) are set up with [`docs/SETUP_STORAGE.md`](./docs/SETUP_STORAGE.md).
 
 To run the end-to-end tests once, install the browser first:
 
@@ -52,8 +53,11 @@ pnpm exec playwright install chromium
 | `pnpm format`       | Prettier, write                                |
 | `pnpm format:check` | Prettier, check only                           |
 | `pnpm test`         | Vitest unit tests                              |
+| `pnpm test:live`    | Data layer tests against the real Redis and R2 |
 | `pnpm test:e2e`     | Playwright end-to-end tests                    |
 | `pnpm check`        | lint + typecheck + test + build, in that order |
+| `pnpm check:launch` | Fails while a contact detail is a placeholder  |
+| `pnpm seed`         | Fill the data store (`--demo`: sample records) |
 
 ---
 
@@ -80,14 +84,14 @@ footer, page metadata and the route smoke tests all read from it.
 
 ## Sitemap
 
-| Public page    | Shows                                                                                    |
-| -------------- | ---------------------------------------------------------------------------------------- |
-| `/`            | Hero, mission / vision / about, core team                                                |
-| `/about`       | Club details and every team member by hierarchy                                          |
-| `/events`      | Current event with registration link, timeline of past events with photos                |
-| `/gallery`     | Event photos and standalone club photos, by category (workshops, hackathons, meetups, …) |
-| `/recruitment` | Domains always; roles PDF and Google Form only while recruitment is open                 |
-| `/contact`     | Contact details and the sponsorship request form                                         |
+| Public page    | Shows                                                                              |
+| -------------- | ---------------------------------------------------------------------------------- |
+| `/`            | Hero, mission / vision / about, domains                                            |
+| `/about`       | Club details; the core team, then the secretary of each domain                     |
+| `/events`      | Current event with registration link, timeline of past events with photos          |
+| `/gallery`     | Event photos and standalone club photos, by category (hackathons, competitions, …) |
+| `/recruitment` | Domains always; roles PDF and Google Form only while recruitment is open           |
+| `/contact`     | Contact details and the sponsorship request form                                   |
 
 **Admin** — `/admin` (dashboard), `/admin/login`, `/admin/events`, `/admin/gallery`,
 `/admin/team`, `/admin/recruitment`, `/admin/sponsorships`. Never linked from the public site.
@@ -105,18 +109,17 @@ The site is built in ten stages, one per session, each tagged in Git
 | Stage | Scope                                                                        | Status      |
 | ----- | ---------------------------------------------------------------------------- | ----------- |
 | 1     | Foundation, architecture, project rules                                      | **Done**    |
-| 2     | Animation system + AR/VR landing hero                                        | Not started |
-| 3     | Design system + UI shell                                                     | Not started |
-| 4     | Static content layer + page shells (Home, About, Recruitment, Contact) + SEO | Not started |
-| 5     | Data layer: schemas, repository, browser uploads, cache tags                 | Not started |
+| 2     | Animation system + AR/VR landing hero                                        | **Done**    |
+| 3     | Design system + UI shell                                                     | **Done**    |
+| 4     | Static content layer + page shells (Home, About, Recruitment, Contact) + SEO | **Done**    |
+| 5     | Data layer: schemas, repository, browser uploads, cache tags                 | **Done**    |
 | 6     | Admin authentication + panel shell + dashboard                               | Not started |
 | 7     | Events and gallery — admin ↔ public                                          | Not started |
 | 8     | Team, recruitment and sponsorship requests — admin ↔ public                  | Not started |
 | 9     | Animation polish, performance, accessibility, security headers               | Not started |
 | 10    | Testing, deployment, nightly backup + orphan sweep, handover                 | Not started |
 
-Every page currently renders a placeholder that names the stage which fills it
-in. Inputs still needed from the club are tracked in
+Pages whose data arrives in a later stage show an empty state until then. Inputs still needed from the club are tracked in
 [`docs/OPEN_ITEMS.md`](./docs/OPEN_ITEMS.md), and the reasoning behind design and
 product choices in [`docs/DECISIONS.md`](./docs/DECISIONS.md).
 
@@ -125,6 +128,6 @@ product choices in [`docs/DECISIONS.md`](./docs/DECISIONS.md).
 ## Tech stack
 
 Next.js 16 (App Router) · TypeScript strict · Tailwind CSS v4 · React Three Fiber
-· GSAP + ScrollTrigger · Motion · Lenis · Upstash Redis · Vercel Blob · Zod ·
+· GSAP + ScrollTrigger · Motion · Lenis · Upstash Redis · Cloudflare R2 · Zod ·
 Auth.js · react-hook-form · Cloudflare Turnstile · Playwright · Vitest ·
-deployed on Vercel.
+deployed on Netlify.

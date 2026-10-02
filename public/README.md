@@ -11,7 +11,7 @@ public/
 ```
 
 Nothing an admin uploads lives here. Event posters and photos, team photos and
-the recruitment PDF are stored in Vercel Blob, so they change without a
+the recruitment PDF are stored in Cloudflare R2, so they change without a
 redeploy.
 
 The Next.js starter icons have been removed. A real favicon and app icons are

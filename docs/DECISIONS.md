@@ -34,6 +34,11 @@ the call and it was made on the reasoning shown).
 | D-022 | Rule 4 covers colour: no colour or background transitions                    | lead       |
 | D-023 | Content layer in `src/content`; QR codes generated from the links            | lead       |
 | D-024 | Interim recruitment, honest placeholders, no fake sponsorship form           | team       |
+| D-025 | Hosting on **Netlify**; files in **Cloudflare R2**; Upstash used directly    | team, lead |
+| D-026 | Categories: hackathon · competition · workshop · other                       | team       |
+| D-027 | Team: core + domain secretaries only; no team section on Home                | team       |
+| D-028 | Recruitment opens with the form alone; the roles PDF is optional             | team       |
+| D-029 | Data layer: one generic repository over two storage ports                    | lead       |
 
 ---
 
@@ -429,3 +434,111 @@ interim `recruitment.json` — each validated by one Zod schema in
 and the admin inbox (Stage 8). Rather than ship a form that looks real but goes
 nowhere, the Contact page shows an honest "opens soon" notice with the club's
 channels; Stage 8 replaces it with the form.
+
+## D-025 — Hosting on Netlify; files in Cloudflare R2; Upstash used directly
+
+**Choice (Arnav, Stage 5).** The site is deployed on **Netlify**, not Vercel.
+The locked stack (CLAUDE.md §2) assumed Vercel in four places; each is replaced:
+
+| Was (Vercel)                         | Now                                                                                              |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| Upstash added via Vercel Marketplace | **Upstash Redis, created directly** at upstash.com; same client, same REST variables             |
+| Vercel Blob                          | **Cloudflare R2** (lead call, below)                                                             |
+| Vercel Cron                          | A **Netlify scheduled function** calling the nightly job with `CRON_SECRET` (Stage 10)           |
+| Vercel Analytics                     | Re-decided in Stage 9 (it does not run off Vercel); nothing was installed, so nothing is removed |
+
+**Lead call: R2 over Netlify Blobs.** Netlify Blobs has no presigned browser
+uploads, so every photo would pass through a function, whose request body is
+capped at about 6 MB — that breaks rule 11 and fails on full-size phone photos.
+R2 is S3-compatible, gives presigned PUT URLs, has a free tier (10 GB, no
+egress fees) and serves files publicly from an r2.dev URL or a custom domain.
+Requests are signed with `aws4fetch` (a few KB, fetch-based) instead of the
+full AWS SDK. A presigned PUT cannot cap a file's size, so the size and type
+are checked again when the file is attached to a record, and a bad upload is
+deleted then (D-029).
+
+**Caching on Netlify.** Netlify's Next.js runtime lists Cache Components as
+fully supported, so the design is unchanged: `'use cache'` + `cacheTag` on
+public reads, `updateTag` from Server Actions. To be confirmed on the first
+real deploy (OPEN_ITEMS #26): an admin save must show on the public page at
+the next reload, from any instance.
+
+**One namespace for both stores.** `REDIS_KEY_PREFIX` became
+`DATA_NAMESPACE`, which prefixes Redis keys (`sig:{ns}:…`) **and** R2 objects
+(`{ns}/…`), so production, previews and tests can share one database and one
+bucket. Netlify sets `CONTEXT` on every build; `src/lib/env.ts` fails a deploy
+whose namespace does not match it (production must be `prod`, nothing else
+may be).
+
+## D-026 — Categories: hackathon · competition · workshop · other
+
+**Choice (Arnav, Stage 5).** The club runs mostly hackathons and competitions,
+plus workshops; everything else shares one catch-all, **Other**. Meetups and
+talks are not separate categories. Events and standalone gallery photos share
+the list (`src/lib/schemas/category.ts`), in that order. Adding a category
+later is one line.
+
+## D-027 — Team: core + domain secretaries only; no team section on Home
+
+**Choice (Arnav, Stage 5).**
+
+1. The public hierarchy has **two tiers**: the **core team** (six
+   office-bearers: President, Vice President, …) and the **secretaries**, one
+   per domain, each tied to a domain id from `domains.json`.
+2. **Coordinators and volunteers are not stored or shown**, and there is no
+   faculty advisor on the site.
+3. **The home page has no team section**; the team appears on About only.
+   This supersedes the "core members also appear on the home page" line of
+   CLAUDE.md §1 and the `isCore` flag planned in the schemas README: with
+   nothing else singling out core members, the tier says it.
+
+Secretaries are listed in the order of the domains they lead; core members in
+the admin's drag order.
+
+## D-028 — Recruitment opens with the form alone; the roles PDF is optional
+
+**Choice (Arnav, Stage 5).** The roles-and-responsibilities PDF does not exist
+yet. Recruitment can be **open with only the Google Form link**; while no PDF
+is uploaded, the Recruitment page says "The roles and responsibilities document
+is coming soon" in place of the download button (rule 9, D-024: never a dead
+link). The earlier rule "recruitment can only be opened when both are set" is
+dropped.
+
+**Lead call.** `src/content/recruitment.json` is now validated by
+`RecruitmentInputSchema`, the admin-managed record's own input schema, and the
+separate `InterimRecruitment` schema was deleted — one schema, as rule 3 asks.
+`pnpm seed` copies the file into Redis when no admin has saved settings yet,
+so Stage 8 only switches the page to `getRecruitment()` and deletes the file.
+
+## D-029 — Data layer: one generic repository over two storage ports
+
+**Choice (lead, Stage 5).** How `src/lib/data` is built, so later stages and
+a future Postgres move have one design to follow:
+
+- **Two ports** (`adapters/types.ts`): a `RecordStore` (Redis today) and an
+  `ObjectStorage` (R2 today), each with an in-memory version and one contract
+  test suite every implementation must pass. Replacing Redis means writing one
+  adapter, not touching repositories or UI.
+- **One generic repository** (`entity.ts`) holds every rule once: validate on
+  write and on read (corrupt records are logged and skipped), optimistic
+  concurrency on `updatedAt`, verify newly attached files, delete files a
+  record stopped using, refresh the entity's cache tags. Each entity file only
+  declares its schema, files, score and extra checks.
+- **Atomic writes by Lua script, not MULTI.** Upstash's REST API has no
+  WATCH, so MULTI cannot check a version before writing. One script checks
+  every version and then writes every record and index entry, so a stale edit
+  is refused and an index can never drift from its records.
+- **Records are Redis hashes** (`data` JSON + `version`) so the script reads
+  the version without parsing JSON; each collection has one sorted-set index.
+- **Ids are generated in the browser** (UUID) for admin-managed records, so a
+  file can be uploaded under its record before the record is first saved.
+  Sponsorship requests get a server-side id.
+- **Event phases** (draft · current · awaiting · timeline) are computed per
+  request. An event without an end time runs to the end of its start day in
+  India Standard Time.
+- **Public reads** are `'use cache'` with `cacheLife('hours')`: admin saves
+  refresh them at once through `updateTag`; the lifetime only bounds changes
+  made outside the panel (the seed script, a manual fix).
+- **The upload route fails closed** until Stage 6: `getAdminSession()` is a
+  stub that always returns null, and the route also refuses cross-site
+  requests. Public reads never include `updatedBy` (an admin's email).

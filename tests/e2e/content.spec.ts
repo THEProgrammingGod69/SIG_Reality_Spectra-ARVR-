@@ -23,7 +23,11 @@ test.describe('home', () => {
     await expect(page.getByText(site.about.short)).toBeVisible();
     await expect(page.getByText(site.mission)).toBeVisible();
     await expect(page.getByText(site.vision)).toBeVisible();
-    await expect(page.getByRole('heading', { level: 2, name: 'Core team' })).toBeVisible();
+  });
+
+  test('has no team section: the team is on About only (D-027)', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.getByRole('heading', { name: /team/i })).toHaveCount(0);
   });
 
   test('lists every domain by name and links to the full descriptions', async ({ page }) => {
@@ -73,6 +77,21 @@ test.describe('recruitment', () => {
     await expect(
       page.getByRole('banner').getByRole('link', { name: /Recruitment \(open now\)/ }),
     ).toBeVisible();
+  });
+
+  test('links the roles PDF, or says plainly that it is coming (D-028)', async ({ page }) => {
+    await page.goto('/recruitment');
+    test.skip(!recruitment.open, 'Recruitment is closed in src/content/recruitment.json');
+
+    const pdf = page.getByRole('link', { name: /Roles & responsibilities \(PDF\)/ });
+    if ('rolesPdfUrl' in recruitment && typeof recruitment.rolesPdfUrl === 'string') {
+      await expect(pdf).toHaveAttribute('href', recruitment.rolesPdfUrl);
+    } else {
+      await expect(pdf).toHaveCount(0);
+      await expect(
+        page.getByText('The roles and responsibilities document is coming soon.'),
+      ).toBeVisible();
+    }
   });
 
   test('shows every domain with its full description, in both groups', async ({ page }) => {

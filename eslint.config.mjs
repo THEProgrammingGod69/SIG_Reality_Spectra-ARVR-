@@ -8,17 +8,12 @@ const redisClient = {
   message:
     'Data access goes through src/lib/data/*. Only the repository layer may import the Redis client.',
 };
-const blobServerClient = {
-  name: '@vercel/blob',
+const objectStorageClient = {
+  name: 'aws4fetch',
   message:
-    'Blob access goes through src/lib/data/media.ts. Only the repository layer may import the Blob client.',
+    'File storage goes through src/lib/data/media.ts. Only the repository layer may sign R2 requests.',
 };
-const blobBrowserClient = {
-  name: '@vercel/blob/client',
-  message:
-    'Browser uploads use the shared uploader in src/components/admin; token issuing lives in src/lib/data/media.ts.',
-};
-const storageClients = [redisClient, blobServerClient, blobBrowserClient];
+const storageClients = [redisClient, objectStorageClient];
 
 const eslintConfig = defineConfig([
   globalIgnores([
@@ -37,7 +32,7 @@ const eslintConfig = defineConfig([
 
   {
     rules: {
-      // CLAUDE.md rule: UI never imports the Redis/Blob clients directly.
+      // CLAUDE.md rule: UI never imports the Redis/R2 clients directly.
       // Enforced here so the rule is a build failure, not a code-review opinion.
       'no-restricted-imports': ['error', { paths: storageClients }],
       '@typescript-eslint/no-unused-vars': [
@@ -52,20 +47,13 @@ const eslintConfig = defineConfig([
   },
 
   {
-    // The repository layer is the one place allowed to talk to Redis/Blob.
+    // The repository layer is the one place allowed to talk to Redis/R2.
     files: ['src/lib/data/**/*.ts'],
     rules: { 'no-restricted-imports': 'off' },
   },
 
-  {
-    // Admin upload widgets send files straight from the browser to Blob
-    // (server function bodies are size-capped), so they may use the browser
-    // client — but still never the server clients.
-    files: ['src/components/admin/**/*.{ts,tsx}'],
-    rules: {
-      'no-restricted-imports': ['error', { paths: [redisClient, blobServerClient] }],
-    },
-  },
+  // Admin upload widgets need no storage client at all: they PUT the file to
+  // the presigned URL from /api/admin/upload with plain fetch.
 
   // Must stay last so formatting rules never fight Prettier.
   prettier,

@@ -2,7 +2,6 @@ import { AboutIntro } from '@/components/sections/about-intro';
 import { DomainOverview } from '@/components/sections/domain-overview';
 import { Hero } from '@/components/sections/hero/hero';
 import { MissionVision } from '@/components/sections/mission-vision';
-import { TeamSection } from '@/components/sections/team-section';
 import { contactInfo, domainGroups, profileUrls, siteInfo } from '@/lib/content';
 import { publicEnv } from '@/lib/env.public';
 import { pageMetadata } from '@/lib/metadata';
@@ -36,11 +35,6 @@ export default function HomePage() {
       <AboutIntro motto={siteInfo.motto} about={siteInfo.about.short} />
       <MissionVision mission={siteInfo.mission} vision={siteInfo.vision} />
       <DomainOverview groups={domainGroups} />
-      <TeamSection
-        id="core-team"
-        title="Core team"
-        lead="The people who lead the club across its domains."
-      />
     </>
   );
 }

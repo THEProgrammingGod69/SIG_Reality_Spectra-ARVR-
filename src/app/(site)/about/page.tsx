@@ -37,7 +37,11 @@ export default function AboutPage() {
         mission={siteInfo.mission}
         vision={siteInfo.vision}
       />
-      <TeamSection id="team" title="The team" lead="Everyone in the club, arranged by role." />
+      <TeamSection
+        id="team"
+        title="The team"
+        lead="The core team, and the secretaries who lead each domain."
+      />
     </>
   );
 }

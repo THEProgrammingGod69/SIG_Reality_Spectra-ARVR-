@@ -1,20 +1,18 @@
 import { z } from 'zod';
 
+import { httpsUrl, phone, slug, text } from './fields';
+
 /**
  * Schemas for the Git-edited content in `src/content` (Stage 4).
  *
  * Each file is parsed once, at build time, by `src/lib/content.ts`; a value
  * that breaks a rule here fails `pnpm build` with the file and field named.
  * Length limits are set so every layout that renders a field stays intact.
+ *
+ * The interim `recruitment.json` is the one exception: it is validated by
+ * `RecruitmentInputSchema` (`./recruitment.ts`), the schema of the
+ * admin-managed record that replaces it in Stage 8 (D-024, D-028).
  */
-
-const text = (min: number, max: number) => z.string().trim().min(min).max(max);
-
-/** Absolute https URL. Plain http is refused: every link the club shares is https. */
-export const httpsUrl = z.url({
-  protocol: /^https$/,
-  error: 'Must be an absolute https:// URL',
-});
 
 /* -------------------------------------------------------------------------- */
 /* site.json                                                                  */
@@ -56,7 +54,7 @@ export type DomainGroupId = (typeof DOMAIN_GROUPS)[number]['id'];
 
 export const DomainSchema = z.object({
   /** Stable slug, used as a React key and an in-page anchor. */
-  id: z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Lowercase words joined by hyphens'),
+  id: slug,
   name: text(2, 40),
   group: z.enum(DOMAIN_GROUPS.map((group) => group.id) as [DomainGroupId, ...DomainGroupId[]]),
   description: text(20, 280),
@@ -109,11 +107,7 @@ export type Social = z.infer<typeof SocialSchema>;
 
 export const ContactInfoSchema = z.object({
   email: z.email().nullable(),
-  phone: z
-    .string()
-    .trim()
-    .regex(/^\+?[0-9][0-9 ()-]{6,19}$/, 'A phone number, e.g. +91 20 1234 5678')
-    .nullable(),
+  phone: phone.nullable(),
   address: text(5, 200).nullable(),
   map: z.object({
     /** "Open in Google Maps" link. */
@@ -137,24 +131,3 @@ export const ContactInfoSchema = z.object({
 });
 
 export type ContactInfo = z.infer<typeof ContactInfoSchema>;
-
-/* -------------------------------------------------------------------------- */
-/* recruitment.json — INTERIM until Stage 8                                   */
-/* -------------------------------------------------------------------------- */
-
-/**
- * Interim recruitment status, edited in Git (D-024). Stage 8 replaces it with
- * the admin-managed RecruitmentSettings record (`/admin/recruitment`), whose
- * `open` and `formUrl` fields match these, plus the roles PDF.
- */
-export const InterimRecruitmentSchema = z
-  .object({
-    open: z.boolean(),
-    formUrl: httpsUrl.nullable(),
-  })
-  .refine((recruitment) => !recruitment.open || recruitment.formUrl !== null, {
-    path: ['formUrl'],
-    message: 'Recruitment cannot be open without a form link',
-  });
-
-export type InterimRecruitment = z.infer<typeof InterimRecruitmentSchema>;

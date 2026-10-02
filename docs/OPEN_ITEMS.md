@@ -24,15 +24,18 @@ fails until they are filled in `src/content/contact.json`.
 | --- | --------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
 | 7   | **Official club email**, **phone**, **address** and a **Google Maps link** (embed optional); LinkedIn / GitHub org if the club has them | Open — Instagram and WhatsApp supplied |
 
-## Blocking Stage 5 — data layer
+## Accounts for the data layer (Stage 5 built; needed before Stage 6 goes live)
 
-| #   | Item                                                                                                                            | Status |
-| --- | ------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| 8   | Vercel project created under the **club** account, repo connected                                                               | Open   |
-| 9   | Upstash Redis added via Vercel Marketplace, `vercel env pull` run                                                               | Open   |
-| 10  | Vercel Blob store created, token in env                                                                                         | Open   |
-| 11  | **Confirm the categories**: workshop, hackathon, meetup, talk, competition, other. They are shared by events and gallery photos | Open   |
-| 12  | **Confirm the team hierarchy levels** (for example faculty, leadership, leads, members) and what counts as "core"               | Open   |
+Stage 5 is built and unit-tested against in-memory stores. These accounts let
+`pnpm test:live` and `pnpm seed` run against the real services, and every
+later stage needs them. Step-by-step setup: [`SETUP_STORAGE.md`](./SETUP_STORAGE.md).
+
+| #   | Item                                                                                                                                   | Status                                            |
+| --- | -------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
+| 8   | **Netlify** site on the club account, repo connected; Stage 5 variables set per deploy context (`DATA_NAMESPACE` = `prod` / `preview`) | Site deployed (D-025); variables open             |
+| 9   | **Upstash Redis** database on the club account; REST URL and token in `.env.local` and Netlify                                         | Open                                              |
+| 10  | **Cloudflare R2** bucket on the club account: API token, public URL (r2.dev or custom domain) and the CORS rule                        | Open                                              |
+| 26  | First deploy with data: an admin save shows on the public page at the next reload, from any instance (Netlify + `updateTag`, D-025)    | Open — check when Stage 6/7 first save on Netlify |
 
 ## Blocking Stage 6 — admin auth
 
@@ -52,20 +55,20 @@ fails until they are filled in `src/content/contact.json`.
 
 ## Blocking Stage 8 — team, recruitment and sponsorships
 
-| #   | Item                                                                    | Status                                              |
-| --- | ----------------------------------------------------------------------- | --------------------------------------------------- |
-| 19  | **Team list**: name, position, photo, hierarchy level, core or not      | Open                                                |
-| 20  | **Roles and responsibilities PDF** and the current **Google Form** link | Form link supplied (interim, D-024); roles PDF open |
-| 21  | **Is recruitment open right now?**                                      | Yes — interim `recruitment.json` (D-024)            |
-| 22  | Cloudflare Turnstile site key and secret                                | Open                                                |
+| #   | Item                                                                                    | Status                                                                                          |
+| --- | --------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| 19  | **Team list**: name, position, photo; core team or secretary (and which domain) — D-027 | Open                                                                                            |
+| 20  | **Roles and responsibilities PDF** and the current **Google Form** link                 | Form link supplied (D-024); the page says the PDF is "coming soon" until it is uploaded (D-028) |
+| 21  | **Is recruitment open right now?**                                                      | Yes — interim `recruitment.json` (D-024)                                                        |
+| 22  | Cloudflare Turnstile site key and secret                                                | Open                                                                                            |
 
 ## Blocking Stage 10 — go live
 
-| #   | Item                                                                            | Status |
-| --- | ------------------------------------------------------------------------------- | ------ |
-| 23  | **Domain name decision plus DNS access**, registered under club/VIT ownership   | Open   |
-| 24  | Confirmation that external hosting is acceptable rather than VIT infrastructure | Open   |
-| 25  | Named next-tenure maintainer(s)                                                 | Open   |
+| #   | Item                                                                                                           | Status |
+| --- | -------------------------------------------------------------------------------------------------------------- | ------ |
+| 23  | **Domain name decision plus DNS access**, registered under club/VIT ownership                                  | Open   |
+| 24  | Confirmation that external hosting (Netlify, Upstash, Cloudflare) is acceptable rather than VIT infrastructure | Open   |
+| 25  | Named next-tenure maintainer(s)                                                                                | Open   |
 
 ---
 
@@ -87,6 +90,9 @@ fails until they are filled in `src/content/contact.json`.
 | #4 Club name and one-line intro                                     | Content brief, Oct 2026 — `src/content/site.json` (D-023)                                                                                                                         |
 | #5 Mission, vision, short and long about                            | Content brief — `src/content/site.json`                                                                                                                                           |
 | #6 Domains with descriptions                                        | Content brief — ten domains in `src/content/domains.json`, split technical / non-technical (D-024)                                                                                |
+| #11 Confirm the categories                                          | Hackathon, competition, workshop, other (D-026)                                                                                                                                   |
+| #12 Team hierarchy levels and what counts as "core"                 | Core team (six office-bearers), then one secretary per domain; no coordinators, volunteers or faculty advisor; no team on Home (D-027)                                            |
+| Vercel project (old #8), Vercel Blob store (old #10)                | Hosting is Netlify, files are in Cloudflare R2 (D-025); #8–#10 now describe those accounts                                                                                        |
 
 ---
 

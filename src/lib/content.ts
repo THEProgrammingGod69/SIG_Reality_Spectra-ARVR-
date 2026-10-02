@@ -11,10 +11,10 @@ import {
   ContactInfoSchema,
   DOMAIN_GROUPS,
   DomainsSchema,
-  InterimRecruitmentSchema,
   SiteInfoSchema,
   type Social,
 } from './schemas/content';
+import { RecruitmentInputSchema } from './schemas/recruitment';
 
 /**
  * The Git-edited content (`src/content/*.json`), validated.
@@ -43,9 +43,13 @@ export function parseContent<Schema extends z.ZodType>(
 export const siteInfo = parseContent(SiteInfoSchema, siteJson, 'site.json');
 export const domains = parseContent(DomainsSchema, domainsJson, 'domains.json');
 export const contactInfo = parseContent(ContactInfoSchema, contactJson, 'contact.json');
-/** INTERIM (D-024): Stage 8 reads recruitment status from the admin panel instead. */
+/**
+ * INTERIM (D-024): validated by the admin-managed record's own input schema
+ * (D-028). Stage 8 reads `getRecruitment()` from the data layer instead and
+ * deletes the file; `pnpm seed` copies it into Redis meanwhile.
+ */
 export const interimRecruitment = parseContent(
-  InterimRecruitmentSchema,
+  RecruitmentInputSchema,
   recruitmentJson,
   'recruitment.json',
 );

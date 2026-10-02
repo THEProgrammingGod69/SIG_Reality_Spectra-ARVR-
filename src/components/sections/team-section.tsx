@@ -13,11 +13,12 @@ type TeamSectionProps = {
 };
 
 /**
- * The team section of Home (core team) and About (everyone, by hierarchy).
+ * The team on About: the core team, then the domain secretaries (D-027). The
+ * home page has no team section.
  *
- * Team members are admin-managed (Redis + Blob, `/admin/team`), which Stage 8
+ * Team members are admin-managed (Redis + R2, `/admin/team`), which Stage 8
  * builds; until then the section shows its empty state, as every list must
- * (rule 9). Stage 8 passes the members in and renders the cards here.
+ * (rule 9). Stage 8 passes `getTeam()` in and renders the cards here.
  */
 export function TeamSection({ id, title, lead }: TeamSectionProps) {
   return (
