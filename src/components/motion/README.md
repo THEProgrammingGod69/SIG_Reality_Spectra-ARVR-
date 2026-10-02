@@ -1,13 +1,32 @@
 # `src/components/motion`
 
-Reusable animation primitives: `<Reveal>`, `<Stagger>`, `<Parallax>`,
-`<SplitTextReveal>`, `<MagneticButton>`, `<TiltCard>`, `<PageTransition>`.
+Reusable animation primitives. Built in **Stage 2**; see them all at `/dev/motion`
+(development only).
+
+| File                    | What it is                                                          |
+| ----------------------- | ------------------------------------------------------------------- |
+| `use-reduced-motion.ts` | `useReducedMotion()` hook + `prefersReducedMotion()` live check     |
+| `smooth-scroll.tsx`     | `<SmoothScroll />` — Lenis on GSAP's ticker, ScrollTrigger synced   |
+| `reveal.tsx`            | `<Reveal>` — fade and rise once, when scrolled into view            |
+| `stagger.tsx`           | `<Stagger>` — the same for each direct child, `--stagger` apart     |
+| `focus-text.tsx`        | `<FocusText>` — our TrueFocus (D-009): words dim, corners translate |
+| `enter-on-scroll.ts`    | the shared entrance used by Reveal and Stagger                      |
+
+Tokens and GSAP setup live in `src/lib/motion/` (`tokens.ts`, `gsap.ts`).
 
 Rules:
 
-- Animate `transform` and `opacity` only.
-- Every primitive is `prefers-reduced-motion` aware and degrades to a simple
-  fade, or to nothing.
-- Durations and easings come from the motion tokens, never from inline literals.
+- Animate `transform` and `opacity` only — no exceptions (D-009).
+- Durations, easings, stagger and travel come from the motion tokens in
+  `globals.css`, read at runtime with `readMotionTokens()`. Never a literal.
+- Reduced motion: the tokens collapse to 0, and every primitive also checks the
+  preference and renders static. Lenis switches off.
+- Never hide content ahead of time. No JS, or content already on screen at load,
+  means no animation — not a flash.
+- Clean up only what you created: wrap tweens in `gsap.context(..., element)` and
+  `revert()` it. Never `ScrollTrigger.getAll().forEach(kill)`.
+- Import `gsap` / `ScrollTrigger` from `@/lib/motion/gsap`, not the package, so
+  plugins are registered once.
 
-Built in **Stage 2**.
+Later stages add `<MagneticButton>`, `<TiltCard>` and `<PageTransition>` on the
+same rules (Stage 3 / 9).

@@ -181,6 +181,7 @@ src/
   app/
     (site)/          public routes — one folder per sitemap page
     admin/           admin routes (noindex, never linked publicly)
+    dev/             developer tools, e.g. /dev/motion — 404 in production (Stage 2)
     api/admin/upload browser-upload token route          (Stage 5)
     api/cron/nightly backup + orphan sweep, CRON_SECRET  (Stage 10)
     globals.css      design tokens live here, in @theme
@@ -195,6 +196,7 @@ src/
     data/            repository layer — ONLY place that touches Redis/Blob
     schemas/         Zod schemas
     auth/            Auth.js config
+    motion/          motion tokens reader, GSAP setup, hero device tiers (Stage 2)
     env.ts           server env, validated with Zod (server-only)
     env.public.ts    NEXT_PUBLIC_* env, safe in the browser
     site.ts          sitemap, nav and club config — single source of truth
@@ -318,7 +320,7 @@ One stage per session. `/clear` between stages. Commit and tag each stage
 | Stage | Scope                                                                        | Status      |
 | ----- | ---------------------------------------------------------------------------- | ----------- |
 | 1     | Foundation, architecture, project rules                                      | **Done**    |
-| 2     | Animation system + AR/VR landing hero                                        | Not started |
+| 2     | Animation system + AR/VR landing hero                                        | **Done**    |
 | 3     | Design system + UI shell                                                     | Not started |
 | 4     | Static content layer + page shells (Home, About, Recruitment, Contact) + SEO | Not started |
 | 5     | Data layer: schemas, repository, browser uploads, cache tags                 | Not started |
@@ -337,7 +339,9 @@ updated to match; `docs/ARCHITECTURE.md` is the current design.
 - `src/components/ui/page-placeholder.tsx` — delete once every route has content.
 - The nav and footer in `src/app/(site)/layout.tsx` — replaced in Stage 3.
 - The admin shell in `src/app/admin/layout.tsx` — replaced in Stage 6.
-- The neutral token _values_ in `globals.css` — values replaced in Stage 3, names kept.
+- The placeholder section under the hero in `src/app/(site)/page.tsx` — replaced
+  by mission, vision and core team in Stage 4.
+- The hero's interim CTA styling and tagline copy — Stage 3 Button, Stage 4 copy.
 
 **Deliberately not built yet, so a later stage owns it cleanly:**
 
@@ -369,6 +373,9 @@ contributor must know before writing UI:
 | Contact           | One page: details and the sponsorship form (D-006)                                                                      |
 | Sponsorship inbox | Admin panel only; no email integration (D-008)                                                                          |
 | Repository        | Stays private while React Bits code is inside it (D-014)                                                                |
+| Colours           | Style Board palette is live in `globals.css` since Stage 2 (D-015); Stage 3 adds type, spacing, radii, shadows          |
+| Hero build        | MagicRings shader ported into the one R3F canvas (D-016); static still is token SVG (D-017); scroll-out pin (D-018)     |
+| Motion tokens     | `--dur-*`, `--ease-*`, `--stagger`, `--motion-rise` in CSS; JS reads them via `readMotionTokens()` — never a literal    |
 
 ---
 

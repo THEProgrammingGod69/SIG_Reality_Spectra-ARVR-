@@ -1,5 +1,6 @@
 import Link from 'next/link';
 
+import { SmoothScroll } from '@/components/motion/smooth-scroll';
 import { ctaNavRoutes, primaryNavRoutes, routesInGroup, siteConfig } from '@/lib/site';
 
 /**
@@ -14,6 +15,8 @@ import { ctaNavRoutes, primaryNavRoutes, routesInGroup, siteConfig } from '@/lib
  * What is NOT temporary, and must survive Stage 3:
  *   - the skip link and the single <main id="main-content"> landmark
  *   - links being driven by `siteRoutes`, never hardcoded in the shell
+ *   - <SmoothScroll />: Lenis runs on the public site only; the admin panel
+ *     keeps native scrolling (micro-interactions only, no ambient motion)
  */
 
 const footerGroups = [
@@ -25,6 +28,8 @@ const footerGroups = [
 export default function SiteLayout({ children }: LayoutProps<'/'>) {
   return (
     <>
+      <SmoothScroll />
+
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:rounded-md focus:bg-(--color-accent) focus:px-4 focus:py-2 focus:text-(--color-accent-contrast)"

@@ -48,13 +48,22 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: '#0b0d11',
+  // Browser chrome colour. Metadata cannot read CSS variables, so this mirrors
+  // `--color-bg` in globals.css — change both together.
+  themeColor: '#07060c',
   colorScheme: 'dark',
 };
 
 export default function RootLayout({ children }: LayoutProps<'/'>) {
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
+    // `data-scroll-behavior="smooth"`: globals.css enables smooth scrolling for
+    // in-page anchors, so Next.js must switch it off during route changes to
+    // keep navigation instant (a Next.js 16 opt-in).
+    <html
+      lang="en"
+      data-scroll-behavior="smooth"
+      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+    >
       <body className="flex min-h-full flex-col font-sans">{children}</body>
     </html>
   );

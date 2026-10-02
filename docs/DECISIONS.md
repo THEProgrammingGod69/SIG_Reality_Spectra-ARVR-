@@ -24,6 +24,10 @@ the call and it was made on the reasoning shown).
 | D-012 | Navigation: PillNav on desktop, StaggeredMenu on mobile                      | lead       |
 | D-013 | Component shortlist and rejections                                           | lead       |
 | D-014 | Repo stays private while vendored React Bits code is inside                  | lead       |
+| D-015 | Style Board colours adopted in Stage 2 ("tokens before hero")                | lead       |
+| D-016 | MagicRings is ported into the R3F scene, not used as its own canvas          | lead       |
+| D-017 | The static hero still is an inline SVG drawn from tokens, not a WebP         | lead       |
+| D-018 | Hero scroll-out: pinned 150vh on 3D tiers only, handing over dimmed          | lead       |
 
 ---
 
@@ -231,3 +235,62 @@ website, but not sold, sublicensed or redistributed "alone, in a bundle, or as a
 ported version". Publishing a repository that contains copies of the components
 could be read as redistribution. This is a cautious reading, not legal advice.
 Handover to the next committee should include the repository, not a public mirror.
+
+## D-015 — Style Board colours adopted in Stage 2 ("tokens before hero")
+
+**Choice.** The Style Board palette (base, silver text and the seven spectrum tokens,
+with `text-subtle` at `#797F8D` per D-003) replaces the neutral Stage 1 colour values
+now, in `globals.css`. Token names are unchanged; new ones were added (`void`,
+`border-strong`, `text-body`, `subtle`, `silver`, `spectra-*`, `warning`), and
+`accent` now points at `spectra-violet`. Fonts, the type scale, spacing, radii and
+shadows stay Stage 3 work.
+
+**Why.** The hero is built from its light: rings, horizon and headset are the spectrum.
+Building them in a neutral blue and recolouring in Stage 3 would mean tuning every
+glow twice. The palette was already decided (OPEN_ITEMS "Resolved"), so nothing is
+being invented. The scene reads the tokens at runtime, so Stage 3 can still adjust any
+value from one place.
+
+**Changes.** `globals.css` values; `viewport.themeColor` mirrors `--color-bg`.
+
+## D-016 — MagicRings is ported into the R3F scene
+
+**Choice.** The first of the two options in D-010. MagicRings' fragment shader (its
+`fade` and `ring` functions and pulsing ring cycle) lives on a plane inside the Orbit
+Lab canvas. It is not installed as its own component.
+
+**Why.** It keeps the headset, so the hero is still "one wireframe headset above an
+ignited orbital ring" (D-001), on a single WebGL context. The port also moved the
+shader from screen space to world space, so the rings can grow around the viewer
+during the scroll-out. It drops the mouse, hover and click-burst inputs and the film
+grain, which outlined the plane's square edge. Colours come from tokens. The orbit,
+the guide rings, the left-to-right ignition and the 9-second satellite are new. The
+ported code keeps its licence notice in `src/components/three/orbit-lab/shaders.ts`
+(D-014).
+
+## D-017 — The static hero still is an inline SVG drawn from tokens
+
+**Choice.** The designed still is server-rendered SVG
+(`src/components/sections/hero/hero-still.tsx`), not a WebP screenshot of the scene.
+
+**Why.** It costs no request, recolours itself with the tokens (a WebP would go stale at
+the first Stage 3 change), stays sharp at any size, and mirrors the scene's
+responsive layout through CSS, so the canvas fades in over it with zero layout shift.
+The same element is the static tier, the first paint for every tier, and the no-JS
+render.
+
+**Changes.** The Technical Plan's tier diagram now reads "inline SVG still" (PDF
+regenerated).
+
+## D-018 — Hero scroll-out: pinned on 3D tiers only, handing over dimmed
+
+**Choice.** On the low and high tiers the hero pins for 150vh while the camera pushes in
+toward the left lens, the rings grow and fade, and the text fades and lifts away. The
+scene ends at 35% opacity rather than invisible, then scrolls off normally. The static
+tier does not pin.
+
+**Why.** Fading the scene to nothing left a full viewport of empty black after the pin
+released. Pinning under reduced motion would add 150vh of scrolling with nothing
+moving. The camera stops just in front of the lens rather than passing through it:
+close up, the wireframe and particles turn into noise. "Transitions into the next
+section's background" is finished in Stage 4, once that section exists.

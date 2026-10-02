@@ -4,17 +4,33 @@ Snapshot of where the project stands, so a fresh session can continue without th
 old conversation. Read in this order: this file → `CLAUDE.md` → `docs/DECISIONS.md`
 → `docs/ARCHITECTURE.md` → `docs/OPEN_ITEMS.md`.
 
-## State (as of 2026-09-30)
+## State (as of 2026-10-02)
 
-| Item          | Value                                                                      |
-| ------------- | -------------------------------------------------------------------------- |
-| Repo          | github.com/THEProgrammingGod69/SIG_Reality_Spectra-ARVR- (private), `main` |
-| Local folder  | `D:\Academic Nottes VIT\SIG\SIG_Draft_Code`                                |
-| Last commit   | `bcd10ab` — decisions recorded, standalone gallery, email dropped          |
-| Rollback tags | `stage-1`, `architecture-v2`, `architecture-v3` (current)                  |
-| Done          | Stage 1 (scaffold, routes as placeholders, env contract, tests, docs)      |
-| Next          | **Stage 2 — animation system + Orbit Lab hero** (only when Arnav says go)  |
-| Gates         | `pnpm check` + `pnpm test:e2e` all green (22 unit, 16 e2e)                 |
+| Item          | Value                                                                                    |
+| ------------- | ---------------------------------------------------------------------------------------- |
+| Repo          | github.com/THEProgrammingGod69/SIG_Reality_Spectra-ARVR- (private), `main`               |
+| Local folder  | `D:\Academic Nottes VIT\SIG\SIG_Draft_Code`                                              |
+| Rollback tags | `stage-1`, `architecture-v2`, `architecture-v3`; `stage-2` once committed                |
+| Done          | Stage 1; **Stage 2** (motion system + Orbit Lab hero) — built, all gates green           |
+| Next          | Commit + tag `stage-2` + push (Arnav's go), then Stage 3 — design system                 |
+| Gates         | `pnpm check` + `pnpm test:e2e` green (50 unit, 24 e2e; e2e also on the production build) |
+
+## Stage 2 — what was built
+
+- Motion tokens in `globals.css` (D-015 also adopted the Style Board colours);
+  `src/lib/motion/` reads them, sets up GSAP + CustomEase, and picks hero tiers.
+- `src/components/motion/`: `SmoothScroll` (Lenis on GSAP's ticker), `Reveal`,
+  `Stagger`, `FocusText`, `useReducedMotion`.
+- Hero: `src/components/sections/hero/` + `src/components/three/orbit-lab/`.
+  One canvas (MagicRings ported, D-016), token SVG still (D-017), intro ≈ 1.35 s
+  once per session, scroll-out pin on 3D tiers (D-018). three.js is a lazy
+  chunk; the static tier never loads it.
+- `/dev/motion` playground (404 in production). `/?hero-tier=low|high|static`
+  forces a tier in development.
+- Still open: Android 50 fps sign-off (OPEN_ITEMS #1). Desktop frame rates
+  could not be measured headless (software WebGL); check on real hardware.
+- Windows note: Windows PowerShell's `Set-Content`/`Get-Content` mangle UTF-8
+  (BOM, `—` → `â€”`). Edit files with an editor or Node, never PowerShell piping.
 
 ## Working agreement with Arnav
 
@@ -27,7 +43,7 @@ old conversation. Read in this order: this file → `CLAUDE.md` → `docs/DECISI
   (`node render.cjs && python finalize.py`); copy output into `docs/`.
 - Windows machine: long bash heredocs break in the tool — write scripts to a file.
 
-## Stage 2 brief — animation system + hero
+## Stage 2 brief — animation system + hero (done; kept for reference)
 
 Build the motion foundation and the landing hero; nothing else.
 

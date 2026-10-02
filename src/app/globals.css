@@ -1,43 +1,102 @@
 @import 'tailwindcss';
 
 /* =============================================================================
-   Design tokens — TEMPORARY NEUTRAL SET (Stage 1)
+   Design tokens
    =============================================================================
-   Stage 3 replaces these VALUES with the real brand palette, type scale and
-   spacing rhythm. The token NAMES are already the ones Stage 3 will use, so
-   components written now keep working without edits.
+   Project rule (CLAUDE.md §3.1): components never contain a raw hex, px
+   colour or millisecond literal. They reference a token. Changing a value here
+   must change the whole site — including the 3D hero, which reads these same
+   variables at runtime (src/lib/motion/tokens.ts, src/components/three).
 
-   Project rule (CLAUDE.md): components never contain a raw hex or px colour.
-   They reference a token. Changing a value here must change the whole site.
+   Colours: the Style Board palette, adopted in Stage 2 so the hero is built in
+   its real light (D-015). Stage 3 adds the type scale, spacing rhythm, radii and
+   shadows, and may refine values; the names stay.
+
+   `static` makes Tailwind emit every variable even when no utility uses it,
+   because the WebGL scene and the motion system read them from JavaScript.
    ============================================================================= */
 
-@theme {
-  /* Surfaces and text */
-  --color-bg: #0b0d11;
-  --color-surface: #14171d;
-  --color-surface-raised: #1c2029;
-  --color-text: #f2f4f8;
-  --color-muted: #9aa3b2;
-  --color-border: #262b35;
+@theme static {
+  /* Base — the lab darkness */
+  --color-void: #000000;
+  --color-bg: #07060c;
+  --color-surface: #0e0d15;
+  --color-surface-raised: #16131f;
+  --color-border: #332a3a;
+  --color-border-strong: #4a4058;
 
-  /* A single accent until the brand palette is confirmed in Stage 3. */
-  --color-accent: #4c8dff;
-  --color-accent-contrast: #06080c;
+  /* Text — the logo's silver */
+  --color-text: #f2f2f3;
+  --color-text-body: #d8d8d7;
+  --color-muted: #8e8a9a;
+  /* Captions and metadata only; never body copy (D-003). */
+  --color-subtle: #797f8d;
+  --color-silver: #aeb0b3;
 
-  /* Feedback */
-  --color-success: #3fbf7f;
-  --color-danger: #f0616d;
+  /* Spectrum — the headset glow. At most ~10% of any screen, never body text. */
+  --color-spectra-magenta: #fb00eb;
+  --color-spectra-orchid: #e024f2;
+  --color-spectra-violet: #a663fc;
+  --color-spectra-indigo: #635acf;
+  --color-spectra-azure: #6ea6fe;
+  --color-spectra-blue: #3470c1;
+  --color-spectra-cyan: #7cd5ff;
 
-  /* Motion tokens. Stage 2 expands these into the full motion system. */
-  --duration-fast: 150ms;
-  --duration-base: 300ms;
-  --duration-slow: 600ms;
-  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  /* Semantic accent: one name the UI uses, mapped onto the spectrum. */
+  --color-accent: var(--color-spectra-violet);
+  --color-accent-contrast: var(--color-bg);
+
+  /* Feedback — functional only (forms, admin) */
+  --color-success: #4ade80;
+  --color-warning: #fbbf24;
+  --color-danger: #f87171;
+
+  /* ---------------------------------------------------------------------------
+     Motion tokens (Stage 2). Durations and easings for CSS and for JavaScript:
+     GSAP, Motion and the hero scene all read these variables, so there is no
+     second copy of a duration anywhere in the codebase.
+     --------------------------------------------------------------------------- */
+  --dur-micro: 150ms; /* hover, press, toggles */
+  --dur-short: 300ms; /* buttons, chips, small reveals */
+  --dur-medium: 600ms; /* card and section entrances */
+  --dur-long: 1200ms; /* hero choreography, page transitions */
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1); /* default entrance */
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1); /* transitions, morphs */
+
+  --stagger: 70ms; /* lists, grids, words */
+  --motion-rise: 1.5rem; /* how far an entering element travels */
+}
+
+/* Reduced motion collapses every motion token, so anything that reads them —
+   CSS transitions, GSAP tweens, Motion animations — becomes instant. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-micro: 0ms;
+    --dur-short: 0ms;
+    --dur-medium: 0ms;
+    --dur-long: 0ms;
+    --stagger: 0ms;
+    --motion-rise: 0rem;
+  }
 }
 
 @layer base {
   html {
     color-scheme: dark;
+  }
+
+  /* Native smooth scrolling for in-page anchors when JavaScript (and so Lenis)
+     is unavailable. Lenis switches this off while it runs (html.lenis-smooth),
+     and `data-scroll-behavior="smooth"` on <html> keeps route changes instant. */
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
+  }
+
+  html.lenis.lenis-smooth {
+    scroll-behavior: auto;
   }
 
   body {

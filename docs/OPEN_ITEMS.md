@@ -11,9 +11,9 @@ should be raised rather than worked around with a placeholder that ships.
 
 ## Blocking Stage 2 — animation system and landing hero
 
-| #   | Item                                          | Why it blocks                                                   | Status |
-| --- | --------------------------------------------- | --------------------------------------------------------------- | ------ |
-| 1   | **A real mid-range Android phone** to test on | The 50+ fps low-tier budget cannot be signed off from a desktop | Open   |
+| #   | Item                                          | Why it blocks                                                   | Status                                                                                                                                                                                                                           |
+| --- | --------------------------------------------- | --------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | **A real mid-range Android phone** to test on | The 50+ fps low-tier budget cannot be signed off from a desktop | Open — Stage 2 is built; only this sign-off remains. Open `/?hero-tier=low` on the phone (dev server on the LAN), scroll the hero, and note the fps; the low tier is tuned in `HERO_TIER_BUDGET` (`src/lib/motion/hero-tier.ts`) |
 
 ## Blocking Stage 3 — design system
 
