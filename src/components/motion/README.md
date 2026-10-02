@@ -1,7 +1,7 @@
 # `src/components/motion`
 
-Reusable animation primitives. Built in **Stage 2**; see them all at `/dev/motion`
-(development only).
+Reusable animation primitives. Built in **Stage 2**, extended in **Stage 3**; see
+them all at `/dev/motion` (development only).
 
 | File                    | What it is                                                          |
 | ----------------------- | ------------------------------------------------------------------- |
@@ -11,6 +11,9 @@ Reusable animation primitives. Built in **Stage 2**; see them all at `/dev/motio
 | `stagger.tsx`           | `<Stagger>` — the same for each direct child, `--stagger` apart     |
 | `focus-text.tsx`        | `<FocusText>` — our TrueFocus (D-009): words dim, corners translate |
 | `enter-on-scroll.ts`    | the shared entrance used by Reveal and Stagger                      |
+| `magnetic.tsx`          | `<Magnetic>` — our Magnet: pull toward a mouse pointer (Stage 3)    |
+| `use-motion-tokens.ts`  | `useMotionTokens()` — live tokens for render-time props (Stage 3)   |
+| `scroll-lock.ts`        | `lockScroll()` for overlays; also stops Lenis (Stage 3)             |
 
 Tokens and GSAP setup live in `src/lib/motion/` (`tokens.ts`, `gsap.ts`).
 
@@ -28,5 +31,6 @@ Rules:
 - Import `gsap` / `ScrollTrigger` from `@/lib/motion/gsap`, not the package, so
   plugins are registered once.
 
-Later stages add `<MagneticButton>`, `<TiltCard>` and `<PageTransition>` on the
-same rules (Stage 3 / 9).
+The page transition lives with the site chrome (`components/site/page-transition.tsx`);
+the magnetic button is `Button`/`ButtonLink` with `magnetic`. Stage 9 adds a
+tilt card on the same rules.

@@ -15,13 +15,6 @@ should be raised rather than worked around with a placeholder that ships.
 | --- | --------------------------------------------- | --------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 1   | **A real mid-range Android phone** to test on | The 50+ fps low-tier budget cannot be signed off from a desktop | Open — Stage 2 is built; only this sign-off remains. Open `/?hero-tier=low` on the phone (dev server on the LAN), scroll the hero, and note the fps; the low tier is tuned in `HERO_TIER_BUDGET` (`src/lib/motion/hero-tier.ts`) |
 
-## Blocking Stage 3 — design system
-
-| #   | Item                                                                                       | Why it blocks                                                                                                                                                                       | Status |
-| --- | ------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| 2   | **Vector logo with a transparent background**, light and dark variants, plus a square mark | The supplied `SIG_LOGO.svg` is a 1.7 MB PNG wrapped in SVG with a white background — it cannot be recoloured and shows a white box on a dark site. See `references/brand/README.md` | Open   |
-| 3   | **VIT branding rules** — mandated marks, colours, placement                                | Compliance, and it can change layout                                                                                                                                                | Open   |
-
 ## Blocking Stage 4 — static content
 
 | #   | Item                                                                               | Status |
@@ -78,23 +71,25 @@ should be raised rather than worked around with a placeholder that ships.
 
 ## Resolved
 
-| Was                                                | Resolved by                                            |
-| -------------------------------------------------- | ------------------------------------------------------ |
-| Landing concept, mood, motion spec                 | SIG Style & Motion Board; hero direction D-001, D-010  |
-| 3D headset model                                   | Built procedurally in the R3F scene — no `.glb` needed |
-| Brand colours and fonts                            | Style Board palette; fonts D-002                       |
-| Caption colour failing WCAG AA                     | D-003 (`#797F8D`)                                      |
-| `ogl` effects in the hero; intro vs. readable text | D-010, D-011                                           |
-| UI design references                               | Style Board and the design inspiration board           |
-| Sponsor page content, brochure, "why join" copy    | Removed from scope with the architecture revision      |
-| Resend account and verified sending domain         | Removed: no email integration (D-008)                  |
-| Gallery: event photos only, or also standalone     | Both (D-005); item 18 above covers the first photos    |
+| Was                                                                 | Resolved by                                                                                                                                                                       |
+| ------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Landing concept, mood, motion spec                                  | SIG Style & Motion Board; hero direction D-001, D-010                                                                                                                             |
+| 3D headset model                                                    | Built procedurally in the R3F scene — no `.glb` needed                                                                                                                            |
+| Brand colours and fonts                                             | Style Board palette; fonts D-002                                                                                                                                                  |
+| Caption colour failing WCAG AA                                      | D-003 (`#797F8D`)                                                                                                                                                                 |
+| `ogl` effects in the hero; intro vs. readable text                  | D-010, D-011                                                                                                                                                                      |
+| UI design references                                                | Style Board and the design inspiration board                                                                                                                                      |
+| Sponsor page content, brochure, "why join" copy                     | Removed from scope with the architecture revision                                                                                                                                 |
+| Resend account and verified sending domain                          | Removed: no email integration (D-008)                                                                                                                                             |
+| Gallery: event photos only, or also standalone                      | Both (D-005); item 18 above covers the first photos                                                                                                                               |
+| #2 Logo with transparent background, light/dark variants and a mark | Club brand pack, Oct 2026 — raster masters in `references/brand`; original badge + white-ring mark ship via `next/image` (D-021). A hand-drawn vector mark remains a nice-to-have |
+| #3 VIT branding rules                                               | None apply: VIT is the college name only, with no logo or rules. It appears as plain text in the club credit line (footer, hero eyebrow, menu)                                    |
 
 ---
 
 ## Notes
 
-- Items 2, 7, 23 and 24 depend on people outside the build team and have the
+- Items 7, 23 and 24 depend on people outside the build team and have the
   longest lead times, so they are worth chasing first even though some of their
   stages come later.
 - Every third-party account (items 8–10, 13, 22) must be created on a

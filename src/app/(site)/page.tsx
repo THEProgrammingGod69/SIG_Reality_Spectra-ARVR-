@@ -2,6 +2,10 @@ import type { Metadata } from 'next';
 
 import { Reveal } from '@/components/motion/reveal';
 import { Hero } from '@/components/sections/hero/hero';
+import { Badge } from '@/components/ui/badge';
+import { Heading } from '@/components/ui/heading';
+import { Section } from '@/components/ui/section';
+import { Text } from '@/components/ui/text';
 import { getRoute } from '@/lib/site';
 
 const route = getRoute('/');
@@ -20,17 +24,17 @@ export default function HomePage() {
       {/* TEMPORARY (Stage 2): stands in for mission, vision and the core team,
           which Stage 4 builds. It also gives the hero's scroll-out somewhere
           to hand over to. */}
-      <section aria-labelledby="home-next" className="mx-auto w-full max-w-3xl px-6 py-32">
+      <Section labelledBy="home-next" width="prose">
         <Reveal>
-          <h2 id="home-next" className="text-3xl font-semibold tracking-tight text-balance">
+          <Heading level={2} id="home-next">
             Mission, vision and the core team
-          </h2>
-          <p className="mt-4 text-pretty text-(--color-muted)">{route.description}</p>
-          <p className="mt-10 inline-flex rounded-full border border-(--color-border) bg-(--color-surface) px-4 py-1.5 font-mono text-xs text-(--color-muted)">
-            Placeholder — built in Stage 4
-          </p>
+          </Heading>
+          <Text size="lg" tone="muted" className="mt-4">
+            {route.description}
+          </Text>
+          <Badge className="mt-10">Placeholder — built in Stage 4</Badge>
         </Reveal>
-      </section>
+      </Section>
     </>
   );
 }

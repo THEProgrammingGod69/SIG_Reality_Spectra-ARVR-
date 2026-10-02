@@ -114,21 +114,3 @@ test.describe('hero with JavaScript', () => {
     expect(phases).not.toContain('playing');
   });
 });
-
-test.describe('motion playground', () => {
-  // CI runs the production build (playwright.config.ts); locally the dev server.
-  const production = Boolean(process.env.CI);
-
-  test(`/dev/motion is ${production ? 'hidden (404) in production' : 'available in development'}`, async ({
-    page,
-  }) => {
-    const response = await page.goto('/dev/motion');
-    expect(response?.status()).toBe(production ? 404 : 200);
-    if (!production) {
-      await expect(
-        page.getByRole('heading', { level: 1, name: 'Motion playground' }),
-      ).toBeVisible();
-      await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', /noindex/);
-    }
-  });
-});

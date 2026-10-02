@@ -1,5 +1,6 @@
-import Link from 'next/link';
-
+import { ButtonLink } from '@/components/ui/button';
+import { Container } from '@/components/ui/container';
+import { Eyebrow, Text } from '@/components/ui/text';
 import { getRoute, siteConfig } from '@/lib/site';
 
 import { HeroStage } from './hero-stage';
@@ -18,46 +19,43 @@ const recruitmentRoute = getRoute('/recruitment');
  * the HTML at first paint (D-010), on top of the static still. `HeroStage`
  * then decides whether this device gets the 3D scene and choreographs it.
  *
+ * The hero is full-bleed: it runs underneath the fixed header, and its text
+ * clears the header with `pt-header`. On tall screens the text sits at the
+ * bottom, and the horizon crest is at ≈ 91% of the height (hero-still.tsx,
+ * orbit-lab-scene.tsx), so the bottom padding of 14svh keeps the buttons
+ * above the crest.
+ *
  * Copy: the one-line intro is the Stage 1 tagline until the club supplies the
- * real line (docs/OPEN_ITEMS.md #4). Buttons are interim styling; Stage 3's
- * Button primitive replaces them. The "recruitment open" badge arrives with
+ * real line (docs/OPEN_ITEMS.md #4). The "recruitment open" badge arrives with
  * recruitment settings in Stage 8.
  */
 export function Hero() {
   return (
     <HeroStage labelledBy={TITLE_ID} still={<HeroStill />}>
-      <div className="mx-auto flex w-full max-w-6xl flex-col justify-end px-6 pt-24 pb-16 sm:pb-20 [@media(min-aspect-ratio:23/20)]:justify-center [@media(min-aspect-ratio:23/20)]:pb-24">
+      <Container className="flex flex-col justify-end pt-header pb-[max(4rem,14svh)] [@media(min-aspect-ratio:23/20)]:justify-center [@media(min-aspect-ratio:23/20)]:pb-24">
         <div className="max-w-xl">
-          <p className="font-mono text-xs tracking-widest text-(--color-muted) uppercase">
-            Special Interest Group · {siteConfig.parentOrganisation}
-          </p>
+          <Eyebrow>Special Interest Group · {siteConfig.parentOrganisation}</Eyebrow>
 
           <HeroTitle
             id={TITLE_ID}
             text={siteConfig.name}
-            className="mt-4 text-5xl font-semibold tracking-tight text-balance text-(--color-text) sm:text-6xl lg:text-7xl"
+            className="mt-4 font-display text-display-2xl text-balance text-(--color-text)"
           />
 
-          <p className="mt-6 max-w-md text-lg text-pretty text-(--color-text-body)">
+          <Text size="lg" className="mt-6 max-w-md">
             {siteConfig.tagline}
-          </p>
+          </Text>
 
           <div className="mt-10 flex flex-wrap items-center gap-3">
-            <Link
-              href={eventsRoute.href}
-              className="rounded-full bg-(--color-accent) px-6 py-2.5 text-sm font-medium text-(--color-accent-contrast) transition-opacity duration-(--dur-micro) hover:opacity-90"
-            >
+            <ButtonLink href={eventsRoute.href} magnetic>
               Explore events
-            </Link>
-            <Link
-              href={recruitmentRoute.href}
-              className="rounded-full border border-(--color-border-strong) px-6 py-2.5 text-sm font-medium text-(--color-text) transition-colors duration-(--dur-micro) hover:border-(--color-accent)"
-            >
+            </ButtonLink>
+            <ButtonLink href={recruitmentRoute.href} variant="secondary">
               Join the club
-            </Link>
+            </ButtonLink>
           </div>
         </div>
-      </div>
+      </Container>
     </HeroStage>
   );
 }

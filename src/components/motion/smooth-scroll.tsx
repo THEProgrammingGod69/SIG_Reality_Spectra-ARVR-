@@ -6,6 +6,7 @@ import { useEffect } from 'react';
 
 import { gsap, ScrollTrigger } from '@/lib/motion/gsap';
 
+import { registerLenis } from './scroll-lock';
 import { prefersReducedMotion, useReducedMotion } from './use-reduced-motion';
 
 /** GSAP's default lag smoothing, restored when Lenis stops. */
@@ -35,8 +36,11 @@ export function SmoothScroll() {
     const tick = (seconds: number) => lenis.raf(seconds * 1000);
     gsap.ticker.add(tick);
     gsap.ticker.lagSmoothing(0);
+    // Overlays stop and restart this instance through the scroll lock.
+    registerLenis(lenis);
 
     return () => {
+      registerLenis(null);
       gsap.ticker.remove(tick);
       gsap.ticker.lagSmoothing(GSAP_LAG_THRESHOLD_MS, GSAP_LAG_ADJUSTED_MS);
       offScroll();

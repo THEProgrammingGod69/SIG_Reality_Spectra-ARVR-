@@ -1,25 +1,30 @@
-import Link from 'next/link';
-
-import { siteConfig } from '@/lib/site';
+import { ButtonLink } from '@/components/ui/button';
+import { Container } from '@/components/ui/container';
+import { Heading } from '@/components/ui/heading';
+import { BrandMark } from '@/components/ui/logo';
+import { Eyebrow, Text } from '@/components/ui/text';
+import { getRoute, siteConfig } from '@/lib/site';
 
 /**
- * Root 404. Stage 3 restyles this with the design system; the copy and the
- * route back to Home stay.
+ * Root 404. It renders outside the public site layout (no header or footer),
+ * so it carries its own <main> landmark and a way home.
  */
 export default function NotFound() {
   return (
-    <main id="main-content" className="mx-auto w-full max-w-3xl px-6 py-24 sm:py-32">
-      <p className="font-mono text-sm text-(--color-muted)">404</p>
-      <h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">Page not found</h1>
-      <p className="mt-4 text-(--color-muted)">
-        That page does not exist, or it is no longer published.
-      </p>
-      <Link
-        href="/"
-        className="mt-10 inline-flex rounded-full bg-(--color-accent) px-5 py-2 text-sm font-medium text-(--color-accent-contrast)"
-      >
-        Back to {siteConfig.shortName}
-      </Link>
+    <main id="main-content" className="flex flex-1 items-center py-section">
+      <Container width="prose" className="flex flex-col items-start">
+        <BrandMark alt="" sizes="3.5rem" className="size-14" />
+        <Eyebrow className="mt-8">Error 404</Eyebrow>
+        <Heading level={1} className="mt-3">
+          Page not found
+        </Heading>
+        <Text size="lg" tone="muted" className="mt-4">
+          That page does not exist, or it is no longer published.
+        </Text>
+        <ButtonLink href={getRoute('/').href} className="mt-10">
+          Back to {siteConfig.shortName}
+        </ButtonLink>
+      </Container>
     </main>
   );
 }

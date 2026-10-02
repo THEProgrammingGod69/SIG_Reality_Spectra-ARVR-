@@ -59,24 +59,25 @@ a lab that builds real things, or a gaming landing page?
 
 ## 2. Locked tech stack — do not substitute
 
-| Layer              | Choice                                                          |
-| ------------------ | --------------------------------------------------------------- |
-| Framework          | Next.js 16 (App Router) + TypeScript strict                     |
-| Package manager    | pnpm                                                            |
-| Styling            | Tailwind CSS v4 + shadcn/ui (**admin only**)                    |
-| 3D                 | React Three Fiber + `@react-three/drei`                         |
-| Scroll/timeline    | GSAP + ScrollTrigger                                            |
-| UI micro-animation | Motion (formerly Framer Motion)                                 |
-| Smooth scroll      | Lenis                                                           |
-| Data               | Upstash Redis (serverless KV, via Vercel Marketplace)           |
-| Images             | Vercel Blob                                                     |
-| Validation         | Zod (shared schemas)                                            |
-| Admin auth         | Auth.js — Google provider, JWT sessions, email allowlist in env |
-| Forms              | react-hook-form + Zod                                           |
-| Spam protection    | Cloudflare Turnstile + honeypot                                 |
-| Analytics          | Vercel Analytics                                                |
-| Testing            | Playwright (E2E) + Vitest (schemas/utils)                       |
-| Hosting            | Vercel + club-owned GitHub org                                  |
+| Layer              | Choice                                                                               |
+| ------------------ | ------------------------------------------------------------------------------------ |
+| Framework          | Next.js 16 (App Router) + TypeScript strict                                          |
+| Package manager    | pnpm                                                                                 |
+| Styling            | Tailwind CSS v4 + shadcn/ui (**admin only**); `cn()` = clsx + tailwind-merge (D-019) |
+| Icons              | lucide-react, 1.5 stroke, via `<Icon>` (D-019)                                       |
+| 3D                 | React Three Fiber + `@react-three/drei`                                              |
+| Scroll/timeline    | GSAP + ScrollTrigger                                                                 |
+| UI micro-animation | Motion (formerly Framer Motion)                                                      |
+| Smooth scroll      | Lenis                                                                                |
+| Data               | Upstash Redis (serverless KV, via Vercel Marketplace)                                |
+| Images             | Vercel Blob                                                                          |
+| Validation         | Zod (shared schemas)                                                                 |
+| Admin auth         | Auth.js — Google provider, JWT sessions, email allowlist in env                      |
+| Forms              | react-hook-form + Zod                                                                |
+| Spam protection    | Cloudflare Turnstile + honeypot                                                      |
+| Analytics          | Vercel Analytics                                                                     |
+| Testing            | Playwright (E2E) + Vitest (schemas/utils)                                            |
+| Hosting            | Vercel + club-owned GitHub org                                                       |
 
 If a library looks like a better fit mid-build, raise it — do not silently swap it.
 
@@ -181,13 +182,14 @@ src/
   app/
     (site)/          public routes — one folder per sitemap page
     admin/           admin routes (noindex, never linked publicly)
-    dev/             developer tools, e.g. /dev/motion — 404 in production (Stage 2)
+    dev/             developer tools: /dev/ui, /dev/motion — 404 in production
     api/admin/upload browser-upload token route          (Stage 5)
     api/cron/nightly backup + orphan sweep, CRON_SECRET  (Stage 10)
     globals.css      design tokens live here, in @theme
     robots.ts
   components/
     ui/              design-system primitives          (Stage 3)
+    site/            site chrome: header, PillNav, mobile menu, footer   (Stage 3)
     motion/          reusable animation primitives     (Stage 2)
     three/           R3F scenes                        (Stage 2)
     sections/        composed page sections            (Stage 2/4)
@@ -197,9 +199,12 @@ src/
     schemas/         Zod schemas
     auth/            Auth.js config
     motion/          motion tokens reader, GSAP setup, hero device tiers (Stage 2)
+    cn.ts            the one class-name helper (public UI and shadcn admin)
+    contrast.ts      WCAG contrast maths for the token audit and /dev/ui
     env.ts           server env, validated with Zod (server-only)
     env.public.ts    NEXT_PUBLIC_* env, safe in the browser
     site.ts          sitemap, nav and club config — single source of truth
+  assets/            imported static assets (brand logo images)        (Stage 3)
   content/           site info, domains, contact — JSON, validated at build time
 tests/
   unit/              Vitest — schemas and pure utilities
@@ -321,7 +326,7 @@ One stage per session. `/clear` between stages. Commit and tag each stage
 | ----- | ---------------------------------------------------------------------------- | ----------- |
 | 1     | Foundation, architecture, project rules                                      | **Done**    |
 | 2     | Animation system + AR/VR landing hero                                        | **Done**    |
-| 3     | Design system + UI shell                                                     | Not started |
+| 3     | Design system + UI shell                                                     | **Done**    |
 | 4     | Static content layer + page shells (Home, About, Recruitment, Contact) + SEO | Not started |
 | 5     | Data layer: schemas, repository, browser uploads, cache tags                 | Not started |
 | 6     | Admin authentication + panel shell + dashboard                               | Not started |
@@ -337,11 +342,10 @@ updated to match; `docs/ARCHITECTURE.md` is the current design.
 **Temporary scaffolding, to delete as it is replaced:**
 
 - `src/components/ui/page-placeholder.tsx` — delete once every route has content.
-- The nav and footer in `src/app/(site)/layout.tsx` — replaced in Stage 3.
 - The admin shell in `src/app/admin/layout.tsx` — replaced in Stage 6.
 - The placeholder section under the hero in `src/app/(site)/page.tsx` — replaced
   by mission, vision and core team in Stage 4.
-- The hero's interim CTA styling and tagline copy — Stage 3 Button, Stage 4 copy.
+- The hero's tagline copy — the real one-line intro arrives in Stage 4 (OPEN_ITEMS #4).
 
 **Deliberately not built yet, so a later stage owns it cleanly:**
 
@@ -358,24 +362,29 @@ updated to match; `docs/ARCHITECTURE.md` is the current design.
 The full reasoning is in [`docs/DECISIONS.md`](./docs/DECISIONS.md). What a
 contributor must know before writing UI:
 
-| Topic             | Decision                                                                                                                |
-| ----------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| Hero              | **Orbit Lab**: dark lab, low spectrum horizon, rings, one wireframe headset (D-001)                                     |
-| Fonts             | **Space Grotesk** (display), **Inter** (body), **JetBrains Mono** (labels); via `next/font`, four files at most (D-002) |
-| Caption colour    | `text-subtle` is **`#797F8D`** (≥ 4.5:1 on bg, surface and raised); captions only (D-003)                               |
-| Palette           | The Style Board tokens; the spectrum is light, at most ~10% of any screen                                               |
-| Component source  | **React Bits only** (D-004); the events timeline is built in-house                                                      |
-| Motion            | Rule 4 has no exceptions (D-009); TrueFocus is replaced by our own `FocusText`                                          |
-| WebGL             | One context in the hero, at most two heavy WebGL components per page; no `ogl` (D-010, D-011)                           |
-| Hero text         | The name is real text at first paint; the intro plays around it, skippable, once per session (D-010)                    |
-| Navigation        | PillNav on desktop (patched to `next/link`), StaggeredMenu on mobile; no Dock (D-012)                                   |
-| Home              | Hero, mission/vision/about, core team. No stat counters in v1 (D-007)                                                   |
-| Contact           | One page: details and the sponsorship form (D-006)                                                                      |
-| Sponsorship inbox | Admin panel only; no email integration (D-008)                                                                          |
-| Repository        | Stays private while React Bits code is inside it (D-014)                                                                |
-| Colours           | Style Board palette is live in `globals.css` since Stage 2 (D-015); Stage 3 adds type, spacing, radii, shadows          |
-| Hero build        | MagicRings shader ported into the one R3F canvas (D-016); static still is token SVG (D-017); scroll-out pin (D-018)     |
-| Motion tokens     | `--dur-*`, `--ease-*`, `--stagger`, `--motion-rise` in CSS; JS reads them via `readMotionTokens()` — never a literal    |
+| Topic             | Decision                                                                                                                                                        |
+| ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Hero              | **Orbit Lab**: dark lab, low spectrum horizon, rings, one wireframe headset (D-001)                                                                             |
+| Fonts             | **Space Grotesk** (display), **Inter** (body), **JetBrains Mono** (labels); via `next/font`, four files at most (D-002)                                         |
+| Caption colour    | `text-subtle` is **`#797F8D`** (≥ 4.5:1 on bg, surface and raised); captions only (D-003)                                                                       |
+| Palette           | The Style Board tokens; the spectrum is light, at most ~10% of any screen                                                                                       |
+| Component source  | **React Bits only** (D-004); the events timeline is built in-house                                                                                              |
+| Motion            | Rule 4 has no exceptions (D-009); TrueFocus is replaced by our own `FocusText`                                                                                  |
+| WebGL             | One context in the hero, at most two heavy WebGL components per page; no `ogl` (D-010, D-011)                                                                   |
+| Hero text         | The name is real text at first paint; the intro plays around it, skippable, once per session (D-010)                                                            |
+| Navigation        | PillNav on desktop (patched to `next/link`), StaggeredMenu on mobile; no Dock (D-012)                                                                           |
+| Home              | Hero, mission/vision/about, core team. No stat counters in v1 (D-007)                                                                                           |
+| Contact           | One page: details and the sponsorship form (D-006)                                                                                                              |
+| Sponsorship inbox | Admin panel only; no email integration (D-008)                                                                                                                  |
+| Repository        | Stays private while React Bits code is inside it (D-014)                                                                                                        |
+| Colours           | Style Board palette is live in `globals.css` since Stage 2 (D-015); Stage 3 adds type, spacing, radii, shadows                                                  |
+| Hero build        | MagicRings shader ported into the one R3F canvas (D-016); static still is token SVG (D-017); scroll-out pin (D-018)                                             |
+| Motion tokens     | `--dur-*`, `--ease-*`, `--stagger`, `--motion-rise` in CSS; JS reads them via `readMotionTokens()` — never a literal                                            |
+| Design tokens     | Type scale `text-display-*`/`text-body*`/`text-label`, `py-section`, `px-gutter`, `h-header`, `max-w-content`, `rounded-card`/`-control`, `shadow-card`/`-glow` |
+| Shell             | Fixed header over the page; `data-full-bleed` sections run under it. PillNav (`lg`+) and MobileMenu rebuilt from React Bits (D-020)                             |
+| Logo              | Original badge + white-ring mark, raster via `next/image`; masters in `references/brand` (D-021)                                                                |
+| Rule 4 and colour | No colour/background transitions: hover colour is instant, overlays fade with opacity (D-022)                                                                   |
+| Contrast          | Every token pairing is audited for WCAG AA by `tests/unit/contrast.test.ts`; control borders use `--color-subtle`                                               |
 
 ---
 
@@ -474,10 +483,10 @@ Loading the skill is mandatory, not advisory — `get_design_context` and
 `use_figma` fail in confusing ways without it. Read `skill://index.json` for the
 current list.
 
-This is the intended **Stage 3** path: if the club produces a Figma file, read it
-with `figma-design-to-code` and derive the design tokens from it rather than
-eyeballing screenshots. It is blocked on the same input as the rest of Stage 3 —
-see `docs/OPEN_ITEMS.md` (the Stage 3 inputs). Note that Code Connect and shared team
+Stage 3 was built from the Style Board and the reference boards without a Figma
+file. If the club later produces one, read it with `figma-design-to-code` and
+reconcile it against the tokens in `globals.css` rather than eyeballing
+screenshots. Note that Code Connect and shared team
 libraries may not be available on a starter seat; check before planning around
 them.
 

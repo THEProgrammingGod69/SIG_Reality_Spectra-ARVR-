@@ -2,12 +2,9 @@ import type { Metadata } from 'next';
 
 import { MotionPlayground } from './motion-playground';
 
-export const metadata: Metadata = {
-  title: 'Motion playground',
-  robots: { index: false, follow: false },
-};
+export const metadata: Metadata = { title: 'Motion playground' };
 
-/** Every Stage 2 motion primitive in isolation. Development only (see ../layout.tsx). */
+/** Every motion primitive in isolation. Development only (see ../layout.tsx). */
 export default function MotionPlaygroundPage() {
   return <MotionPlayground />;
 }

@@ -1,0 +1,23 @@
+# `src/components/site`
+
+The public site's chrome, built in **Stage 3** and rendered by
+`src/app/(site)/layout.tsx` and `template.tsx`.
+
+| File                     | What it is                                                                         |
+| ------------------------ | ---------------------------------------------------------------------------------- |
+| `site-header.tsx`        | Fixed header: logo, PillNav (`lg`+), Recruitment CTA, Menu toggle; glass on scroll |
+| `pill-nav.tsx`           | Desktop links — our rebuild of React Bits' PillNav (D-020)                         |
+| `mobile-menu.tsx`        | Full-screen menu below `lg` — our rebuild of StaggeredMenu (D-020)                 |
+| `site-footer.tsx`        | Logo badge, every page by group, contact channels once set, VIT Pune credit        |
+| `recruitment-banner.tsx` | Slot for the "recruitment open" banner; renders nothing until Stage 8              |
+| `page-transition.tsx`    | Opacity fade on client navigations only (never the first load)                     |
+
+Rules:
+
+- Links come from `siteRoutes` (`src/lib/site.ts`); nothing here hardcodes a page.
+- Contact channels render only when set (`contactChannels`), so no placeholder
+  link ever ships. Nothing here links to `/admin` (rule 6; an e2e test checks).
+- The header is fixed and overlays the page; a page that opens with a
+  full-bleed section marks it `data-full-bleed` so `<main>` drops its top padding.
+- Overlays (mobile menu, Modal) lock scrolling through
+  `components/motion/scroll-lock.ts`, which also stops Lenis.

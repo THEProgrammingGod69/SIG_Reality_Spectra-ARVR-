@@ -1,23 +1,24 @@
 # `references/brand`
 
-| File           | What it is                                      |
-| -------------- | ----------------------------------------------- |
-| `SIG_LOGO.svg` | Club logo as supplied (see the caveat below).    |
+Logo masters from the club's brand pack (`Stage_3_Vectorization/SIG_brand_assets.zip`,
+October 2026). Full resolution, transparent backgrounds. **Not shipped**: the site
+uses web-sized copies in `src/assets/brand/` (D-021).
 
-## Caveat on the current logo file
+| File                     | What it is                                                     | Use                       |
+| ------------------------ | -------------------------------------------------------------- | ------------------------- |
+| `logo-badge.png`         | The original badge: black roundel, white lettering (2868px)    | Footer; works on dark and light |
+| `logo-mark-on-dark.png`  | Round headset mark with a white ring (1463px)                  | Header, favicon, Apple icon |
+| `logo-mark-on-light.png` | Round headset mark with a black ring (1463px)                  | Light backgrounds, print  |
 
-`SIG_LOGO.svg` is an SVG **wrapper around a base64-encoded PNG**, not true
-vector artwork, and it carries an opaque white background rectangle. Practical
-consequences:
+## Notes
 
-- It cannot be recoloured, and it will not stay crisp when scaled up.
-- The white background will show as a white box on the dark site.
-- It is ~1.7 MB, which is far too heavy to ship in a navbar.
-
-**Needed before Stage 3** (tracked in `docs/OPEN_ITEMS.md`):
-
-- A real vector logo (paths, not an embedded raster), with a transparent background.
-- Light and dark variants, plus a square mark for the favicon and OpenGraph images.
-
-If no vector original exists, a background-removed, trimmed PNG at 2× the largest
-display size is an acceptable fallback — say so and it will be handled that way.
+- **Raster, not vector.** The pack's SVG files only wrap these same PNGs
+  (0.7–1.9 MB each), so they were not kept. A hand-drawn vector of the mark would
+  sharpen the favicon at 16px; it is a nice-to-have.
+- **The pack's "dark" badge was rejected.** It turned the black ring white, but the
+  lettering was already white, so the text disappeared. The original badge reads
+  well on the site's dark background as it is.
+- **Regenerating the web copies:** trim the transparent margin, then resize with
+  Lanczos to 768px (badge) and 256px (mark) into `src/assets/brand/`; the mark at
+  256px is also `src/app/icon.png`, and `src/app/apple-icon.png` is the mark on
+  `--color-bg` at 180px (iOS ignores transparency).

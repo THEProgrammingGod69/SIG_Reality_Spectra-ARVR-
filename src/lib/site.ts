@@ -14,14 +14,33 @@ export const siteConfig = {
   tagline: 'The AR/VR/XR club of VIT Pune',
   description:
     'SIG Reality Spectra is the AR, VR and XR special interest group at VIT Pune. We run workshops, hackathons and meetups, and build extended-reality projects together.',
-  /** Placeholder until the club email is confirmed. Tracked in docs/OPEN_ITEMS.md. */
-  contactEmail: 'TODO@vit.edu',
-  socials: {
-    linkedin: 'https://www.linkedin.com/company/TODO',
-    instagram: 'https://www.instagram.com/TODO',
-    github: 'https://github.com/THEProgrammingGod69/SIG_Reality_Spectra-ARVR-',
-  },
 } as const;
+
+/**
+ * Contact channels. `null` means "not supplied yet" (docs/OPEN_ITEMS.md #7):
+ * the footer and mobile menu render only the channels that are set, so no
+ * placeholder link ever ships. Stage 4 moves these into src/content.
+ *
+ * The site repository is private (D-014), so it is not a public GitHub link.
+ */
+export const contactChannels: {
+  readonly email: string | null;
+  readonly socials: readonly { readonly label: string; readonly href: string | null }[];
+} = {
+  email: null,
+  socials: [
+    { label: 'LinkedIn', href: null },
+    { label: 'Instagram', href: null },
+    { label: 'GitHub', href: null },
+  ],
+};
+
+/** The social links that are actually set, ready to render. */
+export function socialLinks() {
+  return contactChannels.socials.filter(
+    (social): social is { label: string; href: string } => social.href !== null,
+  );
+}
 
 /** Where a route is surfaced in the site chrome. */
 export type NavPlacement = 'primary' | 'cta';

@@ -1,10 +1,14 @@
+import { Badge } from './badge';
+import { Heading } from './heading';
+import { Section } from './section';
+import { Text } from './text';
+
 /**
- * TEMPORARY — Stage 1 only.
+ * TEMPORARY — Stage 1 scaffolding, restyled on the design system in Stage 3.
  *
  * Every sitemap route renders this so the routing tree is real and testable
- * before any design exists. Stage 3 introduces the design system and Stage 4
- * replaces each of these with actual page content. When the last placeholder
- * is gone, delete this file.
+ * before any content exists. Stage 4 and later replace each with the actual
+ * page. When the last placeholder is gone, delete this file.
  */
 
 type PagePlaceholderProps = {
@@ -18,15 +22,12 @@ type PagePlaceholderProps = {
 
 export function PagePlaceholder({ title, description, filledInStage }: PagePlaceholderProps) {
   return (
-    <section
-      data-testid="page-placeholder"
-      className="mx-auto w-full max-w-3xl px-6 py-24 sm:py-32"
-    >
-      <h1 className="text-3xl font-semibold tracking-tight text-balance sm:text-4xl">{title}</h1>
-      <p className="mt-4 text-base text-pretty text-(--color-muted)">{description}</p>
-      <p className="mt-10 inline-flex rounded-full border border-(--color-border) bg-(--color-surface) px-4 py-1.5 font-mono text-xs text-(--color-muted)">
-        Placeholder — built in Stage {filledInStage}
-      </p>
-    </section>
+    <Section width="prose" data-testid="page-placeholder">
+      <Heading level={1}>{title}</Heading>
+      <Text size="lg" tone="muted" className="mt-4">
+        {description}
+      </Text>
+      <Badge className="mt-10">Placeholder — built in Stage {filledInStage}</Badge>
+    </Section>
   );
 }

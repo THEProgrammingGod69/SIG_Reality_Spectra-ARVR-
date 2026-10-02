@@ -10,10 +10,26 @@ old conversation. Read in this order: this file → `CLAUDE.md` → `docs/DECISI
 | ------------- | ---------------------------------------------------------------------------------------- |
 | Repo          | github.com/THEProgrammingGod69/SIG_Reality_Spectra-ARVR- (private), `main`               |
 | Local folder  | `D:\Academic Nottes VIT\SIG\SIG_Draft_Code`                                              |
-| Rollback tags | `stage-1`, `architecture-v2`, `architecture-v3`; `stage-2` once committed                |
-| Done          | Stage 1; **Stage 2** (motion system + Orbit Lab hero) — built, all gates green           |
-| Next          | Commit + tag `stage-2` + push (Arnav's go), then Stage 3 — design system                 |
-| Gates         | `pnpm check` + `pnpm test:e2e` green (50 unit, 24 e2e; e2e also on the production build) |
+| Rollback tags | `stage-1`, `architecture-v2`, `architecture-v3`, `stage-2`; `stage-3` once committed     |
+| Done          | Stages 1–2 (committed); **Stage 3** (design system + UI shell) — built, all gates green  |
+| Next          | Commit + tag `stage-3` + push (Arnav's go), then Stage 4 — static content + page shells  |
+| Gates         | `pnpm check` + `pnpm test:e2e` green (72 unit, 40 e2e; e2e also on the production build) |
+
+## Stage 3 — what was built
+
+- Tokens in `globals.css`: fonts (Space Grotesk · Inter · JetBrains Mono via
+  `next/font`, four files), fluid type scale, spacing rhythm, containers, radii,
+  shadows, glass, gradients, layers, ambient animations.
+- `src/components/ui/`: Button/ButtonLink (incl. StarBorder `star` variant and
+  `magnetic`), Card family, Badge, Container, Section, Heading, Text/Eyebrow,
+  Field/Input/Textarea/Select, Modal, Skeleton, EmptyState, Icon, BrandMark/Badge.
+- `src/components/site/`: fixed header (glass on scroll), PillNav (`lg`+),
+  MobileMenu (StaggeredMenu rebuilt, accessible), footer, recruitment banner
+  slot, page transition (`(site)/template.tsx`).
+- Brand pack in (D-021); favicon + Apple icon; OPEN_ITEMS #2 and #3 resolved.
+- `/dev/ui` playground; `cn()` (D-019); contrast audit test; shell e2e suite
+  (keyboard, mobile menu, 360px overflow on every page, footer, icons).
+- Decisions D-019 – D-022.
 
 ## Stage 2 — what was built
 

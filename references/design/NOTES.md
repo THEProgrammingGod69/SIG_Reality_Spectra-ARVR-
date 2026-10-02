@@ -1,28 +1,39 @@
 # Design references — Stage 3 input
 
-Put UI images in this folder named by purpose, then say what to take from each.
+Stage 3 was built from the boards and kits below (images kept locally in
+`Stage_2_Designing/`; heavy files are not committed). No Figma file was supplied.
 
-| Filename     | Purpose                         |
-| ------------ | ------------------------------- |
-| `home.png`   | Overall landing page layout     |
-| `cards.png`  | Card treatment                  |
-| `navbar.png` | Navigation and header           |
-| `admin.png`  | Admin panel look (optional)     |
+## What was taken from each
 
-## What to take from each image
+### SIG Style & Motion Board
 
-### `home.png`
+- **Took:** the palette (D-015), the fonts (D-002), the motion tokens, the rim
+  light and spectra gradient, the 16–24px card radius, pill-shaped buttons.
+- **Ignored:** placeholder statistics (D-007), the 2.4s intro (D-010).
 
-- **Take:** …
-- **Ignore:** …
+### Raycast landing page (`raycast 1.png`)
 
-## Brand decisions needed
+- **Took:** the restrained dark cards with hairline borders, the glass header
+  that appears on scroll, the dense multi-column footer.
+- **Ignored:** multicolour gradient panels, the command-palette UI.
 
-- **Colours (hex):** _TODO_ — background, surface, text, muted, one accent, border
-- **Fonts:** _TODO_ — Google Font names, or files placed in `/public/fonts`
-- **Logo variants:** _TODO_ — light and dark, transparent background (see `../brand/README.md`)
-- **VIT branding rules:** _TODO_ — any mandated marks, colours or placement
-- **One-line brief:** _TODO_
+### Reflect (`reflect 1.png`)
 
-> Example brief: "Dark, premium XR lab aesthetic: deep navy/black, one accent
-> colour, glassmorphism used sparingly, generous whitespace."
+- **Took:** the planet horizon and orbital rings (the hero, Stage 2); generous
+  negative space around one luminous object per section.
+- **Ignored:** the blue-only monotone.
+
+### Dark UI Components / AI Startup UI Kit / Digital Agency (Figma community)
+
+- **Took:** card language (rounded, 1px borders, featured cards lit with the
+  spectrum), pill navigation, input styling with a clear focus state.
+- **Ignored:** finance widgets, pricing sections, the orange palette.
+
+## Brand decisions
+
+- **Colours:** the Style Board tokens in `src/app/globals.css` (D-015).
+- **Fonts:** Space Grotesk · Inter · JetBrains Mono (D-002).
+- **Logo:** the club brand pack (D-021, `../brand/README.md`).
+- **VIT branding:** none required — "VIT Pune" is plain text in the club credit.
+- **One-line brief:** cinematic, realistic XR lab — dark, precise, light used as
+  a light source, never gaming neon.

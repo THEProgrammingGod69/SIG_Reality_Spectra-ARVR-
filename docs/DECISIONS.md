@@ -28,6 +28,10 @@ the call and it was made on the reasoning shown).
 | D-016 | MagicRings is ported into the R3F scene, not used as its own canvas          | lead       |
 | D-017 | The static hero still is an inline SVG drawn from tokens, not a WebP         | lead       |
 | D-018 | Hero scroll-out: pinned 150vh on 3D tiers only, handing over dimmed          | lead       |
+| D-019 | Stage 3 additions: Lucide icons and one `cn()` helper                        | lead       |
+| D-020 | Site shell: React Bits nav and effects rebuilt; header overlays the page     | lead       |
+| D-021 | Logo: the original badge ships as raster; the pack's dark badge is rejected  | lead       |
+| D-022 | Rule 4 covers colour: no colour or background transitions                    | lead       |
 
 ---
 
@@ -294,3 +298,84 @@ released. Pinning under reduced motion would add 150vh of scrolling with nothing
 moving. The camera stops just in front of the lens rather than passing through it:
 close up, the wireframe and particles turn into noise. "Transitions into the next
 section's background" is finished in Stage 4, once that section exists.
+
+## D-019 — Stage 3 additions: Lucide icons and one `cn()` helper
+
+**Choice.** Three small runtime dependencies were added: `lucide-react` (icons),
+and `clsx` + `tailwind-merge`, wrapped once as `cn()` in `src/lib/cn.ts`.
+
+**Why.** The design brief specifies Lucide at a 1.5 stroke, and shadcn/ui (the
+admin-only stack entry) uses all three, so Stage 6 would add them anyway. Having
+one `cn()` now means the public UI and the admin share a single helper:
+`components.json` points shadcn's `utils` alias at `@/lib/cn`, so `shadcn add`
+never creates a second copy. `tailwind-merge` is taught the token names
+(`text-display-xl`, `py-section`, `rounded-card`…), or it would drop a token
+font size when it meets a colour class; a unit test checks every font-size
+token in `globals.css` is known to it.
+
+**Note.** Lucide v1 no longer ships brand icons (GitHub, LinkedIn, Instagram), so
+social links are text links with an "opens in a new tab" cue.
+
+## D-020 — Site shell: React Bits nav and effects rebuilt; header overlays the page
+
+**Choice.** The D-013 shortlist items used in Stage 3 were read and rebuilt as
+our own components, keeping each one's look and choreography:
+
+| Source        | Ours                     | What changed                                                                                                                                             |
+| ------------- | ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| PillNav       | `site/pill-nav.tsx`      | `next/link` + `usePathname`; `width` load-in removed (rule 4); `menubar` roles removed; its mobile dropdown and spinning logo dropped; tokens            |
+| StaggeredMenu | `site/mobile-menu.tsx`   | `color` tween removed (rule 4); closed panel `inert`; focus moves in, is trapped and returns; Escape; page inert and scroll-locked; closes on navigation |
+| StarBorder    | `ui/button.tsx` (`star`) | Keyframes moved into `@theme` as tokens; colours from the spectrum                                                                                       |
+| Magnet        | `motion/magnetic.tsx`    | No re-render per mouse move (direct transform per frame); mouse only; off under reduced motion                                                           |
+
+The header is fixed and overlays the page. `<main>` is padded by the header
+height unless the page opens with a `data-full-bleed` section (the home hero),
+which runs underneath. PillNav shows from `lg` (1024px); below that the header
+holds the logo, the Recruitment CTA (from `sm`) and the Menu toggle. Home is not
+a pill: the logo links home.
+
+Page transitions fade with opacity only — a transform on the page wrapper would
+break the hero's fixed-position pin — and only on client navigations, never on
+the first load, which must paint the hero name immediately (D-010).
+
+**Why.** Each original broke at least one permanent rule or had an
+accessibility gap (see the table). Rebuilding kept the look the club picked
+while making the shell keyboard- and screen-reader-safe.
+
+## D-021 — Logo: the original badge ships as raster; the pack's dark badge is rejected
+
+**Choice.** The club's brand pack (`Stage_3_Vectorization`) resolves OPEN_ITEMS #2
+with transparent-background PNGs. The site uses the **original badge** (black
+roundel, white lettering) and the **mark with the white ring**, through
+`next/image`. The pack's "dark" badge (`logo-dark`) is not used and was not
+kept.
+
+**Why.**
+
+- The pack's SVGs wrap the same PNG (0.7–1.9 MB each); there are no vector
+  paths. `next/image` serves a few-KB WebP/AVIF at the rendered size instead,
+  from 768px (badge) and 256px (mark) copies in `src/assets/brand/`.
+- The "dark" badge turned the black ring white but the lettering was already
+  white, so "VIT PUNE · Reality Spectra" vanished (white on white). The original
+  badge reads cleanly on `--color-bg` as it is.
+- Full-resolution masters are kept in `references/brand/` for print and
+  handover; the favicon and Apple icon are generated from the mark.
+
+**Open.** A hand-drawn vector of the mark would sharpen the favicon at 16px; it
+is a nice-to-have, not a blocker.
+
+## D-022 — Rule 4 covers colour: no colour or background transitions
+
+**Choice.** "Animate only `transform` and `opacity`" includes CSS transitions of
+`color`, `background-color` and `border-color`. Hover colour changes are
+instant; where a hover should feel animated, an overlay layer fades with
+`opacity` (Button) or an element moves with `transform` (Card lift, PillNav).
+The Stage 2 hero buttons that used `transition-colors` were replaced.
+
+**Why.** The rule has no exceptions (D-009), and an exception for "just colour"
+would be the first crack. Overlays give the same feel on the compositor.
+
+**Also.** Form control borders use `--color-subtle`, the lightest neutral that
+reaches WCAG's 3:1 for component boundaries on every surface; `--color-border`
+(1.5:1) is for decorative hairlines only. A unit test audits every pairing the
+design system uses.

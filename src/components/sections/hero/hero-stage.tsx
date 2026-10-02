@@ -5,6 +5,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNo
 
 import { prefersReducedMotion } from '@/components/motion/use-reduced-motion';
 import { createHeroSceneState } from '@/components/three/orbit-lab/scene-state';
+import { Button } from '@/components/ui/button';
 import { useHeroTier } from '@/components/three/use-hero-tier';
 import { gsap, gsapEase, ScrollTrigger } from '@/lib/motion/gsap';
 import { readMotionTokens } from '@/lib/motion/tokens';
@@ -100,14 +101,17 @@ export function HeroStage({ children, still, labelledBy }: HeroStageProps) {
 
     const state = stateRef.current;
     const late = performance.now() - mountedAtRef.current > INTRO_LATE_START_MS;
+    const seen = hasSeenIntro();
+    // The session's one chance at the intro is now, whether it plays or is
+    // skipped for being late: it never turns up on a later page view.
+    markIntroSeen();
 
-    if (prefersReducedMotion() || late || hasSeenIntro()) {
+    if (prefersReducedMotion() || late || seen) {
       Object.assign(state, createHeroSceneState(true), { scroll: state.scroll });
       setPhase('done');
       return;
     }
 
-    markIntroSeen();
     const tokens = readMotionTokens();
     const outExpo = gsapEase(tokens, 'outExpo');
     const inOut = gsapEase(tokens, 'inOut');
@@ -227,6 +231,8 @@ export function HeroStage({ children, still, labelledBy }: HeroStageProps) {
         aria-labelledby={labelledBy}
         data-hero-tier={tier ?? 'pending'}
         data-hero-intro={phase}
+        // Runs underneath the fixed header (see the site layout's <main>).
+        data-full-bleed
         className="relative isolate flex min-h-svh overflow-hidden"
       >
         {/* The mask fades the scene into the page at the hero's bottom edge. */}
@@ -262,13 +268,14 @@ export function HeroStage({ children, still, labelledBy }: HeroStageProps) {
         </div>
 
         {is3D && phase === 'playing' ? (
-          <button
-            type="button"
+          <Button
+            variant="secondary"
+            size="sm"
             onClick={skipIntro}
-            className="absolute right-6 bottom-6 rounded-full border border-(--color-border) bg-(--color-surface)/70 px-4 py-1.5 font-mono text-xs tracking-widest text-(--color-muted) uppercase transition-colors duration-(--dur-micro) hover:text-(--color-text)"
+            className="absolute right-gutter bottom-6 bg-(--color-glass) font-mono text-label uppercase"
           >
             Skip intro <span aria-hidden="true">· Esc</span>
-          </button>
+          </Button>
         ) : null}
       </section>
     </HeroIntroContext>
