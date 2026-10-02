@@ -11,10 +11,10 @@ old conversation. Read in this order: this file → `CLAUDE.md` → `docs/DECISI
 | Repo          | github.com/THEProgrammingGod69/SIG_Reality_Spectra-ARVR- (private), `main`                    |
 | Local folder  | `D:\Academic Nottes VIT\SIG\SIG_Draft_Code`                                                   |
 | Hosting       | **Netlify** (D-025)                                                                           |
-| Last commit   | `3d9317a` — handoff after Stage 5 (tag `stage-5` on `e852ab6`, pushed)                        |
-| Rollback tags | `stage-1` – `stage-5`, `architecture-v2`, `architecture-v3`                                   |
-| Done          | Stages 1–5 committed and tagged. **Stage 6 built and green, not yet committed** (Arnav's go)  |
-| Next          | Commit + tag `stage-6` on Arnav's go; then **Stage 7 — events and gallery** (brief below)     |
+| Last commit   | `0560575` — Stage 6 (tag `stage-6`, pushed)                                                   |
+| Rollback tags | `stage-1` – `stage-6`, `architecture-v2`, `architecture-v3`                                   |
+| Done          | Stages 1–6, all committed, tagged and pushed                                                  |
+| Next          | **Stage 7 — events and gallery** (brief below). Start only when Arnav says go                 |
 | Gates         | `pnpm check` + `pnpm test:e2e` green (see Stage 6 below); `pnpm test:live` waits for accounts |
 | Credentials   | **Placeholders** (D-030): swap list at the top of `docs/OPEN_ITEMS.md`                        |
 
