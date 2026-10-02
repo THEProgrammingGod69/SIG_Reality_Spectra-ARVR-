@@ -10,10 +10,65 @@ old conversation. Read in this order: this file → `CLAUDE.md` → `docs/DECISI
 | ------------- | ---------------------------------------------------------------------------------------- |
 | Repo          | github.com/THEProgrammingGod69/SIG_Reality_Spectra-ARVR- (private), `main`               |
 | Local folder  | `D:\Academic Nottes VIT\SIG\SIG_Draft_Code`                                              |
-| Rollback tags | `stage-1` – `stage-3`, `architecture-v2`, `architecture-v3`; `stage-4` once committed    |
-| Done          | Stages 1–3 (committed); **Stage 4** (content layer + pages + SEO) — built, gates green   |
-| Next          | Commit + tag `stage-4` + push (Arnav's go), then Stage 5 — data layer (needs accounts)   |
+| Last commit   | `f05ad06` — Stage 4 (tag `stage-4`, pushed)                                              |
+| Rollback tags | `stage-1` – `stage-4`, `architecture-v2`, `architecture-v3`                              |
+| Done          | Stages 1–4, all committed, tagged and pushed                                             |
+| Next          | **Stage 5 — data layer** (brief below). Start only when Arnav says go                    |
 | Gates         | `pnpm check` + `pnpm test:e2e` green (93 unit, 57 e2e; e2e also on the production build) |
+
+## Start of the next chat
+
+1. Read this file, then `CLAUDE.md`, `docs/DECISIONS.md` (D-001 – D-024),
+   `docs/ARCHITECTURE.md`, `docs/OPEN_ITEMS.md`, `src/lib/data/README.md` and
+   `src/lib/schemas/README.md`. No need to re-read the Stage 2–4 source unless a
+   change touches it.
+2. Report which Stage 5 inputs are still missing, then wait for Arnav's go.
+
+## Stage 5 brief — data layer (schemas, repository, uploads, cache tags)
+
+Build the data layer only — **no admin UI** (Stage 6+) and no public page changes
+beyond what is needed to prove reads work. Field lists, keys and blob paths are
+already specified in `src/lib/schemas/README.md` and `src/lib/data/README.md`.
+
+1. **Schemas** in `src/lib/schemas/`: `category.ts` (shared enum), `event.ts`,
+   `gallery.ts`, `team.ts`, `recruitment.ts`, `sponsorship.ts`. One schema per
+   entity (rule 3), inferred types exported, valid/invalid Vitest cases.
+   `RecruitmentSettings` must accept today's `src/content/recruitment.json`
+   shape so Stage 8 can swap it in (D-024).
+2. **Repository** in `src/lib/data/` (the only place importing `@upstash/redis` /
+   `@vercel/blob`; the ESLint rule already enforces it): `keys.ts` (all keys from
+   `REDIS_KEY_PREFIX`), `tags.ts`, `events.ts`, `gallery.ts`, `team.ts`,
+   `recruitment.ts`, `sponsorships.ts`, `media.ts`. Behind interfaces so Postgres
+   can replace Redis later.
+   - Multi-key writes in MULTI transactions; `updatedAt` optimistic concurrency
+     with a clear "changed by someone else" error.
+   - Validate with Zod on every write **and** read; skip + log corrupt records.
+   - Event phase derived at request time (current / awaiting timeline /
+     timeline), never stored; "now" never inside `'use cache'` (rule 12).
+3. **Caching:** public reads are `'use cache'` functions with `cacheTag`; write
+   helpers call `updateTag` (Server-Action-only) — a write without its tag is an
+   incomplete write (rule 10). Gallery reads carry `events` + `gallery`.
+4. **Uploads:** `/api/admin/upload` token route + `media.ts` (type/size limits,
+   path under the record, verify URLs on attach, delete on replace/remove).
+   Session check is a stub until Stage 6 adds Auth.js — must fail closed.
+5. **Seed script** (idempotent) and tests against a test key prefix: create → list
+   → update → delete leaves no orphaned keys or blobs. Next 16 notes in
+   CLAUDE.md §4 (`updateTag`, `cacheTag`, `connection()`).
+6. Docs: decisions, CLAUDE.md status, OPEN_ITEMS, READMEs. Gates, commit, tag
+   `stage-5` only on Arnav's go.
+
+**Inputs needed before Stage 5 (OPEN_ITEMS #8–#12):**
+
+| #   | Input                                                                                      |
+| --- | ------------------------------------------------------------------------------------------ |
+| 8   | Vercel project under the **club** account, repo connected                                  |
+| 9   | Upstash Redis via Vercel Marketplace, `vercel env pull` → `.env.local`                     |
+| 10  | Vercel Blob store, token in env                                                            |
+| 11  | Confirm categories: workshop · hackathon · meetup · talk · competition · other             |
+| 12  | Team hierarchy levels (e.g. faculty, leadership, leads, members) and what counts as "core" |
+
+Without #8–#10 the schemas, keys, tags and logic can still be built and unit-tested
+against an in-memory fake; live Redis/Blob tests wait for the accounts.
 
 ## Stage 4 — what was built
 
