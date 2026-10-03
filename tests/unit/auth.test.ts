@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import { authSetup, isAllowedAdmin, isDevSignInEnabled, safeCallbackPath } from '@/lib/auth/policy';
+import {
+  authSetup,
+  cookieRemovalsOnly,
+  isAllowedAdmin,
+  isDevSignInEnabled,
+  safeCallbackPath,
+} from '@/lib/auth/policy';
 
 /** The admin access rules (D-030), as pure functions of the environment. */
 
@@ -101,5 +107,16 @@ describe('safeCallbackPath', () => {
     null,
   ])('sends %j to the dashboard instead', (value) => {
     expect(safeCallbackPath(value)).toBe('/admin');
+  });
+});
+
+describe('cookieRemovalsOnly', () => {
+  it('passes on a removed session, never a re-issued one (D-032)', () => {
+    const renewed =
+      'authjs.session-token=eyJ...; Path=/; Expires=Sat, 03 Oct 2026 22:00:00 GMT; HttpOnly; SameSite=Lax';
+    const removed = 'authjs.session-token=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax';
+    const expired = 'authjs.session-token.0=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT';
+    expect(cookieRemovalsOnly([renewed, removed, expired])).toEqual([removed, expired]);
+    expect(cookieRemovalsOnly([renewed])).toEqual([]);
   });
 });

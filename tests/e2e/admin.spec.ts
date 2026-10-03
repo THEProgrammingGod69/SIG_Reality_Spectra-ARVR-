@@ -54,6 +54,8 @@ test.describe('signed in', () => {
 
     await page.getByRole('button', { name: 'Sign out' }).first().click();
     await expect(page).toHaveURL('/admin/login');
+    // The sign-in form renders once the sign-out has fully gone through.
+    await expect(page.getByLabel('Admin email')).toBeVisible();
     await page.goto('/admin');
     await expect(page).toHaveURL(/\/admin\/login\?callbackUrl=%2Fadmin/);
   });

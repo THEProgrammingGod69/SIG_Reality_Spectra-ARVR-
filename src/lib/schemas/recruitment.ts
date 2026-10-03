@@ -5,10 +5,6 @@ import { entitySchemas, httpsUrl, mediaUrl } from './fields';
 /**
  * Recruitment settings, one record for the whole site (/admin/recruitment).
  *
- * The input shape is also what the interim `src/content/recruitment.json`
- * holds (D-024), so Stage 8 replaces the file with this record without a
- * second schema (D-028).
- *
  * Opening recruitment needs only the application form. The roles and
  * responsibilities PDF is optional: until it is uploaded the public page says
  * so plainly instead of showing a broken download (D-028).

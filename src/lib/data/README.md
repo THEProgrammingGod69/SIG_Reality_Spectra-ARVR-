@@ -8,26 +8,26 @@ enforces it, so breaking it fails `pnpm lint`. The app imports from
 
 Design: D-025 (Netlify, Upstash, R2) and D-029 (this layer).
 
-| File                       | Responsibility                                                                                                                                     |
-| -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `index.ts`                 | The front door: cached public reads (`getPublicEvents`, `getGallery`, `getTeam`, `getRecruitment`) and `repositories()` for admin reads and writes |
-| `runtime.ts`               | Builds the real services from the environment; shared by the app and `scripts/seed.mts`                                                            |
-| `entity.ts`                | The generic repository: validation on write and read, versions, files, cache tags                                                                  |
-| `events.ts`                | Events, `listPublic`, `splitByPhase` (current / timeline at request time)                                                                          |
-| `gallery.ts`               | Standalone photos, `buildGallery` (event photos + club photos, newest first)                                                                       |
-| `team.ts`                  | Team members, `reorder`, `groupTeam` (core, then secretaries by domain)                                                                            |
-| `recruitment.ts`           | The one settings record: `get`, `getStatus` (closed by default), `save`                                                                            |
-| `sponsorships.ts`          | Requests from /contact: `submit`, `list` (newest first, paged), `setStatus`, `remove`                                                              |
-| `media.ts`                 | Upload tickets, attach checks, deletes                                                                                                             |
-| `keys.ts`                  | Every Redis key and storage key, from `DATA_NAMESPACE`                                                                                             |
-| `tags.ts`                  | Cache tag names shared by reads and writes                                                                                                         |
-| `errors.ts`                | Errors with admin-facing messages (not found, conflict, invalid, media)                                                                            |
-| `adapters/types.ts`        | The two ports: `RecordStore` and `ObjectStorage`                                                                                                   |
-| `adapters/redis-store.ts`  | `RecordStore` on Upstash (atomic writes by Lua script)                                                                                             |
-| `adapters/r2-storage.ts`   | `ObjectStorage` on Cloudflare R2                                                                                                                   |
-| `adapters/memory-*.ts`     | In-memory versions of both ports, for the unit tests                                                                                               |
-| `adapters/file-store.ts`   | Local data mode's `RecordStore`: the memory store loaded from `.data/records-{ns}.json`, writes queued (D-031)                                     |
-| `adapters/file-storage.ts` | Local data mode's `ObjectStorage`: files in `.data/media`, HMAC-signed PUT URLs on `/api/local-media` (D-031)                                      |
+| File                       | Responsibility                                                                                                                                 |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `index.ts`                 | The front door: cached public reads (`getPublicEvents`, `getGallery`, `getTeam`, `getRecruitment`), `publicRead`/`adminRead`, `repositories()` |
+| `runtime.ts`               | Builds the real services from the environment; shared by the app and `scripts/seed.mts`                                                        |
+| `entity.ts`                | The generic repository: validation on write and read, versions, files, cache tags                                                              |
+| `events.ts`                | Events, `listPublic`, `splitByPhase` (current / timeline at request time)                                                                      |
+| `gallery.ts`               | Standalone photos, `buildGallery` (event photos + club photos, newest first)                                                                   |
+| `team.ts`                  | Team members, `append` (end of the tier), `reorder`, `groupTeam` (core, then secretaries by domain)                                            |
+| `recruitment.ts`           | The one settings record: `get`, `getStatus` (closed by default), `save`                                                                        |
+| `sponsorships.ts`          | Requests from /contact: `submit` (rate-limited per sender), `list` (newest first, paged), `setStatus`, `remove`                                |
+| `media.ts`                 | Upload tickets, attach checks, deletes                                                                                                         |
+| `keys.ts`                  | Every Redis key and storage key, from `DATA_NAMESPACE`                                                                                         |
+| `tags.ts`                  | Cache tag names shared by reads and writes                                                                                                     |
+| `errors.ts`                | Errors with admin-facing messages (not found, conflict, invalid, media, rate-limited)                                                          |
+| `adapters/types.ts`        | The two ports: `RecordStore` and `ObjectStorage`                                                                                               |
+| `adapters/redis-store.ts`  | `RecordStore` on Upstash (atomic writes and rate-limit counters by Lua script)                                                                 |
+| `adapters/r2-storage.ts`   | `ObjectStorage` on Cloudflare R2                                                                                                               |
+| `adapters/memory-*.ts`     | In-memory versions of both ports, for the unit tests                                                                                           |
+| `adapters/file-store.ts`   | Local data mode's `RecordStore`: the memory store loaded from `.data/records-{ns}.json`, writes queued process-wide (D-031, D-032)             |
+| `adapters/file-storage.ts` | Local data mode's `ObjectStorage`: files in `.data/media`, HMAC-signed PUT URLs on `/api/local-media` (D-031)                                  |
 
 ## Reads and writes
 
@@ -50,6 +50,9 @@ return adminAction((admin) =>
   allows only in Server Actions. Admin reads are never cached.
 - **Errors** an admin can act on are `DataError`s; show their message. An
   `InvalidDataError` also lists `issues` per field for the form.
+- **Public pages read through `publicRead(what, load)`** inside `<Suspense>`:
+  an outage returns `{ failed }` and the page shows `<LoadFailed>`, never an
+  error page (rule 9).
 - **Admin pages read through `adminRead(what, load)`**: fresh, after
   `connection()`, and returning `{ unavailable }` instead of throwing when no
   store is configured or it fails. `dataAvailability()` says which backend is in
@@ -72,7 +75,7 @@ return adminAction((admin) =>
 | ----------------------------- | ---------- | ----------------------------------------- |
 | `sig:{ns}:{collection}:{id}`  | hash       | `data` (the record's JSON) and `version`  |
 | `sig:{ns}:{collection}:index` | sorted set | the collection's ids, scored for ordering |
-| `sig:{ns}:ratelimit:*`        | —          | the contact form's rate limiter (Stage 8) |
+| `sig:{ns}:ratelimit:{key}`    | string     | a counter that expires (`hit()`, D-032)   |
 
 `{ns}` is `DATA_NAMESPACE`: `prod`, `preview`, `dev`, or `test-…` for the live
 tests. Index scores: events by start time, gallery photos and sponsorship
@@ -132,8 +135,16 @@ were never attached.
 - `pnpm test:live` — the same store contract plus a full create → update →
   delete cycle against the real Upstash and R2, in a throwaway namespace;
   checks that no key or file is left behind.
-- `pnpm seed [--demo]` — copies `src/content/recruitment.json` into Redis if
-  no admin has saved recruitment settings; `--demo` adds labelled sample
-  records (never in `prod`).
+- `pnpm seed --demo` — adds labelled sample records, and opens recruitment if
+  it was never saved (never in `prod`).
 
-Built in **Stage 5**.
+## Rate limit (Stage 8, D-032)
+
+`RecordStore.hit(key, windowSeconds)` counts hits in a window that opens with
+the first hit and then expires. `sponsorships.submit(form, { from })`
+validates the form first, then counts one hit against a hash of the sender's
+address (never the address itself), and refuses the fourth valid request in
+an hour with a `RateLimitedError` (`reason: 'limited'` for the form). Local
+mode keeps the counters in memory; a restart clears them.
+
+Built in **Stages 5–8**.

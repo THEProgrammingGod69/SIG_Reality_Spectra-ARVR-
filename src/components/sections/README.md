@@ -10,20 +10,18 @@ Built in **Stage 2** (Hero) and **Stages 4, 7 and 8** (the rest).
 
 ## Stage 4
 
-| File                     | Used on                     | What it renders                                                        |
-| ------------------------ | --------------------------- | ---------------------------------------------------------------------- |
-| `page-intro.tsx`         | About, Recruitment, Contact | Eyebrow, the page's `<h1>`, lead                                       |
-| `about-intro.tsx`        | Home                        | Motto, "Who we are", short about; opens under the horizon glow (D-018) |
-| `mission-vision.tsx`     | Home, About                 | Mission and vision cards                                               |
-| `domain-overview.tsx`    | Home                        | Domain names by group, link to the full list                           |
-| `domain-list.tsx`        | Recruitment                 | Every domain with its full description, by group                       |
-| `about-story.tsx`        | About                       | The long about, with an "at a glance" card                             |
-| `team-section.tsx`       | About                       | Team heading + empty state until Stage 8 passes members in             |
-| `recruitment-status.tsx` | Recruitment                 | Open: Apply now + QR; closed: where to follow (interim, D-024)         |
-| `contact-details.tsx`    | Contact                     | Email, phone, address, map — "Coming soon" where not set               |
-| `social-channels.tsx`    | Contact                     | Each channel with a button and (from `md`) a QR code                   |
-| `social-buttons.tsx`     | Recruitment, Contact        | The "Follow on …" button row                                           |
-| `sponsorship-notice.tsx` | Contact                     | Honest "form opens soon" notice until Stage 8 (D-024)                  |
+| File                     | Used on                     | What it renders                                                            |
+| ------------------------ | --------------------------- | -------------------------------------------------------------------------- |
+| `page-intro.tsx`         | About, Recruitment, Contact | Eyebrow, the page's `<h1>`, lead                                           |
+| `about-intro.tsx`        | Home                        | Motto, "Who we are", short about; opens under the horizon glow (D-018)     |
+| `mission-vision.tsx`     | Home, About                 | Mission and vision cards                                                   |
+| `domain-overview.tsx`    | Home                        | Domain names by group, link to the full list                               |
+| `domain-list.tsx`        | Recruitment                 | Every domain with its full description, by group                           |
+| `about-story.tsx`        | About                       | The long about, with an "at a glance" card                                 |
+| `recruitment-status.tsx` | Recruitment                 | Open: Apply now + QR + roles PDF or "coming soon"; closed: where to follow |
+| `contact-details.tsx`    | Contact                     | Email, phone, address, map — "Coming soon" where not set                   |
+| `social-channels.tsx`    | Contact                     | Each channel with a button and (from `md`) a QR code                       |
+| `social-buttons.tsx`     | Recruitment, Contact        | The "Follow on …" button row                                               |
 
 ## Stage 7
 
@@ -34,6 +32,15 @@ Built in **Stage 2** (Hero) and **Stages 4, 7 and 8** (the rest).
 | `gallery-browser.tsx` | Gallery         | Category filters with counts, photo grid, "Show more" (client)                   |
 | `photo-grid.tsx`      | Events, Gallery | Square centre-cropped tiles and the full-size viewer (Modal, arrow keys)         |
 | `paragraphs.tsx`      | Events          | Admin-written text as paragraphs, never HTML (D-031)                             |
+
+## Stage 8
+
+| File                      | Used on                             | What it renders                                                                   |
+| ------------------------- | ----------------------------------- | --------------------------------------------------------------------------------- |
+| `team-section.tsx`        | About                               | The team, by tier: square photo or initials, name, position, secretary's domain   |
+| `sponsorship-section.tsx` | Contact                             | The request form, or the club's channels where the form cannot work (D-032)       |
+| `sponsorship-form.tsx`    | Contact                             | The form (client): validation, honeypot, Turnstile widget, sent and failed states |
+| `load-failed.tsx`         | Events, Gallery, About, Recruitment | What a section shows when `publicRead()` failed: a calm note, never an error page |
 
 ## `hero/` (Stage 2)
 

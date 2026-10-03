@@ -41,6 +41,7 @@ the call and it was made on the reasoning shown).
 | D-029 | Data layer: one generic repository over two storage ports                      | lead       |
 | D-030 | Admin access: Auth.js beta pinned, development sign-in, reviewed shadcn subset | team, lead |
 | D-031 | Stage 7: local data mode, any-ratio images, placeholders until real content    | team, lead |
+| D-032 | Stage 8: contact-form spam checks, recruitment moves to the admin panel        | lead       |
 
 ---
 
@@ -633,3 +634,68 @@ registration link.
   public reads return their empty states where no store is configured.
 - **E2E runs use at most 4 parallel browsers locally**: one dev server cannot
   serve more once the pages carry many images.
+
+## D-032 — Stage 8: contact-form spam checks, recruitment moves to the admin panel
+
+**Context.** Stage 8 connects the last three admin tools to the site: the
+team (About), the recruitment settings (Recruitment and the header) and the
+sponsorship inbox (the form on Contact). The team list, the roles PDF and the
+Turnstile keys are still to come (OPEN_ITEMS #19, #20, #22), so the stage is
+built and tested on placeholders, as in D-031.
+
+**Lead calls.**
+
+- **Three spam checks on the public form**, in this order in the Server
+  Action: a **honeypot** field people never see (a bot that fills it is told
+  it worked and nothing is stored); **Cloudflare Turnstile**; then
+  **validation and a rate limit** of 3 requests per sender per hour in the
+  data layer, counted only for valid requests. The limit is a short-lived
+  counter on the `RecordStore` port (`hit()`: an atomic INCR + EXPIRE script
+  on Upstash, `sig:{ns}:ratelimit:*`; in memory for local mode and tests),
+  keyed by a hash of the sender's address, so no IP address is stored. On
+  Netlify the address comes from `x-nf-client-connection-ip`, which Netlify
+  sets and a visitor cannot forge.
+- **Turnstile fails closed.** With both keys it is on; with neither, it is off
+  only off Netlify (a developer's computer, the tests); a Netlify deploy
+  without both keys, or any environment with just one, does not offer the
+  form — Contact shows the club's channels instead, as D-024 required of a
+  form that cannot work. The same rule hides the form where no data store is
+  configured. Cloudflare's script loads only on /contact, only with the keys.
+- **Recruitment lives in the admin panel now.** `src/content/recruitment.json`
+  and `interimRecruitment` are deleted; /recruitment, the header's
+  Recruitment button and the mobile menu read the cached settings
+  (`recruitment` tag). Until an admin first saves them the site shows
+  recruitment closed — so going live includes opening it in
+  /admin/recruitment with the club's form link (OPEN_ITEMS swap list).
+  `pnpm seed` now only adds demo content (`--demo`), which opens recruitment
+  with that link in a development namespace.
+- **No site-wide recruitment banner.** The Stage 3 slot is removed rather than
+  filled: a bar above the fixed header would push every page, the full-bleed
+  hero and the skip link's focus order around, and the status is already
+  shown where people look — the header's button (a dot and "open now" for
+  screen readers) and, on phones where that button is hidden, an "Open now"
+  tag beside Recruitment in the menu.
+- **Team ordering.** New members join the end of their tier. The core team is
+  reordered with up/down buttons, each move saving the whole order atomically
+  (`team.reorder()`); secretaries follow the order of the domains they lead,
+  so they need no ordering. Cards show a square, centre-cropped photo, or the
+  member's initials.
+- **The inbox** lists requests newest first, 20 a page; new ones open by
+  default. A status change saves at once; deletes ask first. There is still no
+  email (D-008): the inbox links the sender's address and phone for a reply.
+- **Shared pieces instead of copies:** `ConfirmDelete`, `SaveBar`,
+  `useRecordVersion` (the `updatedAt` a form sends, and the conflict notice),
+  `CheckboxField` and `PdfField` in the admin; `publicRead()` + `LoadFailed`
+  for every public read; `blankToNull` in `src/lib/forms.ts` for both sides.
+  The Stage 7 screens were moved onto them.
+- **Local data mode's write queue is process-wide.** The development server
+  can load the data layer once per bundle; two copies writing `.data` at once
+  could lose a write. The queue (and the counters) now live per file on
+  `globalThis`, with a test for two store copies.
+- **Sign-out is final; sessions do not roll.** Auth.js re-issues the session
+  cookie on every request the proxy reads it on. With Stage 8's link-heavy
+  admin pages, Next.js prefetches in flight when "Sign out" is pressed could
+  arrive afterwards and put the session back (the production-build e2e run
+  caught it). The proxy now passes on cookie removals only
+  (`cookieRemovalsOnly()` in `src/lib/auth/policy.ts`), so a session lasts a
+  fixed 8 hours from sign-in, as D-030 describes, and signing out sticks.

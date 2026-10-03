@@ -22,12 +22,15 @@ then confirm the dashboard's **Setup** card shows everything configured.
 | `AUTH_SECRET`               | generated in your `.env.local` only                          | A fresh secret per Netlify deploy context              | `SETUP_AUTH.md`                   |
 | Upstash Redis variables     | empty — dashboard says "Data store not connected"            | Club Upstash database (#9)                             | `SETUP_STORAGE.md`                |
 | R2 variables                | empty — uploads answer 503                                   | Club R2 bucket and token (#10)                         | `SETUP_STORAGE.md`                |
-| Turnstile keys              | empty                                                        | Club Cloudflare Turnstile site (#22, Stage 8)          | Stage 8                           |
+| Turnstile keys              | empty — check off locally; the form is hidden on Netlify     | Club Cloudflare Turnstile site (#22)                   | D-032                             |
 | `CRON_SECRET`               | empty                                                        | A generated secret (Stage 10)                          | Stage 10                          |
 | Contact details             | "Coming soon" in `src/content/contact.json`                  | Club email, phone, address, map link (#7)              | `pnpm check:launch` gate          |
 | `DATA_BACKEND`              | `local` in your `.env.local` (records + uploads in `.data/`) | Remove once Upstash + R2 are set (D-031)               | `SETUP_STORAGE.md`                |
 | Events and photos           | `[Demo]` events and club photos from `pnpm seed --demo`      | Real events (#15) and photos (#18), added in the panel | `/admin/events`, `/admin/gallery` |
 | Sample registration link    | The recruitment Google Form link, in demo events only        | Each event's real link (typically VIERP, #16)          | `/admin/events`                   |
+| Team                        | `[Demo]` core members and secretaries                        | The real team (#19), added in the panel                | `/admin/team`                     |
+| Recruitment settings        | Open with the form link in `dev` only (seeded)               | Open in production with the form link (#20, #21)       | `/admin/recruitment`              |
+| Sponsorship requests        | One `[Demo]` request in `dev`                                | Nothing to swap: delete it, real requests arrive       | `/admin/sponsorships`             |
 
 ---
 
@@ -75,14 +78,14 @@ later stage needs them. Step-by-step setup: [`SETUP_STORAGE.md`](./SETUP_STORAGE
 | 17  | Preferred **poster aspect ratio**                                                         | Resolved: any ratio, shown whole in a 4:5 frame (D-031)                          |
 | 18  | A first batch of **standalone club photos** (consent checked), with a category for each   | Open — the drive is not finalised; `[Demo]` photos until then (D-031)            |
 
-## Blocking Stage 8 — team, recruitment and sponsorships
+## Team, recruitment and sponsorships (Stage 8 built with placeholders)
 
-| #   | Item                                                                                    | Status                                                                                          |
-| --- | --------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| 19  | **Team list**: name, position, photo; core team or secretary (and which domain) — D-027 | Open                                                                                            |
-| 20  | **Roles and responsibilities PDF** and the current **Google Form** link                 | Form link supplied (D-024); the page says the PDF is "coming soon" until it is uploaded (D-028) |
-| 21  | **Is recruitment open right now?**                                                      | Yes — interim `recruitment.json` (D-024)                                                        |
-| 22  | Cloudflare Turnstile site key and secret                                                | Open                                                                                            |
+| #   | Item                                                                                    | Status                                                                                                                                   |
+| --- | --------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| 19  | **Team list**: name, position, photo; core team or secretary (and which domain) — D-027 | Open — `[Demo]` members until supplied; add them in `/admin/team` (D-032)                                                                |
+| 20  | **Roles and responsibilities PDF** and the current **Google Form** link                 | Form link supplied: `https://forms.gle/WoDyL1mwWHnnKFs38`. The PDF shows as "coming soon" until uploaded in `/admin/recruitment` (D-028) |
+| 21  | **Is recruitment open right now?**                                                      | Yes. It is now set only in `/admin/recruitment` (D-032): open it there with the form link when the live data store exists                |
+| 22  | Cloudflare Turnstile site key and secret                                                | Open — the check is off locally; a Netlify deploy without both keys hides the form and lists the channels (D-032)                        |
 
 ## Blocking Stage 10 — go live
 

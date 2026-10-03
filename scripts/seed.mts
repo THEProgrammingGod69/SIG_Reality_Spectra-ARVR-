@@ -1,21 +1,19 @@
 /**
- * pnpm seed [--demo]
+ * pnpm seed --demo
  *
  * Fills the data store this checkout's `.env.local` points at (its
- * DATA_BACKEND and DATA_NAMESPACE). Safe to run any number of times: it only
- * ever creates records that do not exist yet, and never edits or deletes one.
+ * DATA_BACKEND and DATA_NAMESPACE) with clearly labelled "[Demo]" content
+ * until the club's real content arrives (D-031): events (current, draft,
+ * ended, on the timeline, one at every length limit), club photos, team
+ * members (with and without a photo), a sponsorship request, and recruitment
+ * open with the club's form link if no admin has saved the settings yet.
+ * Placeholder images come in mixed aspect ratios. Refused in the production
+ * namespace, where everything is entered in the admin panel.
  *
- * Always:  copies src/content/recruitment.json into the recruitment settings,
- *          if no admin has saved them yet (the Stage 8 hand-over, D-028).
- * --demo:  adds clearly labelled "[Demo]" events (current, draft, ended, on the
- *          timeline, one at every length limit), club photos and team members,
- *          with generated placeholder images in mixed aspect ratios, until the
- *          club's real content arrives (D-031). Refused in the production
- *          namespace.
- *
- * Changes made here bypass the admin panel, so the running site shows them
- * within an hour (the public reads' cache lifetime), or at once after a
- * restart.
+ * Safe to run any number of times: it only ever creates records that do not
+ * exist yet, and never edits or deletes one. Changes made here bypass the
+ * admin panel, so the running site shows them within an hour (the public
+ * reads' cache lifetime), or at once after a restart.
  */
 import { existsSync, readFileSync } from 'node:fs';
 
@@ -24,15 +22,21 @@ import type { EventInput } from '@/lib/schemas/event';
 // Load the environment before anything reads it (src/lib/env.ts parses on import).
 if (existsSync('.env.local')) process.loadEnvFile('.env.local');
 
-const { interimRecruitment, domains } = await import('@/lib/content');
+if (!process.argv.includes('--demo')) {
+  console.log('Usage: pnpm seed --demo   (adds labelled demo content; never in "prod")');
+  process.exit(1);
+}
+
+const { domains } = await import('@/lib/content');
 const { createDataServices } = await import('@/lib/data/runtime');
 const { CATEGORIES } = await import('@/lib/schemas/category');
 
 const SEED_ACTOR = 'seed-script@reality-spectra.invalid';
 const DAY = 24 * 60 * 60 * 1000;
+/** The club's application form (supplied Oct 2026, OPEN_ITEMS #20). */
+const CLUB_FORM_URL = 'https://forms.gle/WoDyL1mwWHnnKFs38';
 
 const data = createDataServices({ invalidate: () => {} });
-const demo = process.argv.includes('--demo');
 const summary: string[] = [];
 
 /** Create a record unless one with its id exists; files are made only when it does not. */
@@ -49,21 +53,23 @@ async function ensure(
   summary.push(`created  ${label}`);
 }
 
-console.log(`Seeding namespace "${data.namespace}"${demo ? ' with demo data' : ''}…`);
+if (data.namespace === 'prod') {
+  throw new Error('Demo data is never written to the production namespace.');
+}
+console.log(`Seeding namespace "${data.namespace}" with demo data…`);
 
 if ((await data.recruitment.get()) === null) {
-  await data.recruitment.save(interimRecruitment, null, SEED_ACTOR);
-  summary.push('created  recruitment settings (from src/content/recruitment.json)');
+  await data.recruitment.save(
+    { open: true, formUrl: CLUB_FORM_URL, rolesPdfUrl: null },
+    null,
+    SEED_ACTOR,
+  );
+  summary.push('created  recruitment settings (open, with the club’s form link)');
 } else {
-  summary.push('exists   recruitment settings (an admin has saved them; left alone)');
+  summary.push('exists   recruitment settings (left alone)');
 }
 
-if (demo) {
-  if (data.namespace === 'prod') {
-    throw new Error('Demo data is never written to the production namespace.');
-  }
-  await seedDemo();
-}
+await seedDemo();
 
 console.log(summary.map((line) => `  ${line}`).join('\n'));
 console.log('Done.');
@@ -119,7 +125,7 @@ async function seedDemo() {
   }
 
   async function upload(
-    target: 'event-poster' | 'event-photo' | 'gallery-photo',
+    target: 'event-poster' | 'event-photo' | 'gallery-photo' | 'member-photo',
     recordId: string,
     label: string,
     ratioIndex: number,
@@ -150,7 +156,7 @@ async function seedDemo() {
   // Fixed ids, so a second run finds the same records and skips them.
   const demoId = (n: number) => `de300000-0000-4000-8000-${String(n).padStart(12, '0')}`;
   // A placeholder until real events exist: the recruitment form stands in (D-031).
-  const registrationUrl = interimRecruitment.formUrl ?? 'https://example.org/register';
+  const registrationUrl = CLUB_FORM_URL;
   const base = {
     description:
       'Demo data, created by pnpm seed --demo while the real event details are being finalised.\n\nReplace or delete it from the admin panel at any time.',
@@ -325,32 +331,47 @@ async function seedDemo() {
     );
   }
 
-  const corePositions = ['President', 'Vice President'];
+  // Every other member has a photo (portrait-shaped, to see the square crop);
+  // the rest show their initials.
+  const memberPhoto = async (id: string, name: string, index: number) =>
+    index % 2 === 0 ? await upload('member-photo', id, name, 0, `Demo photo of ${name}`) : null;
+
+  const corePositions = ['President', 'Vice President', 'General Secretary'];
   for (const [index, position] of corePositions.entries()) {
     const id = demoId(10 + index);
+    const name = `Demo ${position}`;
     await ensure(
       `demo core member (${position})`,
       () => data.team.get(id),
-      () =>
+      async () =>
         data.team.create(
-          { id, name: `Demo ${position}`, position, tier: 'core', order: index },
+          {
+            id,
+            name,
+            position,
+            tier: 'core',
+            order: index,
+            photo: await memberPhoto(id, name, index),
+          },
           SEED_ACTOR,
         ),
     );
   }
   for (const [index, domain] of domains.slice(0, 3).entries()) {
     const id = demoId(20 + index);
+    const name = `Demo Secretary ${index + 1}`;
     await ensure(
       `demo secretary (${domain.name})`,
       () => data.team.get(id),
-      () =>
+      async () =>
         data.team.create(
           {
             id,
-            name: `Demo Secretary ${index + 1}`,
+            name,
             position: `Secretary, ${domain.name}`,
             tier: 'secretary',
             domainId: domain.id,
+            photo: await memberPhoto(id, name, index),
           },
           SEED_ACTOR,
         ),

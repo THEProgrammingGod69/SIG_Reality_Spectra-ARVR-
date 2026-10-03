@@ -4,8 +4,9 @@ import siteJson from '@/content/site.json';
 import {
   contactInfo,
   domainGroups,
+  domainNames,
+  domainOptions,
   domains,
-  interimRecruitment,
   parseContent,
   pendingContent,
   profileUrls,
@@ -148,13 +149,9 @@ describe('contact', () => {
   });
 });
 
-describe('interim recruitment', () => {
-  it('is open with an https form link', () => {
-    expect(interimRecruitment.open).toBe(true);
-    expect(interimRecruitment.formUrl).toMatch(/^https:\/\//);
-  });
-
-  it('parses into the admin-managed record’s shape, with no roles PDF yet (D-028)', () => {
-    expect(interimRecruitment.rolesPdfUrl).toBeNull();
+describe('domain helpers', () => {
+  it('names every domain, in domains.json order', () => {
+    expect(domainOptions.map((domain) => domain.id)).toEqual(domains.map((domain) => domain.id));
+    for (const domain of domains) expect(domainNames[domain.id]).toBe(domain.name);
   });
 });

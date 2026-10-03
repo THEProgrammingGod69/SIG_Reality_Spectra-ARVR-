@@ -148,5 +148,16 @@ export function storeContract(
     it('rejects a batch that touches one record twice', async () => {
       await expect(store.write([create('a', 1), create('a', 2)])).rejects.toThrow(/twice/);
     });
+
+    it('counts hits per key within a window, then starts again', async () => {
+      expect(await store.hit('form:a', 1)).toBe(1);
+      expect(await store.hit('form:a', 1)).toBe(2);
+      expect(await store.hit('form:b', 1)).toBe(1);
+      // Counters are not records.
+      expect(await store.count('sponsorship')).toBe(0);
+
+      await new Promise((resolve) => setTimeout(resolve, 1_500));
+      expect(await store.hit('form:a', 1)).toBe(1);
+    });
   });
 }

@@ -20,7 +20,7 @@ import { Icon } from './icon';
  * Field wires the accessibility for you — the label's `htmlFor`, the control's
  * `aria-describedby` (hint + error) and `aria-invalid` — and hands those props
  * to its child render function, which spreads them onto a control alongside
- * react-hook-form's `register()` (Stage 8).
+ * react-hook-form's `register()` (the sponsorship form on /contact).
  *
  * The control border is `--color-subtle`, the lightest neutral that clears
  * WCAG's 3:1 for component boundaries on every surface (contrast test).

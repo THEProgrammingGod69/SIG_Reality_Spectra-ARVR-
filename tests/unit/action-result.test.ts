@@ -8,9 +8,10 @@ import {
   InvalidDataError,
   MediaError,
   NotFoundError,
+  RateLimitedError,
 } from '@/lib/data/errors';
 
-/** How a failed admin save reaches the admin (D-030). */
+/** How a failed save reaches the admin, or the visitor on /contact (D-030, D-032). */
 describe('toActionFailure', () => {
   it.each([
     [new NotSignedInError(), 'signed-out'],
@@ -18,6 +19,7 @@ describe('toActionFailure', () => {
     [new AlreadyExistsError('This event'), 'conflict'],
     [new NotFoundError('This event'), 'not-found'],
     [new MediaError('The poster is too large.'), 'media'],
+    [new RateLimitedError('Please try again in an hour.'), 'limited'],
   ] as const)('passes on the admin-facing message of %s', (error, reason) => {
     expect(toActionFailure(error)).toEqual({
       ok: false,

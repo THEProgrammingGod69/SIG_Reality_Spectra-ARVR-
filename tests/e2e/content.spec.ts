@@ -2,13 +2,14 @@ import { expect, test } from '@playwright/test';
 
 import contact from '@/content/contact.json';
 import domains from '@/content/domains.json';
-import recruitment from '@/content/recruitment.json';
 import site from '@/content/site.json';
 import { siteConfig, siteRoutes } from '@/lib/site';
 
 /**
  * Stage 4 acceptance: the Git-edited content reaches its pages, placeholders
- * are honest, QR codes appear where they help, and SEO is complete. Expected
+ * are honest, QR codes appear where they help, and SEO is complete. The
+ * admin-managed parts (team, recruitment status, sponsorship form) are covered
+ * by team-recruitment.spec.ts and sponsorships.spec.ts. Expected
  * values are read from src/content, so editing the copy never breaks a test.
  */
 
@@ -65,35 +66,6 @@ test.describe('about', () => {
 test.describe('recruitment', () => {
   test.use({ viewport: { width: 1280, height: 900 } });
 
-  test('offers the application form while open, with a QR code', async ({ page }) => {
-    await page.goto('/recruitment');
-    test.skip(!recruitment.open, 'Recruitment is closed in src/content/recruitment.json');
-
-    const apply = page.getByRole('link', { name: /Apply now/ });
-    await expect(apply).toHaveAttribute('href', recruitment.formUrl!);
-    await expect(apply).toHaveAttribute('target', '_blank');
-    await expect(apply).toHaveAttribute('rel', /noopener/);
-    await expect(page.getByRole('img', { name: 'QR code for the application form' })).toBeVisible();
-    await expect(
-      page.getByRole('banner').getByRole('link', { name: /Recruitment \(open now\)/ }),
-    ).toBeVisible();
-  });
-
-  test('links the roles PDF, or says plainly that it is coming (D-028)', async ({ page }) => {
-    await page.goto('/recruitment');
-    test.skip(!recruitment.open, 'Recruitment is closed in src/content/recruitment.json');
-
-    const pdf = page.getByRole('link', { name: /Roles & responsibilities \(PDF\)/ });
-    if ('rolesPdfUrl' in recruitment && typeof recruitment.rolesPdfUrl === 'string') {
-      await expect(pdf).toHaveAttribute('href', recruitment.rolesPdfUrl);
-    } else {
-      await expect(pdf).toHaveCount(0);
-      await expect(
-        page.getByText('The roles and responsibilities document is coming soon.'),
-      ).toBeVisible();
-    }
-  });
-
   test('shows every domain with its full description, in both groups', async ({ page }) => {
     await page.goto('/recruitment');
 
@@ -103,18 +75,6 @@ test.describe('recruitment', () => {
     for (const domain of domains) {
       await expect(page.locator(`#${domain.id}`)).toContainText(domain.description);
     }
-  });
-});
-
-test.describe('recruitment on a phone', () => {
-  test.use({ viewport: { width: 390, height: 844 } });
-
-  test('swaps the QR code for the button (a phone cannot scan itself)', async ({ page }) => {
-    await page.goto('/recruitment');
-    test.skip(!recruitment.open, 'Recruitment is closed in src/content/recruitment.json');
-
-    await expect(page.getByRole('link', { name: /Apply now/ })).toBeVisible();
-    await expect(page.getByRole('img', { name: 'QR code for the application form' })).toBeHidden();
   });
 });
 
@@ -148,12 +108,6 @@ test.describe('contact', () => {
         ).toBeVisible();
       }
     }
-  });
-
-  test('explains the sponsorship form honestly until it exists', async ({ page }) => {
-    await page.goto('/contact');
-    await expect(page.getByText('The request form opens soon')).toBeVisible();
-    await expect(page.locator('form')).toHaveCount(0);
   });
 });
 

@@ -48,7 +48,8 @@ const INTEGRATIONS = [
   {
     id: 'turnstile',
     label: 'Spam protection (Cloudflare Turnstile)',
-    purpose: 'Protects the sponsorship form on /contact (Stage 8).',
+    purpose:
+      'Protects the sponsorship form on /contact; without it a deploy hides the form (D-032).',
     variables: ['NEXT_PUBLIC_TURNSTILE_SITE_KEY', 'TURNSTILE_SECRET_KEY'],
   },
   {

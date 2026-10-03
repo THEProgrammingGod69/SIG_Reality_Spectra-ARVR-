@@ -90,8 +90,8 @@ export async function Overview() {
       >
         {recruitment === null ? (
           <p className="text-body-sm text-muted-foreground">
-            Not saved here yet. The site shows the status in src/content/recruitment.json until
-            Stage 8 moves it into this panel.
+            Never saved, so the site shows recruitment as closed. Open it in the recruitment
+            settings with the application form link.
           </p>
         ) : (
           <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-body-sm">

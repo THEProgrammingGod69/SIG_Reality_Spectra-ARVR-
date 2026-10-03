@@ -245,10 +245,13 @@ export function MobileMenuPanel({
   menu,
   rootRef,
   channels,
+  recruitmentOpen,
 }: {
   menu: MobileMenuState;
   rootRef: MobileMenuRefs['root'];
   channels: Channels;
+  /** Tags the Recruitment link while recruitment is open (the header CTA is hidden on phones). */
+  recruitmentOpen: boolean;
 }) {
   return (
     <div
@@ -278,7 +281,10 @@ export function MobileMenuPanel({
             {siteRoutes.map((route, i) => {
               const current = menu.pathname === route.href;
               return (
-                <li key={route.href} className="overflow-hidden">
+                <li
+                  key={route.href}
+                  className="flex flex-wrap items-center gap-x-4 gap-y-1 overflow-hidden"
+                >
                   <Link
                     href={route.href}
                     onClick={menu.close}
@@ -296,6 +302,14 @@ export function MobileMenuPanel({
                       {route.label}
                     </span>
                   </Link>
+                  {route.placement === 'cta' && recruitmentOpen ? (
+                    <span
+                      data-menu-extra
+                      className="rounded-full border border-(--color-accent)/40 px-2.5 py-1 font-mono text-label whitespace-nowrap text-(--color-accent) uppercase"
+                    >
+                      Open now
+                    </span>
+                  ) : null}
                 </li>
               );
             })}

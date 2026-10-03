@@ -4,7 +4,6 @@ import type { z } from 'zod';
 
 import contactJson from '@/content/contact.json';
 import domainsJson from '@/content/domains.json';
-import recruitmentJson from '@/content/recruitment.json';
 import siteJson from '@/content/site.json';
 
 import {
@@ -14,7 +13,6 @@ import {
   SiteInfoSchema,
   type Social,
 } from './schemas/content';
-import { RecruitmentInputSchema } from './schemas/recruitment';
 
 /**
  * The Git-edited content (`src/content/*.json`), validated.
@@ -43,15 +41,13 @@ export function parseContent<Schema extends z.ZodType>(
 export const siteInfo = parseContent(SiteInfoSchema, siteJson, 'site.json');
 export const domains = parseContent(DomainsSchema, domainsJson, 'domains.json');
 export const contactInfo = parseContent(ContactInfoSchema, contactJson, 'contact.json');
-/**
- * INTERIM (D-024): validated by the admin-managed record's own input schema
- * (D-028). Stage 8 reads `getRecruitment()` from the data layer instead and
- * deletes the file; `pnpm seed` copies it into Redis meanwhile.
- */
-export const interimRecruitment = parseContent(
-  RecruitmentInputSchema,
-  recruitmentJson,
-  'recruitment.json',
+
+/** Each domain's id and name: the secretary's domain picker (a client prop). */
+export const domainOptions = domains.map(({ id, name }) => ({ id, name }));
+
+/** Domain names by id, for labelling a secretary's domain. */
+export const domainNames: Readonly<Record<string, string>> = Object.fromEntries(
+  domains.map((domain) => [domain.id, domain.name]),
 );
 
 /**

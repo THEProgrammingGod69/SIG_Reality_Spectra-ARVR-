@@ -1,6 +1,7 @@
 import type { FieldValues, Path, RegisterOptions, UseFormReturn } from 'react-hook-form';
-import type { ReactNode } from 'react';
+import type { ComponentProps, ReactNode } from 'react';
 
+import { Checkbox } from '@/components/admin/ui/checkbox';
 import { Label } from '@/components/admin/ui/label';
 import { cn } from '@/lib/cn';
 
@@ -44,12 +45,25 @@ export function FormField({ id, label, hint, error, className, children }: FormF
   );
 }
 
-/**
- * For `register(…, { setValueAs: blankToNull })` on an optional text field:
- * an empty box means "not set" (null), not an empty string.
- */
-export function blankToNull(value: string | null | undefined): string | null {
-  return value?.trim() ? value : null;
+type CheckboxFieldProps = Omit<ComponentProps<typeof Checkbox>, 'children'> & {
+  label: string;
+  /** Shown under the label, e.g. what ticking it does on the site. */
+  hint?: ReactNode;
+  error?: string | undefined;
+};
+
+/** A checkbox with its label, hint and error: pass it `checkboxProps(form, …)`. */
+export function CheckboxField({ label, hint, error, className, ...checkbox }: CheckboxFieldProps) {
+  return (
+    <label className={cn('flex items-start gap-3 text-body-sm text-foreground', className)}>
+      <Checkbox {...checkbox} aria-invalid={Boolean(error)} className="mt-0.5" />
+      <span>
+        {label}
+        {hint ? <span className="block text-xs text-muted-foreground">{hint}</span> : null}
+        {error ? <span className="block text-xs text-destructive">{error}</span> : null}
+      </span>
+    </label>
+  );
 }
 
 /**

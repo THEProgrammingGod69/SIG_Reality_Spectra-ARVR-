@@ -37,8 +37,8 @@ type SiteHeaderProps = {
  * · Menu toggle, with the MobileMenu panel behind the header row.
  *
  * The CTA shows a status dot while recruitment is open. The layout passes the
- * status (interim content now, admin settings from Stage 8) and the contact
- * channels as props, so no server-only content module reaches the browser.
+ * status (the admin-managed recruitment settings) and the contact channels as
+ * props, so no server-only content module reaches the browser.
  */
 export function SiteHeader({ channels, recruitmentOpen }: SiteHeaderProps) {
   const scrolled = useSyncExternalStore(subscribeToScroll, isScrolled, () => false);
@@ -57,7 +57,12 @@ export function SiteHeader({ channels, recruitmentOpen }: SiteHeaderProps) {
         )}
       />
 
-      <MobileMenuPanel menu={menu} rootRef={menuRefs.root} channels={channels} />
+      <MobileMenuPanel
+        menu={menu}
+        rootRef={menuRefs.root}
+        channels={channels}
+        recruitmentOpen={recruitmentOpen}
+      />
 
       <Container className="relative flex h-full items-center justify-between gap-6">
         <Link href={homeRoute.href} className="flex items-center gap-3 rounded-full">

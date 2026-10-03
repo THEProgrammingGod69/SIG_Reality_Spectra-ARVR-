@@ -33,11 +33,13 @@ type ImageFieldProps = {
   error?: ImageErrors;
   /** The preview's frame, e.g. `aspect-4/5` for posters. */
   frame: string;
+  /** How the site shows the image; by default, whole whatever its shape (D-031). */
+  hint?: string;
 };
 
 /**
- * One image with its alt text: a poster, later a team photo. Any aspect ratio
- * is accepted and shown whole (D-031).
+ * One image with its alt text: an event poster, a team member's photo. Any
+ * aspect ratio is accepted.
  */
 export function ImageField({
   id,
@@ -49,6 +51,7 @@ export function ImageField({
   defaultAlt,
   error,
   frame,
+  hint = 'Any shape; it is shown whole. JPEG, PNG, WebP or AVIF.',
 }: ImageFieldProps) {
   return (
     <fieldset className="flex flex-col gap-3">
@@ -95,7 +98,7 @@ export function ImageField({
         target={target}
         recordId={recordId}
         label={value ? 'Replace the image' : 'Upload an image'}
-        hint="Any shape; it is shown whole. JPEG, PNG, WebP or AVIF."
+        hint={hint}
         onUploaded={(file) => onChange(toImage(file, value?.alt || defaultAlt))}
       />
       {error?.message ? <p className="text-xs text-destructive">{error.message}</p> : null}

@@ -8,10 +8,6 @@ import { httpsUrl, phone, slug, text } from './fields';
  * Each file is parsed once, at build time, by `src/lib/content.ts`; a value
  * that breaks a rule here fails `pnpm build` with the file and field named.
  * Length limits are set so every layout that renders a field stays intact.
- *
- * The interim `recruitment.json` is the one exception: it is validated by
- * `RecruitmentInputSchema` (`./recruitment.ts`), the schema of the
- * admin-managed record that replaces it in Stage 8 (D-024, D-028).
  */
 
 /* -------------------------------------------------------------------------- */

@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 
-import recruitmentJson from '@/content/recruitment.json';
 import { CATEGORIES, categoryLabel, CategorySchema } from '@/lib/schemas/category';
 import {
   EventInputSchema,
@@ -9,11 +8,11 @@ import {
   EventSchema,
   MAX_EVENT_PHOTOS,
 } from '@/lib/schemas/event';
-import { instant, mediaUrl } from '@/lib/schemas/fields';
+import { instant, mediaUrl, text } from '@/lib/schemas/fields';
 import { GalleryPhotoInputSchema } from '@/lib/schemas/gallery';
 import { RecruitmentInputSchema, RecruitmentSettingsSchema } from '@/lib/schemas/recruitment';
 import { SponsorshipFormSchema, SponsorshipRequestSchema } from '@/lib/schemas/sponsorship';
-import { TeamMemberInputSchema } from '@/lib/schemas/team';
+import { initialsOf, TeamMemberInputSchema } from '@/lib/schemas/team';
 import { uploadFolder, UploadRequestSchema } from '@/lib/schemas/upload';
 
 /**
@@ -178,16 +177,16 @@ describe('TeamMember', () => {
       'tier',
     ]);
   });
+
+  it('shows the first and last initials when there is no photo', () => {
+    expect(initialsOf('Ada Lovelace')).toBe('AL');
+    expect(initialsOf('  ada   king  lovelace ')).toBe('AL');
+    expect(initialsOf('Arnav')).toBe('A');
+    expect(initialsOf('Émile Zola')).toBe('ÉZ');
+  });
 });
 
 describe('RecruitmentSettings', () => {
-  it('accepts today’s src/content/recruitment.json as its input (D-024, D-028)', () => {
-    expect(RecruitmentInputSchema.parse(recruitmentJson)).toEqual({
-      ...recruitmentJson,
-      rolesPdfUrl: null,
-    });
-  });
-
   it('cannot be open without a form link, but can be without the PDF', () => {
     expect(fails(RecruitmentInputSchema.safeParse({ open: true }))).toEqual(['formUrl']);
     expect(RecruitmentInputSchema.safeParse({ open: false }).success).toBe(true);
@@ -242,5 +241,16 @@ describe('UploadRequest', () => {
         size: 1,
       }).success,
     ).toBe(true);
+  });
+});
+
+describe('field messages', () => {
+  const message = (schema: ReturnType<typeof text>, value: string) =>
+    schema.safeParse(value).error?.issues[0]?.message;
+
+  it('speak to the person filling the form, not in Zod’s words', () => {
+    expect(message(text(2, 80), 'A')).toBe('Enter at least 2 characters');
+    expect(message(text(1, 120), '   ')).toBe('Required');
+    expect(message(text(20, 2000), 'x'.repeat(2001))).toBe('Keep it to 2,000 characters or fewer');
   });
 });

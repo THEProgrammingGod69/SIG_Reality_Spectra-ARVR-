@@ -56,6 +56,25 @@ export async function adminRead<T>(
   }
 }
 
+/**
+ * A public page's read, made safe: if the data store fails, the page gets
+ * `failed` and shows a calm "could not be loaded" message instead of an error
+ * page (rule 9). Next.js's own signals, such as "render this at request
+ * time", pass straight through.
+ */
+export async function publicRead<T>(
+  what: string,
+  load: () => Promise<T>,
+): Promise<{ data: T } | { failed: true }> {
+  try {
+    return { data: await load() };
+  } catch (error) {
+    unstable_rethrow(error);
+    console.error(`[site] Could not load ${what}.`, error);
+    return { failed: true };
+  }
+}
+
 /* -------------------------------------------------------------------------- */
 /* Public reads                                                               */
 /* -------------------------------------------------------------------------- */
@@ -131,7 +150,9 @@ export {
   InvalidDataError,
   MediaError,
   NotFoundError,
+  RateLimitedError,
 } from './errors';
 export type { GalleryItem } from './gallery';
+export { groupTeam } from './team';
 export { dataAvailability, localMediaFiles } from './runtime';
 export type { DataServices } from './runtime';

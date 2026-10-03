@@ -34,5 +34,14 @@ export function testImage(name: string) {
   };
 }
 
+/** A minimal PDF, for the roles-and-responsibilities upload. */
+export function testPdf(name: string) {
+  return {
+    name,
+    mimeType: 'application/pdf',
+    buffer: Buffer.from('%PDF-1.4\n1 0 obj << /Type /Catalog >> endobj\ntrailer << >>\n%%EOF\n'),
+  };
+}
+
 /** A title no other test or record shares. */
 export const unique = (label: string) => `E2E ${label} ${Date.now().toString(36)}`;

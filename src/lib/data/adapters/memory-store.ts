@@ -27,6 +27,8 @@ export function createMemoryStore(initial: StoreSnapshot = {}) {
       new Map(Object.entries(records)),
     ]),
   );
+  // Counters are not records: never part of a snapshot, gone when the process ends.
+  const counters = new Map<string, { hits: number; expiresAt: number }>();
   const entries = (collection: Collection) => {
     let map = collections.get(collection);
     if (!map) collections.set(collection, (map = new Map()));
@@ -72,6 +74,17 @@ export function createMemoryStore(initial: StoreSnapshot = {}) {
             score: op.score,
           });
       }
+    },
+
+    async hit(key, windowSeconds) {
+      const now = Date.now();
+      const current = counters.get(key);
+      const counter =
+        current && current.expiresAt > now
+          ? { ...current, hits: current.hits + 1 }
+          : { hits: 1, expiresAt: now + windowSeconds * 1000 };
+      counters.set(key, counter);
+      return counter.hits;
     },
   };
 

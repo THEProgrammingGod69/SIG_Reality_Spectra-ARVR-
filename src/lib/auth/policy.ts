@@ -7,6 +7,19 @@
 export const SESSION_MAX_AGE_SECONDS = 8 * 60 * 60;
 
 export const LOGIN_PATH = '/admin/login';
+
+/**
+ * Of the cookies Auth.js sets while the proxy reads a session, the ones the
+ * proxy passes on: removals only. Auth.js otherwise re-issues the session
+ * cookie on every request it reads, and a request still in flight when an
+ * admin signs out — a link prefetch — would put the session back. Sessions
+ * therefore last a fixed `SESSION_MAX_AGE_SECONDS` from sign-in (D-032).
+ */
+export function cookieRemovalsOnly(setCookies: readonly string[]): string[] {
+  return setCookies.filter((cookie) =>
+    /;\s*max-age=0\s*(;|$)|;\s*expires=thu, 01 jan 1970/i.test(cookie),
+  );
+}
 const DASHBOARD_PATH = '/admin';
 
 /** Whether an email is on the allowlist. Comparison ignores case and spaces. */

@@ -8,19 +8,10 @@ import { type ComponentProps, useState } from 'react';
 import { useFieldArray, useForm } from 'react-hook-form';
 import { z } from 'zod';
 
-import { blankToNull, FormField, inputProps } from '@/components/admin/form-field';
-import { ConflictNotice, reportFailure } from '@/components/admin/form-feedback';
+import { ConfirmDelete } from '@/components/admin/confirm-delete';
+import { FormField, inputProps } from '@/components/admin/form-field';
+import { ConflictNotice, useRecordVersion } from '@/components/admin/form-feedback';
 import { useToast } from '@/components/admin/toaster';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/admin/ui/alert-dialog';
 import { Button } from '@/components/admin/ui/button';
 import {
   Card,
@@ -35,6 +26,7 @@ import { useUnsavedChanges } from '@/components/admin/unsaved-changes';
 import { UploadDropzone } from '@/components/admin/upload-dropzone';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Icon } from '@/components/ui/icon';
+import { blankToNull } from '@/lib/forms';
 import { CATEGORIES, type Category } from '@/lib/schemas/category';
 import { type GalleryPhoto, GalleryPhotoInputSchema } from '@/lib/schemas/gallery';
 
@@ -259,10 +251,7 @@ function NewPhotos() {
 
 function SavedPhoto({ photo }: { photo: GalleryPhoto }) {
   const router = useRouter();
-  const { toast, notify } = useToast();
-  const [expectedUpdatedAt, setExpectedUpdatedAt] = useState(photo.updatedAt);
-  const [conflict, setConflict] = useState(false);
-  const [confirmDelete, setConfirmDelete] = useState(false);
+  const record = useRecordVersion(photo.updatedAt);
   const values = (from: GalleryPhoto): PhotoValues => ({
     id: from.id,
     image: from.image,
@@ -277,25 +266,24 @@ function SavedPhoto({ photo }: { photo: GalleryPhoto }) {
   useUnsavedChanges(formState.isDirty);
   const errors = formState.errors;
 
+  // A stored photo always has a version; the fallback only satisfies the type.
+  const version = record.version ?? photo.updatedAt;
+
   const save = handleSubmit(async (input) => {
-    setConflict(false);
-    const result = await updateGalleryPhoto(photo.id, expectedUpdatedAt, input);
-    if (!result.ok) {
-      setConflict(result.reason === 'conflict');
-      reportFailure(result, setError, toast);
-      return;
-    }
-    notify(result, 'Photo saved.');
-    setExpectedUpdatedAt(result.data.updatedAt);
-    reset(values(result.data));
+    const saved = record.saved(
+      await updateGalleryPhoto(photo.id, version, input),
+      'Photo saved.',
+      setError,
+    );
+    if (!saved) return;
+    reset(values(saved));
     router.refresh();
   });
 
   async function remove() {
-    const result = await deleteGalleryPhoto(photo.id, expectedUpdatedAt);
-    notify(result, 'Photo deleted.');
-    if (result.ok) router.refresh();
-    else setConflict(result.reason === 'conflict');
+    if (record.deleted(await deleteGalleryPhoto(photo.id, version), 'Photo deleted.')) {
+      router.refresh();
+    }
   }
 
   return (
@@ -314,7 +302,7 @@ function SavedPhoto({ photo }: { photo: GalleryPhoto }) {
         />
       </div>
       <div className="flex flex-1 flex-col gap-3 p-3">
-        {conflict ? <ConflictNotice /> : null}
+        {record.conflict ? <ConflictNotice /> : null}
         <FormField id={`photo-${photo.id}-alt`} label="Alt text" error={errors.image?.alt?.message}>
           {(control) => <Input {...control} {...inputProps(form, 'image.alt')} />}
         </FormField>
@@ -342,34 +330,16 @@ function SavedPhoto({ photo }: { photo: GalleryPhoto }) {
           <Button type="submit" size="sm" disabled={!formState.isDirty || formState.isSubmitting}>
             {formState.isSubmitting ? 'Saving…' : 'Save'}
           </Button>
-          <Button
-            type="button"
+          <ConfirmDelete
+            label="Delete"
             size="sm"
-            variant="ghost"
-            className="ms-auto text-destructive hover:text-destructive"
-            onClick={() => setConfirmDelete(true)}
-          >
-            <Icon icon={Trash2} size="sm" />
-            Delete
-          </Button>
+            className="ms-auto"
+            title="Delete this photo?"
+            description="It is removed from the gallery and its file is deleted. This cannot be undone."
+            onConfirm={remove}
+          />
         </div>
       </div>
-      <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete this photo?</AlertDialogTitle>
-            <AlertDialogDescription>
-              It is removed from the gallery and its file is deleted. This cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Keep it</AlertDialogCancel>
-            <AlertDialogAction destructive onClick={() => void remove()}>
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </form>
   );
 }

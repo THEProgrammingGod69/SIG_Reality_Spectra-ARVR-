@@ -48,8 +48,8 @@ export type SiteRoute = {
  * The confirmed public sitemap: six pages, no detail routes.
  *
  * Past events and their photos render inline on /events (timeline) and /gallery,
- * team members on / (core team) and /about (full hierarchy), and the sponsor
- * form lives on /contact — so no page needs a per-record URL.
+ * team members on /about (core team, then the domain secretaries), and the
+ * sponsorship form lives on /contact — so no page needs a per-record URL.
  */
 export const siteRoutes = [
   {

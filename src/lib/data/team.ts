@@ -2,6 +2,7 @@ import {
   MAX_TEAM_ORDER,
   TEAM_TIERS,
   type TeamMember,
+  type TeamMemberInput,
   TeamMemberInputSchema,
   TeamMemberSchema,
   type TeamTier,
@@ -44,6 +45,17 @@ export function createTeamRepository(
 
   return {
     ...entity,
+
+    /** Add a member at the end of their tier, after everyone already in it. */
+    async append(input: Omit<TeamMemberInput, 'order'>, actor: string) {
+      const last = Math.max(
+        -1,
+        ...(await entity.list())
+          .filter((member) => member.tier === input.tier)
+          .map((member) => member.order),
+      );
+      return entity.create({ ...input, order: Math.min(last + 1, MAX_TEAM_ORDER) }, actor);
+    },
 
     /**
      * Save a new order for some members, as the admin dragged them: all of

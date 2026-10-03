@@ -1,10 +1,15 @@
 import { ContactDetails } from '@/components/sections/contact-details';
 import { PageIntro } from '@/components/sections/page-intro';
 import { SocialChannels } from '@/components/sections/social-channels';
-import { SponsorshipNotice } from '@/components/sections/sponsorship-notice';
+import { SponsorshipSection } from '@/components/sections/sponsorship-section';
 import { contactInfo, socialLinks } from '@/lib/content';
+import { publicEnv } from '@/lib/env.public';
 import { pageMetadata } from '@/lib/metadata';
 import { getRoute, routeTitle } from '@/lib/site';
+import { turnstileMode } from '@/lib/turnstile';
+
+import { sendSponsorshipRequest } from './actions';
+import { sponsorshipFormAvailable } from './availability';
 
 const route = getRoute('/contact');
 
@@ -26,7 +31,13 @@ export default function ContactPage() {
         map={contactInfo.map}
       />
       <SocialChannels socials={socialLinks} />
-      <SponsorshipNotice socials={socialLinks} />
+      <SponsorshipSection
+        action={sponsorshipFormAvailable() ? sendSponsorshipRequest : null}
+        turnstileSiteKey={
+          turnstileMode() === 'on' ? (publicEnv.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? null) : null
+        }
+        socials={socialLinks}
+      />
     </>
   );
 }

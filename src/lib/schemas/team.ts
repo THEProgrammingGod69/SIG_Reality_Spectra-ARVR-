@@ -57,3 +57,13 @@ export const TeamMemberSchema = record;
 
 export type TeamMemberInput = z.input<typeof TeamMemberInputSchema>;
 export type TeamMember = z.output<typeof TeamMemberSchema>;
+
+/** What a member's card shows without a photo: "Ada Lovelace" → "AL". */
+export function initialsOf(name: string): string {
+  const words = name.trim().split(/\s+/).filter(Boolean);
+  const letters = words.length > 1 ? [words[0], words[words.length - 1]] : words;
+  return letters
+    .map((word) => Array.from(word ?? '')[0] ?? '')
+    .join('')
+    .toUpperCase();
+}

@@ -1,7 +1,6 @@
-import { ArrowLeft, Hammer } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import type { ReactNode } from 'react';
 
-import { EmptyState } from '@/components/ui/empty-state';
 import { Icon } from '@/components/ui/icon';
 import { type AdminRouteHref, getAdminRoute } from '@/lib/site';
 
@@ -44,19 +43,5 @@ export function AdminPageHeader({ href, title, description, back, actions }: Adm
         {actions}
       </div>
     </header>
-  );
-}
-
-/** An admin tool whose screens a later stage builds. */
-export function PlannedTool({ href, stage }: { href: AdminRouteHref; stage: number }) {
-  return (
-    <>
-      <AdminPageHeader href={href} />
-      <EmptyState
-        icon={Hammer}
-        title={`Built in Stage ${stage}`}
-        description="This tool is not built yet. Its data layer is ready; the editing screens come next."
-      />
-    </>
   );
 }

@@ -86,6 +86,8 @@ test.describe('events', () => {
     await page.goto(editor);
     await deleteEvent(page);
     await publicPage.reload();
+    // The events stream in after the page shell: wait for them first.
+    await expect(publicPage.getByRole('heading', { name: 'Happening next' })).toBeVisible();
     await expect(publicPage.getByText(title)).toHaveCount(0);
   });
 
@@ -212,6 +214,10 @@ test.describe('gallery', () => {
     await expect(page.getByRole('status').filter({ hasText: 'Photo deleted' })).toBeVisible();
 
     await page.goto('/gallery');
+    // Wait for the streamed gallery (newest first, so the photo would lead it).
+    await expect(
+      page.getByRole('group', { name: 'Filter by category' }).or(page.getByText('No photos yet')),
+    ).toBeVisible();
     await expect(page.getByRole('button', { name: alt })).toHaveCount(0);
   });
 });

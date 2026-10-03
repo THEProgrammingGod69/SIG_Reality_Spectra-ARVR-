@@ -8,19 +8,22 @@ there is no user table and no password is ever stored. It is re-checked on
 every request, so removing an address locks that admin out at once. Yearly
 handover is done by editing that one variable. Setup: `docs/SETUP_AUTH.md`.
 
-| File              | Does                                                                                            |
-| ----------------- | ----------------------------------------------------------------------------------------------- |
-| `policy.ts`       | The pure rules: allowlist match, development sign-in switch, `authSetup()`, safe callback paths |
-| `config.ts`       | Auth.js: providers, callbacks, `setup` (what sign-in can do in this environment)                |
-| `session.ts`      | `getAdminSession()` (cached per request), `requireAdmin()`, `adminFromSession()`                |
-| `admin-action.ts` | `adminAction()` — the wrapper every admin Server Action uses                                    |
-| `actions.ts`      | Server Actions: Google sign-in, development sign-in, sign-out                                   |
-| `errors.ts`       | `NotSignedInError` (client-safe)                                                                |
+| File              | Does                                                                                                                    |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `policy.ts`       | The pure rules: allowlist match, development sign-in switch, `authSetup()`, safe callback paths, `cookieRemovalsOnly()` |
+| `config.ts`       | Auth.js: providers, callbacks, `setup` (what sign-in can do in this environment)                                        |
+| `session.ts`      | `getAdminSession()` (cached per request), `requireAdmin()`, `adminFromSession()`                                        |
+| `admin-action.ts` | `adminAction()` — the wrapper every admin Server Action uses                                                            |
+| `actions.ts`      | Server Actions: Google sign-in, development sign-in, sign-out                                                           |
+| `errors.ts`       | `NotSignedInError` (client-safe)                                                                                        |
 
 ## Three locks (rule 8)
 
 1. `src/proxy.ts` sends signed-out visitors to `/admin/login`, remembering the
-   page they asked for (only ever an `/admin` path: no open redirect).
+   page they asked for (only ever an `/admin` path: no open redirect). It never
+   re-issues the session cookie (only removals pass), so a prefetch answered
+   after "Sign out" cannot sign the admin back in; sessions last a fixed 8 hours
+   from sign-in (D-032).
 2. The panel layout (`src/app/admin/(panel)/layout.tsx`) checks again before
    rendering anything.
 3. **Every Server Action re-checks** by wrapping its body in `adminAction()`;

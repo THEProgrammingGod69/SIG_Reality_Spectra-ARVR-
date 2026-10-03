@@ -8,11 +8,22 @@ import { z } from 'zod';
  * in the browser.
  */
 
-/** Trimmed text with a length range sized to the layout that renders it. */
-export const text = (min: number, max: number) => z.string().trim().min(min).max(max);
+/** The "too long" message every text field shows, admin and public alike. */
+const tooLong = (max: number) => `Keep it to ${max.toLocaleString('en-IN')} characters or fewer`;
+
+/**
+ * Trimmed text with a length range sized to the layout that renders it. The
+ * messages are written for the person filling the form, never Zod's defaults.
+ */
+export const text = (min: number, max: number) =>
+  z
+    .string()
+    .trim()
+    .min(min, min <= 1 ? 'Required' : `Enter at least ${min} characters`)
+    .max(max, tooLong(max));
 
 /** Optional long-form text: may be empty, never longer than `max`. */
-export const longText = (max: number) => z.string().trim().max(max).default('');
+export const longText = (max: number) => z.string().trim().max(max, tooLong(max)).default('');
 
 /** Absolute https URL. Plain http is refused: every link the club shares is https. */
 export const httpsUrl = z.url({

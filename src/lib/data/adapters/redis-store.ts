@@ -47,6 +47,13 @@ end
 return {'ok', 0}
 `;
 
+/** Count a hit; the first hit of a window sets its expiry. KEYS[1] counter, ARGV[1] seconds. */
+const HIT_SCRIPT = `
+local hits = redis.call('INCR', KEYS[1])
+if hits == 1 then redis.call('EXPIRE', KEYS[1], ARGV[1]) end
+return hits
+`;
+
 export type RedisStoreConfig = { url: string; token: string; namespace: string };
 
 /** The production `RecordStore`: Upstash Redis over its REST API. */
@@ -55,6 +62,7 @@ export function createRedisStore({ url, token, namespace }: RedisStoreConfig) {
   const redis = new Redis({ url, token, automaticDeserialization: false });
   const keys = redisKeys(namespace);
   const writeScript = redis.createScript<[string, number]>(WRITE_SCRIPT);
+  const hitScript = redis.createScript<number>(HIT_SCRIPT);
 
   const store: RecordStore = {
     async get(collection, id) {
@@ -103,6 +111,16 @@ export function createRedisStore({ url, token, namespace }: RedisStoreConfig) {
         throw new WriteCheckError(result, ops[Number(index) - 1]!);
       }
       throw new Error(`Unexpected reply from the write script: ${String(result)}`);
+    },
+
+    async hit(key, windowSeconds) {
+      // INCR and EXPIRE in one script, so a counter can never be left without its expiry.
+      return Number(
+        await hitScript.exec(
+          [keys.rateLimit(key)],
+          [String(Math.max(1, Math.ceil(windowSeconds)))],
+        ),
+      );
     },
   };
 

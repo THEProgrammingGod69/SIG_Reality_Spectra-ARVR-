@@ -198,7 +198,7 @@ src/
     site/            site chrome: header, PillNav, mobile menu, footer   (Stage 3)
     motion/          reusable animation primitives     (Stage 2)
     three/           R3F scenes                        (Stage 2)
-    sections/        composed page sections            (Stage 2/4)
+    sections/        composed page sections            (Stages 2, 4, 7, 8)
     admin/           admin shell, toasts, unsaved-changes guard; ui/ = reviewed shadcn (Stages 6–8)
   lib/
     data/            repository layer — ONLY place that touches Redis/R2      (Stage 5)
@@ -207,6 +207,8 @@ src/
     action-result.ts the one result shape admin Server Actions return     (Stage 6)
     integrations.ts  which outside services have credentials (dashboard)  (Stage 6)
     dates.ts         dates in the club's time zone                        (Stage 6)
+    forms.ts         helpers shared by admin and public forms (blankToNull) (Stage 8)
+    turnstile.ts     the contact form's spam check: mode + verification   (Stage 8)
     motion/          motion tokens reader, GSAP setup, hero device tiers (Stage 2)
     cn.ts            the one class-name helper (public UI and shadcn admin)
     contrast.ts      WCAG contrast maths for the token audit and /dev/ui
@@ -217,9 +219,9 @@ src/
     metadata.ts      pageMetadata(): title, canonical, OpenGraph per page   (Stage 4)
     structured-data.ts  schema.org JSON-LD for the club                     (Stage 4)
   assets/            imported static assets (brand logo images)        (Stage 3)
-  content/           site, domains, contact, interim recruitment — JSON, validated at build time
+  content/           site, domains, contact — JSON, validated at build time
   proxy.ts           the /admin guard (Next 16's renamed middleware)       (Stage 6)
-scripts/             seed.mts — pnpm seed [--demo]                            (Stage 5)
+scripts/             seed.mts — pnpm seed --demo                              (Stages 5–8)
 .data/               local data mode records + uploads, gitignored (D-031)  (Stage 7)
 tests/
   unit/              Vitest — schemas, utilities, data layer on in-memory adapters
@@ -316,7 +318,7 @@ pnpm format:check  # Prettier check
 pnpm test          # Vitest (unit)
 pnpm test:live     # data layer against the real Upstash + R2 (needs .env.local)
 pnpm test:e2e      # Playwright (first run: pnpm exec playwright install chromium)
-pnpm seed          # copy recruitment.json into Redis if unset; --demo adds sample data
+pnpm seed --demo   # labelled demo content in a dev namespace (never prod), D-031/D-032
 pnpm check         # lint + typecheck + test + build
 pnpm check:launch  # fails while any contact detail is still a placeholder (go-live gate)
 ```
@@ -354,7 +356,7 @@ One stage per session. `/clear` between stages. Commit and tag each stage
 | 5     | Data layer: schemas, repository, browser uploads, cache tags                 | **Done**    |
 | 6     | Admin authentication + panel shell + dashboard                               | **Done**    |
 | 7     | Events and gallery (event photos + standalone photos) — admin ↔ public       | **Done**    |
-| 8     | Team, recruitment and sponsorship requests — admin ↔ public                  | Not started |
+| 8     | Team, recruitment and sponsorship requests — admin ↔ public                  | **Done**    |
 | 9     | Animation polish, performance, accessibility, security headers               | Not started |
 | 10    | Testing, deployment, nightly backup + orphan sweep, handover                 | Not started |
 
@@ -364,19 +366,11 @@ updated to match; `docs/ARCHITECTURE.md` is the current design.
 
 **Temporary scaffolding, to delete as it is replaced:**
 
-- `src/content/recruitment.json` — replaced by the admin-managed
-  RecruitmentSettings in Stage 8 (D-024); it is already validated by that
-  record's schema (D-028), and `pnpm seed` copies it into Redis.
-- `PlannedTool` in `src/components/admin/admin-page.tsx` — the Team,
-  Recruitment and Sponsorships pages' "Built in Stage 8" state.
 - Placeholder credentials (temporary admin `dryerisdry@gmail.com`, no Google
   keys, no Upstash/R2) — the swap list is at the top of `docs/OPEN_ITEMS.md`.
-- Local data mode (`DATA_BACKEND=local`) and the `[Demo]` events and photos from
-  `pnpm seed --demo` — until the accounts and the real content exist (D-031).
-- `src/components/sections/sponsorship-notice.tsx` — replaced by the
-  sponsorship request form in Stage 8 (D-024).
-- The empty state in `src/components/sections/team-section.tsx` — Stage 8 passes
-  the team members in.
+- Local data mode (`DATA_BACKEND=local`) and the `[Demo]` events, photos, team
+  members and request from `pnpm seed --demo` — until the accounts and the real
+  content exist (D-031, D-032).
 - "Coming soon" contact placeholders — filled in `src/content/contact.json`;
   `pnpm check:launch` fails until they are (Stage 10 gate).
 
@@ -427,6 +421,10 @@ contributor must know before writing UI:
 | Local data         | `DATA_BACKEND=local`: records + uploads in `.data/`, same upload flow as R2; refused on Netlify (D-031)                                                         |
 | Images             | Any ratio: posters whole in a 4:5 frame, photos as square centre-cropped tiles, viewer shows them whole; WebP ≤ 2400 px (D-031)                                 |
 | Admin-written text | Plain text as paragraphs (`<Paragraphs>`), never HTML; no Markdown renderer (D-031)                                                                             |
+| Contact form       | Honeypot, Turnstile (fails closed on Netlify without keys), 3 requests/sender/hour in the data layer; no form where it cannot work (D-032)                      |
+| Recruitment status | Admin-managed only (`recruitment.json` deleted); header button + mobile-menu tag show "open"; no site-wide banner (D-032)                                       |
+| Admin form kit     | `FormField`/`CheckboxField`, `ImageField`/`PdfField`, `SaveBar`, `ConfirmDelete`, `useRecordVersion` — reuse, never copy (D-032)                                |
+| Public reads       | Through `publicRead()` inside `<Suspense>`; a failure shows `<LoadFailed>`, never an error page (D-032)                                                         |
 
 ---
 

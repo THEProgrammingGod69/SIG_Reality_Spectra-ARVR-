@@ -56,6 +56,11 @@ export class InvalidDataError extends DataError {
   }
 }
 
+/** Too many submissions from one sender within the limit's window (the contact form). */
+export class RateLimitedError extends DataError {
+  override name = 'RateLimitedError';
+}
+
 /** An uploaded file that cannot be attached: wrong place, type, size, or missing. */
 export class MediaError extends DataError {
   override name = 'MediaError';

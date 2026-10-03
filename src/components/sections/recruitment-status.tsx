@@ -22,10 +22,7 @@ type RecruitmentStatusProps = {
  * Recruitment: open → the application form (button, and a QR code to scan
  * from a laptop screen) and the roles-and-responsibilities PDF, or an honest
  * "coming soon" line until it is uploaded (D-028); closed → a calm note and
- * where to follow the club.
- *
- * INTERIM (D-024): the props come from src/content/recruitment.json. Stage 8
- * feeds the same shape from the admin-managed settings (`getRecruitment()`).
+ * where to follow the club. The settings are managed in /admin/recruitment.
  */
 export function RecruitmentStatus({ recruitment, socials }: RecruitmentStatusProps) {
   const formUrl = recruitment.open ? recruitment.formUrl : null;

@@ -67,6 +67,13 @@ export interface RecordStore {
    * A record may appear at most once per call.
    */
   write(ops: readonly WriteOp[]): Promise<void>;
+  /**
+   * Count one hit against `key` and return the hits so far in its window,
+   * this one included. The window opens with the key's first hit and lasts
+   * `windowSeconds`; then the key expires and counting starts again. For
+   * short-lived counters such as the contact form's rate limit, never records.
+   */
+  hit(key: string, windowSeconds: number): Promise<number>;
 }
 
 /** Thrown by a store when a check fails; the repository turns it into a DataError. */

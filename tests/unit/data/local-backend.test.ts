@@ -45,6 +45,29 @@ describe('local file store', () => {
     rmSync(dir, { recursive: true, force: true });
   });
 
+  it('loses nothing when two copies of the store write one file at once', async () => {
+    // As when the development server loads the data layer once per bundle.
+    const dir = temporary();
+    const file = join(dir, 'records.json');
+    const stores = [createFileStore(file), createFileStore(file)];
+    await Promise.all(
+      Array.from({ length: 20 }, (_, index) =>
+        stores[index % 2]!.write([
+          {
+            kind: 'create',
+            collection: 'sponsorship',
+            id: `r${index}`,
+            data: '{}',
+            version: 'v',
+            score: index,
+          },
+        ]),
+      ),
+    );
+    expect(await stores[0]!.count('sponsorship')).toBe(20);
+    rmSync(dir, { recursive: true, force: true });
+  });
+
   it('survives a restart: a new store reads what the last one wrote', async () => {
     const dir = temporary();
     const file = join(dir, 'records.json');

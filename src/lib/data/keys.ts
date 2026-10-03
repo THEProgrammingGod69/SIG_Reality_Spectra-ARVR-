@@ -6,6 +6,7 @@
  * | ------------------------------------- | --------------------------------------- |
  * | `sig:{ns}:{collection}:{id}`          | hash: `data` (JSON) and `version`       |
  * | `sig:{ns}:{collection}:index`         | sorted set of the collection's ids      |
+ * | `sig:{ns}:ratelimit:{key}`            | a counter that expires (rate limits)    |
  * | `{ns}/{folder}{file}` (R2)            | an uploaded file (see `UPLOAD_TARGETS`) |
  */
 
@@ -22,6 +23,8 @@ export function redisKeys(namespace: string) {
       return `${root}:${collection}:${id}`;
     },
     index: (collection: Collection) => `${root}:${collection}:index`,
+    /** A rate-limit counter (`RecordStore.hit`); expires with its window. */
+    rateLimit: (key: string) => `${root}:ratelimit:${key}`,
     /** SCAN pattern matching every key of this namespace (maintenance and tests). */
     pattern: `${root}:*`,
   };

@@ -103,9 +103,11 @@ must pass before the accounts are considered done.
 pnpm seed --demo
 ```
 
-This fills your `dev` namespace with labelled sample events and team members
-for trying the site out. Without `--demo` it only copies
-`src/content/recruitment.json` into the recruitment settings.
+This fills your `dev` namespace with labelled sample events, photos, team
+members and a sponsorship request for trying the site out, and opens
+recruitment with the club's form link if no admin has saved the settings yet.
+It refuses the `prod` namespace: on the live site everything, including
+opening recruitment, is done in the admin panel.
 
 ## 4. Netlify
 
@@ -128,7 +130,6 @@ The build refuses to deploy if production does not use `prod`, or if a preview
 does (D-025), so a mistake here fails loudly instead of mixing test edits into
 the live site.
 
-Redeploy after adding the variables. Before Stage 8 switches the Recruitment
-page to the admin-managed settings, run `pnpm seed` once against production
-(temporarily set `DATA_NAMESPACE="prod"` in `.env.local`, run it, set it back)
-so the current recruitment status carries over.
+Redeploy after adding the variables. A new production store starts with
+recruitment closed (D-032): sign in to `/admin/recruitment`, tick "Recruitment
+is open", paste the club's Google Form link (OPEN_ITEMS #20) and save.

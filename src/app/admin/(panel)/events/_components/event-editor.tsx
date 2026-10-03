@@ -1,27 +1,15 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import type { z } from 'zod';
 
-import { blankToNull, checkboxProps, FormField, inputProps } from '@/components/admin/form-field';
-import { ConflictNotice, reportFailure } from '@/components/admin/form-feedback';
+import { ConfirmDelete } from '@/components/admin/confirm-delete';
+import { CheckboxField, checkboxProps, FormField, inputProps } from '@/components/admin/form-field';
+import { ConflictNotice, SaveBar, useRecordVersion } from '@/components/admin/form-feedback';
 import { ImageField, PhotoListField } from '@/components/admin/image-fields';
-import { useToast } from '@/components/admin/toaster';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/admin/ui/alert-dialog';
-import { Button } from '@/components/admin/ui/button';
 import {
   Card,
   CardContent,
@@ -29,13 +17,12 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/admin/ui/card';
-import { Checkbox } from '@/components/admin/ui/checkbox';
 import { Input } from '@/components/admin/ui/input';
 import { NativeSelect } from '@/components/admin/ui/native-select';
 import { Textarea } from '@/components/admin/ui/textarea';
 import { useUnsavedChanges } from '@/components/admin/unsaved-changes';
-import { Icon } from '@/components/ui/icon';
 import { fromClubLocalInput, toClubLocalInput } from '@/lib/dates';
+import { blankToNull } from '@/lib/forms';
 import { CATEGORIES } from '@/lib/schemas/category';
 import {
   EVENT_MODES,
@@ -95,10 +82,7 @@ export function EventEditor({
   // "Now" for the timeline hint, fixed when the editor opens; the server
   // decides for real when it saves.
   const [openedAt] = useState(() => new Date());
-  const { toast, notify } = useToast();
-  const [expectedUpdatedAt, setExpectedUpdatedAt] = useState(event?.updatedAt ?? null);
-  const [conflict, setConflict] = useState(false);
-  const [confirmDelete, setConfirmDelete] = useState(false);
+  const record = useRecordVersion(event?.updatedAt ?? null);
 
   const form = useForm<Values, unknown, Saved>({
     resolver: zodResolver(EventInputSchema),
@@ -118,40 +102,35 @@ export function EventEditor({
   const defaultAlt = `Photo from ${title || 'the event'}`;
 
   const save = handleSubmit(async (values) => {
-    setConflict(false);
     const result =
-      event && expectedUpdatedAt
-        ? await updateEvent(event.id, expectedUpdatedAt, values)
+      event && record.version
+        ? await updateEvent(event.id, record.version, values)
         : await createEvent(values);
-    if (!result.ok) {
-      setConflict(result.reason === 'conflict');
-      reportFailure(result, setError, toast);
-      return;
-    }
-    notify(result, event ? 'Saved. The public pages show it now.' : 'Event created.');
+    const saved = record.saved(
+      result,
+      event ? 'Saved. The public pages show it now.' : 'Event created.',
+      setError,
+    );
+    if (!saved) return;
     if (!event) {
-      router.replace(`/admin/events/${result.data.id}`);
+      router.replace(`/admin/events/${saved.id}`);
       return;
     }
-    setExpectedUpdatedAt(result.data.updatedAt);
-    reset(valuesOf(result.data));
+    reset(valuesOf(saved));
     router.refresh();
   });
 
   async function remove() {
-    if (!event || !expectedUpdatedAt) return;
-    const result = await deleteEvent(event.id, expectedUpdatedAt);
-    notify(result, 'Event deleted, with its poster and photos.');
-    if (result.ok) {
+    if (!event || !record.version) return;
+    const result = await deleteEvent(event.id, record.version);
+    if (record.deleted(result, 'Event deleted, with its poster and photos.')) {
       router.replace('/admin/events');
-    } else {
-      setConflict(result.reason === 'conflict');
     }
   }
 
   return (
     <form onSubmit={save} noValidate className="flex flex-col gap-6">
-      {conflict ? <ConflictNotice /> : null}
+      {record.conflict ? <ConflictNotice /> : null}
 
       <Card>
         <CardHeader>
@@ -286,15 +265,12 @@ export function EventEditor({
               />
             )}
           </FormField>
-          <label className="flex items-start gap-3 text-body-sm text-foreground">
-            <Checkbox {...checkboxProps(form, 'published')} className="mt-0.5" />
-            <span>
-              Published
-              <span className="block text-xs text-muted-foreground">
-                Shown on /events until it ends. Unpublished events are drafts.
-              </span>
-            </span>
-          </label>
+          <CheckboxField
+            {...checkboxProps(form, 'published')}
+            label="Published"
+            hint="Shown on /events until it ends. Unpublished events are drafts."
+            error={errors.published?.message}
+          />
         </CardContent>
       </Card>
 
@@ -360,64 +336,35 @@ export function EventEditor({
               />
             )}
           />
-          <label className="flex items-start gap-3 text-body-sm text-foreground">
-            <Checkbox
-              {...checkboxProps(form, 'inTimeline')}
-              disabled={!canTimeline}
-              className="mt-0.5"
-            />
-            <span>
-              On the timeline
-              <span className="block text-xs text-muted-foreground">
-                {canTimeline
-                  ? 'Shown in the /events timeline, with its photos in /gallery.'
-                  : 'Available once the event has ended and has at least one photo.'}
-              </span>
-              {errors.inTimeline?.message ? (
-                <span className="block text-xs text-destructive">{errors.inTimeline.message}</span>
-              ) : null}
-            </span>
-          </label>
+          <CheckboxField
+            {...checkboxProps(form, 'inTimeline')}
+            disabled={!canTimeline}
+            label="On the timeline"
+            hint={
+              canTimeline
+                ? 'Shown in the /events timeline, with its photos in /gallery.'
+                : 'Available once the event has ended and has at least one photo.'
+            }
+            error={errors.inTimeline?.message}
+          />
         </CardContent>
       </Card>
 
-      <div className="sticky bottom-0 z-10 -mx-gutter flex flex-wrap items-center gap-3 border-t bg-background px-gutter py-4 lg:-mx-10 lg:px-10">
-        <Button type="submit" disabled={isSubmitting || (event !== null && !isDirty)}>
-          {isSubmitting ? 'Saving…' : event ? 'Save changes' : 'Create event'}
-        </Button>
-        <p className="text-xs text-muted-foreground" aria-live="polite">
-          {isDirty ? 'Unsaved changes' : event ? 'All changes saved' : ''}
-        </p>
+      <SaveBar
+        exists={event !== null}
+        createLabel="Create event"
+        isDirty={isDirty}
+        isSubmitting={isSubmitting}
+      >
         {event ? (
-          <Button
-            type="button"
-            variant="ghost"
-            className="ms-auto text-destructive hover:text-destructive"
-            onClick={() => setConfirmDelete(true)}
-          >
-            <Icon icon={Trash2} size="sm" />
-            Delete event
-          </Button>
+          <ConfirmDelete
+            label="Delete event"
+            title="Delete this event?"
+            description="It disappears from the site, and its poster and photos are deleted. This cannot be undone."
+            onConfirm={remove}
+          />
         ) : null}
-      </div>
-
-      <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete this event?</AlertDialogTitle>
-            <AlertDialogDescription>
-              It disappears from the site, and its poster and photos are deleted. This cannot be
-              undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Keep it</AlertDialogCancel>
-            <AlertDialogAction destructive onClick={() => void remove()}>
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      </SaveBar>
     </form>
   );
 }

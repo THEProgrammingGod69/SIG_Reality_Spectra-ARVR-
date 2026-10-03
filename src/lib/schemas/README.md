@@ -16,7 +16,7 @@ schemas.
 | `event.ts`       | Event; phases (`eventPhase`, `eventEndsAt`)                 | `/admin/events`      | 5     |
 | `gallery.ts`     | GalleryPhoto                                                | `/admin/gallery`     | 5     |
 | `team.ts`        | TeamMember, tiers                                           | `/admin/team`        | 5     |
-| `recruitment.ts` | RecruitmentSettings (also validates `recruitment.json`)     | `/admin/recruitment` | 5     |
+| `recruitment.ts` | RecruitmentSettings                                         | `/admin/recruitment` | 5     |
 | `sponsorship.ts` | SponsorshipRequest, SponsorshipForm                         | `/contact` form      | 5     |
 
 ## Input and record
@@ -71,9 +71,8 @@ events (which take the event's category), newest first.
 order (within the tier).
 
 **RecruitmentSettings** — open · formUrl (https; required to open) ·
-rolesPdfUrl (optional; the page says "coming soon" without it, D-028). The
-input shape is also `src/content/recruitment.json`'s. Closed by default before
-an admin saves.
+rolesPdfUrl (optional; the page says "coming soon" without it, D-028). Closed
+by default before an admin saves.
 
 **SponsorshipRequest** — id (assigned by the server) · name · organisation ·
 email · phone (optional) · type (`sponsorship` · `collaboration` · `other`) ·

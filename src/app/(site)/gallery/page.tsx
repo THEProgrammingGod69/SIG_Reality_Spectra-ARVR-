@@ -1,13 +1,11 @@
-import { ServerCrash } from 'lucide-react';
-import { unstable_rethrow } from 'next/navigation';
 import { Suspense } from 'react';
 
 import { GalleryBrowser } from '@/components/sections/gallery-browser';
+import { LoadFailed } from '@/components/sections/load-failed';
 import { PageIntro } from '@/components/sections/page-intro';
-import { EmptyState } from '@/components/ui/empty-state';
 import { Section } from '@/components/ui/section';
 import { Skeleton } from '@/components/ui/skeleton';
-import { getGallery } from '@/lib/data';
+import { getGallery, publicRead } from '@/lib/data';
 import { pageMetadata } from '@/lib/metadata';
 import { clubCredit, getRoute, routeTitle } from '@/lib/site';
 
@@ -34,20 +32,7 @@ export default function GalleryPage() {
 }
 
 async function Gallery() {
-  let items: Awaited<ReturnType<typeof getGallery>>;
-  try {
-    items = await getGallery();
-  } catch (error) {
-    // Next.js signals request-time rendering by throwing; that is not a failure.
-    unstable_rethrow(error);
-    console.error('[gallery] Could not load the gallery.', error);
-    return (
-      <EmptyState
-        icon={ServerCrash}
-        title="The gallery could not be loaded right now"
-        description="Please try again in a moment."
-      />
-    );
-  }
-  return <GalleryBrowser items={items} />;
+  const read = await publicRead('the gallery', getGallery);
+  if ('failed' in read) return <LoadFailed what="The gallery" />;
+  return <GalleryBrowser items={read.data} />;
 }

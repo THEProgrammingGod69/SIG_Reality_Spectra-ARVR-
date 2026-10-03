@@ -4,12 +4,11 @@ The small amount of copy that changes rarely and needs no admin panel. Every fil
 is validated against a Zod schema (`src/lib/schemas/content.ts`) **at build time**:
 a malformed field fails `pnpm build` with a message naming the file and the field.
 
-| File               | Holds                                                                              |
-| ------------------ | ---------------------------------------------------------------------------------- |
-| `site.json`        | Hero one-liner, motto, positioning line (meta description), mission, vision, about |
-| `domains.json`     | The ten domains, in display order (01–10), each `technical` or `non-technical`     |
-| `contact.json`     | Email, phone, address, map link/embed, social channels (and which get a QR code)   |
-| `recruitment.json` | **Interim** recruitment status and Google Form link — replaced in Stage 8 (D-024)  |
+| File           | Holds                                                                              |
+| -------------- | ---------------------------------------------------------------------------------- |
+| `site.json`    | Hero one-liner, motto, positioning line (meta description), mission, vision, about |
+| `domains.json` | The ten domains, in display order (01–10), each `technical` or `non-technical`     |
+| `contact.json` | Email, phone, address, map link/embed, social channels (and which get a QR code)   |
 
 How to edit:
 
@@ -23,5 +22,5 @@ How to edit:
   component (tests are the exception).
 
 Everything the committee changes week to week — events, event photos, team
-members, recruitment settings (from Stage 8) and sponsorship requests — is
-**not** here. It lives in Redis and Blob and is edited at `/admin`.
+members, recruitment settings and sponsorship requests — is **not** here. It
+lives in Upstash Redis and Cloudflare R2 and is edited at `/admin` (D-025).

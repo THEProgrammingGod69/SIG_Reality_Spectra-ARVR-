@@ -1,15 +1,13 @@
-import { ServerCrash } from 'lucide-react';
-import { unstable_rethrow } from 'next/navigation';
 import { Suspense } from 'react';
 
 import { CurrentEvents } from '@/components/sections/current-events';
 import { EventTimeline } from '@/components/sections/event-timeline';
+import { LoadFailed } from '@/components/sections/load-failed';
 import { PageIntro } from '@/components/sections/page-intro';
-import { EmptyState } from '@/components/ui/empty-state';
 import { Section } from '@/components/ui/section';
 import { Skeleton } from '@/components/ui/skeleton';
 import { socialLinks } from '@/lib/content';
-import { getPublicEvents } from '@/lib/data';
+import { getPublicEvents, publicRead } from '@/lib/data';
 import { pageMetadata } from '@/lib/metadata';
 import { clubCredit, getRoute, routeTitle } from '@/lib/site';
 
@@ -35,27 +33,18 @@ export default function EventsPage() {
 
 /** Which events are current is decided per request (rule 12), so this streams in. */
 async function Events() {
-  let events: Awaited<ReturnType<typeof getPublicEvents>>;
-  try {
-    events = await getPublicEvents();
-  } catch (error) {
-    // Next.js signals request-time rendering by throwing; that is not a failure.
-    unstable_rethrow(error);
-    console.error('[events] Could not load the events.', error);
+  const read = await publicRead('the events', getPublicEvents);
+  if ('failed' in read) {
     return (
       <Section>
-        <EmptyState
-          icon={ServerCrash}
-          title="Events could not be loaded right now"
-          description="Please try again in a moment."
-        />
+        <LoadFailed what="Events" />
       </Section>
     );
   }
   return (
     <>
-      <CurrentEvents events={events.current} socials={socialLinks} />
-      <EventTimeline events={events.timeline} />
+      <CurrentEvents events={read.data.current} socials={socialLinks} />
+      <EventTimeline events={read.data.timeline} />
     </>
   );
 }
