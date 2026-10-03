@@ -55,7 +55,12 @@ export function createR2Storage({
     async put(key, body, contentType) {
       await send(
         objectUrl(key),
-        { method: 'PUT', body, headers: { 'Content-Type': contentType } },
+        {
+          method: 'PUT',
+          // A copy typed as an ArrayBuffer view, which fetch accepts as a body.
+          body: typeof body === 'string' ? body : new Uint8Array(body),
+          headers: { 'Content-Type': contentType },
+        },
         [],
       );
     },

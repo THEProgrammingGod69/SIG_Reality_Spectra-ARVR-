@@ -321,12 +321,12 @@ delivery failure to handle; the dashboard shows a "new requests" count instead.
 
 ## 8. Environments
 
-| Environment | `DATA_NAMESPACE` | Purpose                                                   |
-| ----------- | ---------------- | --------------------------------------------------------- |
-| Local       | `dev`            | development; `pnpm seed --demo` fills it with sample data |
-| Preview     | `preview`        | Netlify deploy previews and branch deploys                |
-| Production  | `prod`           | club domain; nightly backup and orphan sweep              |
-| Live tests  | `test-…`         | throwaway, created and removed by `pnpm test:live`        |
+| Environment | `DATA_NAMESPACE` | Purpose                                                                                                    |
+| ----------- | ---------------- | ---------------------------------------------------------------------------------------------------------- |
+| Local       | `dev`            | development; `DATA_BACKEND=local` keeps it in `.data/` until Upstash/R2 exist; `pnpm seed --demo` fills it |
+| Preview     | `preview`        | Netlify deploy previews and branch deploys                                                                 |
+| Production  | `prod`           | club domain; nightly backup and orphan sweep                                                               |
+| Live tests  | `test-…`         | throwaway, created and removed by `pnpm test:live`                                                         |
 
 One Upstash database and one R2 bucket serve every environment; the namespace
 prefixes every Redis key (`sig:{ns}:…`) and R2 object (`{ns}/…`). Netlify
@@ -395,3 +395,20 @@ Recorded in [`DECISIONS.md`](./DECISIONS.md) D-030:
 - Admin Server Actions return an `ActionResult` through `adminAction()`.
 - The dashboard reads the data store per request and lists which outside
   services still lack credentials.
+
+## 13. Revision 6 — Stage 7, events and gallery
+
+Recorded in [`DECISIONS.md`](./DECISIONS.md) D-031:
+
+- **Local data mode** (`DATA_BACKEND=local`) stands in for Upstash and R2 on a
+  developer's computer: a JSON file of records and a folder of files in
+  `.data/`, with the same signed-upload flow through `/api/local-media`.
+  Refused on Netlify.
+- **/admin/events** (list by phase, editor for new and existing events, recap,
+  photos, timeline) and **/admin/gallery** (batch upload, edit, delete), built
+  on react-hook-form with the one schema per entity.
+- **/events** shows current events (posters whole in a 4:5 frame, register
+  link) and the timeline; **/gallery** shows both photo sources with category
+  filters, "show more" and a full-size viewer.
+- Images of any ratio; descriptions and recaps are plain text.
+- Content is placeholder (`[Demo]`) until the club supplies events and photos.

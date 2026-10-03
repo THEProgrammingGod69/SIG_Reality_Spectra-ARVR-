@@ -2,27 +2,31 @@
  * pnpm seed [--demo]
  *
  * Fills the data store this checkout's `.env.local` points at (its
- * DATA_NAMESPACE). Safe to run any number of times: it only ever creates
- * records that do not exist yet, and never edits or deletes one.
+ * DATA_BACKEND and DATA_NAMESPACE). Safe to run any number of times: it only
+ * ever creates records that do not exist yet, and never edits or deletes one.
  *
  * Always:  copies src/content/recruitment.json into the recruitment settings,
  *          if no admin has saved them yet (the Stage 8 hand-over, D-028).
- * --demo:  adds clearly labelled sample events, team members and a
- *          sponsorship request, for local development and previews. Refused in
- *          the production namespace.
+ * --demo:  adds clearly labelled "[Demo]" events (current, draft, ended, on the
+ *          timeline, one at every length limit), club photos and team members,
+ *          with generated placeholder images in mixed aspect ratios, until the
+ *          club's real content arrives (D-031). Refused in the production
+ *          namespace.
  *
  * Changes made here bypass the admin panel, so the running site shows them
  * within an hour (the public reads' cache lifetime), or at once after a
- * restart or redeploy.
+ * restart.
  */
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
+
+import type { EventInput } from '@/lib/schemas/event';
 
 // Load the environment before anything reads it (src/lib/env.ts parses on import).
 if (existsSync('.env.local')) process.loadEnvFile('.env.local');
 
 const { interimRecruitment, domains } = await import('@/lib/content');
-const { AlreadyExistsError } = await import('@/lib/data/errors');
 const { createDataServices } = await import('@/lib/data/runtime');
+const { CATEGORIES } = await import('@/lib/schemas/category');
 
 const SEED_ACTOR = 'seed-script@reality-spectra.invalid';
 const DAY = 24 * 60 * 60 * 1000;
@@ -31,15 +35,18 @@ const data = createDataServices({ invalidate: () => {} });
 const demo = process.argv.includes('--demo');
 const summary: string[] = [];
 
-/** Create a record unless one with its id exists. */
-async function ensure(label: string, create: () => Promise<unknown>) {
-  try {
-    await create();
-    summary.push(`created  ${label}`);
-  } catch (error) {
-    if (!(error instanceof AlreadyExistsError)) throw error;
+/** Create a record unless one with its id exists; files are made only when it does not. */
+async function ensure(
+  label: string,
+  exists: () => Promise<unknown>,
+  create: () => Promise<unknown>,
+) {
+  if ((await exists()) !== null) {
     summary.push(`exists   ${label}`);
+    return;
   }
+  await create();
+  summary.push(`created  ${label}`);
 }
 
 console.log(`Seeding namespace "${data.namespace}"${demo ? ' with demo data' : ''}…`);
@@ -55,78 +62,298 @@ if (demo) {
   if (data.namespace === 'prod') {
     throw new Error('Demo data is never written to the production namespace.');
   }
+  await seedDemo();
+}
+
+console.log(summary.map((line) => `  ${line}`).join('\n'));
+console.log('Done.');
+
+/* -------------------------------------------------------------------------- */
+/* Demo data                                                                  */
+/* -------------------------------------------------------------------------- */
+
+async function seedDemo() {
+  const { default: sharp } = await import('sharp');
+
+  // The image colours come from the design tokens, so the placeholders match the site.
+  const css = readFileSync('src/app/globals.css', 'utf8');
+  const token = (name: string) => {
+    const value = new RegExp(`--color-${name}:\\s*(#[0-9a-f]{6})`, 'i').exec(css)?.[1];
+    if (!value) throw new Error(`Token --color-${name} not found in globals.css`);
+    return value;
+  };
+  const spectrum = ['magenta', 'violet', 'indigo', 'azure', 'cyan', 'orchid'].map((name) =>
+    token(`spectra-${name}`),
+  );
+  const [background, ink] = [token('bg'), token('text')];
+
+  /** The shapes the club's photos come in. */
+  const RATIOS = [
+    { label: '4:5', width: 1080, height: 1350 },
+    { label: '16:9', width: 1600, height: 900 },
+    { label: '1:1', width: 1200, height: 1200 },
+    { label: '9:16', width: 900, height: 1600 },
+    { label: '4:3', width: 1600, height: 1200 },
+    { label: '5:4', width: 1350, height: 1080 },
+  ] as const;
+  let painted = 0;
+
+  /** A placeholder image: spectrum gradient, its label and shape written on it. */
+  async function placeholder(label: string, ratioIndex: number) {
+    const ratio = RATIOS[ratioIndex % RATIOS.length]!;
+    const from = spectrum[painted % spectrum.length]!;
+    const to = spectrum[(painted + 2) % spectrum.length]!;
+    painted += 1;
+    const size = Math.round(Math.min(ratio.width, ratio.height) / 14);
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${ratio.width}" height="${ratio.height}">
+      <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="${from}"/><stop offset="1" stop-color="${to}"/>
+      </linearGradient></defs>
+      <rect width="100%" height="100%" fill="${background}"/>
+      <rect width="100%" height="100%" fill="url(#g)" opacity="0.6"/>
+      <text x="50%" y="47%" text-anchor="middle" font-family="sans-serif" font-size="${size}" fill="${ink}">${label}</text>
+      <text x="50%" y="58%" text-anchor="middle" font-family="monospace" font-size="${Math.round(size * 0.6)}" fill="${ink}" opacity="0.8">DEMO · ${ratio.label}</text>
+    </svg>`;
+    const body = new Uint8Array(await sharp(Buffer.from(svg)).webp({ quality: 70 }).toBuffer());
+    return { body, width: ratio.width, height: ratio.height };
+  }
+
+  async function upload(
+    target: 'event-poster' | 'event-photo' | 'gallery-photo',
+    recordId: string,
+    label: string,
+    ratioIndex: number,
+    alt: string,
+  ) {
+    const image = await placeholder(label, ratioIndex);
+    const url = await data.media.putFile(target, recordId, image.body, 'image/webp');
+    return { url, alt, width: image.width, height: image.height };
+  }
+
+  async function photos(eventId: string, title: string, count: number, firstRatio: number) {
+    const list = [];
+    for (let index = 0; index < count; index += 1) {
+      list.push(
+        await upload(
+          'event-photo',
+          eventId,
+          `Photo ${index + 1}`,
+          firstRatio + index,
+          `Demo photo ${index + 1} from ${title}`,
+        ),
+      );
+    }
+    return list;
+  }
 
   const at = (days: number) => new Date(Date.now() + days * DAY).toISOString();
   // Fixed ids, so a second run finds the same records and skips them.
   const demoId = (n: number) => `de300000-0000-4000-8000-${String(n).padStart(12, '0')}`;
-  const demoEvent = {
-    category: 'hackathon',
-    summary: 'Sample event created by pnpm seed --demo, for trying the site out.',
-    description: 'Demo data. Delete it from the admin panel at any time.',
+  // A placeholder until real events exist: the recruitment form stands in (D-031).
+  const registrationUrl = interimRecruitment.formUrl ?? 'https://example.org/register';
+  const base = {
+    description:
+      'Demo data, created by pnpm seed --demo while the real event details are being finalised.\n\nReplace or delete it from the admin panel at any time.',
     venue: 'VIT Pune',
     mode: 'offline',
   } as const;
 
-  await ensure('demo event (current)', () =>
-    data.events.create(
-      {
-        ...demoEvent,
+  const events: { id: string; label: string; make: () => Promise<EventInput> }[] = [
+    {
+      id: demoId(1),
+      label: 'demo event (current, with poster)',
+      make: async () => ({
+        ...base,
         id: demoId(1),
         title: '[Demo] XR Build Night',
+        category: 'hackathon',
+        summary: 'An overnight build sprint for AR and VR prototypes. Sample event.',
         startsAt: at(14),
         endsAt: at(15),
         published: true,
-        registrationUrl: 'https://example.org/register',
-      },
-      SEED_ACTOR,
-    ),
-  );
-  await ensure('demo event (ended, awaiting the timeline)', () =>
-    data.events.create(
-      {
-        ...demoEvent,
+        registrationUrl,
+        poster: await upload(
+          'event-poster',
+          demoId(1),
+          'XR Build Night',
+          0,
+          'Demo poster for XR Build Night',
+        ),
+      }),
+    },
+    {
+      id: demoId(2),
+      label: 'demo event (ended, needs a recap)',
+      make: async () => ({
+        ...base,
         id: demoId(2),
         title: '[Demo] Spectra Hack',
         category: 'competition',
+        summary: 'Ended and waiting for its recap and photos. Sample event.',
         startsAt: at(-10),
-      },
-      SEED_ACTOR,
-    ),
-  );
-  await ensure('demo event (draft)', () =>
-    data.events.create(
-      {
-        ...demoEvent,
+      }),
+    },
+    {
+      id: demoId(3),
+      label: 'demo event (draft)',
+      make: async () => ({
+        ...base,
         id: demoId(3),
         title: '[Demo] Unity Workshop',
         category: 'workshop',
+        summary: 'A draft: not shown on the site until it is published. Sample event.',
         startsAt: at(30),
-      },
-      SEED_ACTOR,
-    ),
-  );
+      }),
+    },
+    {
+      id: demoId(4),
+      label: 'demo event (timeline, 6 photos)',
+      make: async () => ({
+        ...base,
+        id: demoId(4),
+        title: '[Demo] AR Treasure Hunt',
+        category: 'competition',
+        summary: 'Teams solved AR clues across the campus. Sample event.',
+        startsAt: at(-40),
+        recap:
+          'Twelve teams followed AR markers across the campus.\n\nThis recap is placeholder text until the real one is written.',
+        photos: await photos(demoId(4), 'AR Treasure Hunt', 6, 1),
+        inTimeline: true,
+      }),
+    },
+    {
+      id: demoId(5),
+      label: 'demo event (timeline, 12 photos)',
+      make: async () => ({
+        ...base,
+        id: demoId(5),
+        title: '[Demo] Blender for XR',
+        category: 'workshop',
+        summary: 'Modelling assets for headsets, from a cube to a scene. Sample event.',
+        startsAt: at(-75),
+        endsAt: at(-74),
+        recap: 'A two-day workshop on modelling and exporting assets for XR. Placeholder recap.',
+        photos: await photos(demoId(5), 'Blender for XR', 12, 2),
+        inTimeline: true,
+      }),
+    },
+    {
+      id: demoId(6),
+      label: 'demo event (timeline, poster and 4 photos)',
+      make: async () => ({
+        ...base,
+        id: demoId(6),
+        title: '[Demo] HackXR 2025',
+        category: 'hackathon',
+        summary: 'Thirty-six hours of building for headsets. Sample event.',
+        startsAt: at(-120),
+        endsAt: at(-118),
+        poster: await upload(
+          'event-poster',
+          demoId(6),
+          'HackXR 2025',
+          1,
+          'Demo poster for HackXR 2025',
+        ),
+        recap: 'Placeholder recap for the club’s flagship hackathon.',
+        photos: await photos(demoId(6), 'HackXR 2025', 4, 3),
+        inTimeline: true,
+      }),
+    },
+    {
+      id: demoId(7),
+      label: 'demo event (every field at its length limit)',
+      make: async () => ({
+        ...base,
+        id: demoId(7),
+        title: `[Demo] ${'Longest possible event title to test the layout '.repeat(2)}`.slice(
+          0,
+          80,
+        ),
+        category: 'other',
+        summary:
+          `Sample event at every length limit, so the cards are seen at their fullest ${'and longest '.repeat(10)}`.slice(
+            0,
+            160,
+          ),
+        venue: `A venue name at the length limit ${'with more words '.repeat(10)}`.slice(0, 120),
+        mode: 'hybrid',
+        startsAt: at(21),
+        published: true,
+        registrationUrl,
+        poster: await upload(
+          'event-poster',
+          demoId(7),
+          'Tall poster',
+          3,
+          'Demo poster in a tall 9:16 shape',
+        ),
+      }),
+    },
+  ];
+  for (const event of events) {
+    await ensure(
+      event.label,
+      () => data.events.get(event.id),
+      async () => data.events.create(await event.make(), SEED_ACTOR),
+    );
+  }
+
+  // Enough club photos to see the gallery's filters and "Show more" at work.
+  for (let index = 0; index < 28; index += 1) {
+    const id = demoId(100 + index);
+    const category = CATEGORIES[index % CATEGORIES.length]!.id;
+    await ensure(
+      `demo club photo ${index + 1}`,
+      () => data.gallery.get(id),
+      async () =>
+        data.gallery.create(
+          {
+            id,
+            image: await upload(
+              'gallery-photo',
+              id,
+              `Club photo ${index + 1}`,
+              index,
+              `Demo club photo ${index + 1}`,
+            ),
+            category,
+            caption: index % 3 === 0 ? `Demo caption ${index + 1}` : null,
+          },
+          SEED_ACTOR,
+        ),
+    );
+  }
 
   const corePositions = ['President', 'Vice President'];
   for (const [index, position] of corePositions.entries()) {
-    await ensure(`demo core member (${position})`, () =>
-      data.team.create(
-        { id: demoId(10 + index), name: `Demo ${position}`, position, tier: 'core', order: index },
-        SEED_ACTOR,
-      ),
+    const id = demoId(10 + index);
+    await ensure(
+      `demo core member (${position})`,
+      () => data.team.get(id),
+      () =>
+        data.team.create(
+          { id, name: `Demo ${position}`, position, tier: 'core', order: index },
+          SEED_ACTOR,
+        ),
     );
   }
   for (const [index, domain] of domains.slice(0, 3).entries()) {
-    await ensure(`demo secretary (${domain.name})`, () =>
-      data.team.create(
-        {
-          id: demoId(20 + index),
-          name: `Demo Secretary ${index + 1}`,
-          position: `Secretary, ${domain.name}`,
-          tier: 'secretary',
-          domainId: domain.id,
-        },
-        SEED_ACTOR,
-      ),
+    const id = demoId(20 + index);
+    await ensure(
+      `demo secretary (${domain.name})`,
+      () => data.team.get(id),
+      () =>
+        data.team.create(
+          {
+            id,
+            name: `Demo Secretary ${index + 1}`,
+            position: `Secretary, ${domain.name}`,
+            tier: 'secretary',
+            domainId: domain.id,
+          },
+          SEED_ACTOR,
+        ),
     );
   }
 
@@ -144,6 +371,3 @@ if (demo) {
     summary.push('exists   sponsorship requests (inbox not empty; none added)');
   }
 }
-
-console.log(summary.map((line) => `  ${line}`).join('\n'));
-console.log('Done.');

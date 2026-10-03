@@ -9,7 +9,7 @@ import {
   EventSchema,
   MAX_EVENT_PHOTOS,
 } from '@/lib/schemas/event';
-import { instant } from '@/lib/schemas/fields';
+import { instant, mediaUrl } from '@/lib/schemas/fields';
 import { GalleryPhotoInputSchema } from '@/lib/schemas/gallery';
 import { RecruitmentInputSchema, RecruitmentSettingsSchema } from '@/lib/schemas/recruitment';
 import { SponsorshipFormSchema, SponsorshipRequestSchema } from '@/lib/schemas/sponsorship';
@@ -41,6 +41,14 @@ describe('shared fields', () => {
   it('stores times normalised to UTC', () => {
     expect(instant.parse('2026-10-10T18:00:00+05:30')).toBe('2026-10-10T12:30:00.000Z');
     expect(instant.safeParse('10 October 2026').success).toBe(false);
+  });
+
+  it('accepts uploaded-file URLs from R2 or the local data mode route, and nothing else', () => {
+    expect(mediaUrl.safeParse('https://media.example.org/prod/gallery/x.webp').success).toBe(true);
+    expect(mediaUrl.safeParse('/api/local-media/dev/gallery/abc/x.webp').success).toBe(true);
+    expect(mediaUrl.safeParse('/api/local-media/../../.env.local').success).toBe(false);
+    expect(mediaUrl.safeParse('/elsewhere/x.webp').success).toBe(false);
+    expect(mediaUrl.safeParse('http://media.example.org/x.webp').success).toBe(false);
   });
 });
 

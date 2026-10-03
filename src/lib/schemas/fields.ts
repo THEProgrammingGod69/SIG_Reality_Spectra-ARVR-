@@ -20,6 +20,24 @@ export const httpsUrl = z.url({
   error: 'Must be an absolute https:// URL',
 });
 
+/** Where the development server serves uploads in local data mode (D-031). */
+export const LOCAL_MEDIA_PATH = '/api/local-media';
+
+/**
+ * The URL of an uploaded file: our public R2 address (https), or, in local
+ * data mode, a path on the development server. That it is really ours, under
+ * the right record, is checked when the record is saved (src/lib/data/media.ts).
+ */
+export const mediaUrl = z.union([
+  httpsUrl,
+  z
+    .string()
+    .regex(
+      new RegExp(`^${LOCAL_MEDIA_PATH}/(?!.*\\.\\.)[A-Za-z0-9._/-]+$`),
+      'Must be an uploaded file',
+    ),
+]);
+
 /** Stable, human-readable id: lowercase words joined by hyphens. */
 export const slug = z
   .string()
@@ -44,7 +62,7 @@ export const recordId = z.uuid({ error: 'Must be a record id (UUID)' });
  * records compare and sort the same way everywhere.
  */
 export const instant = z.iso
-  .datetime({ offset: true, error: 'Must be an ISO 8601 date and time' })
+  .datetime({ offset: true, error: 'Enter a date and time' })
   .transform((value) => new Date(value).toISOString());
 
 /** The admin (Google account) who made a change. */

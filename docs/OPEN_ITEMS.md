@@ -15,16 +15,19 @@ The club's accounts are not available yet (Stage 6, D-030), so the site is
 built with these placeholders. When the real details arrive, replace each one,
 then confirm the dashboard's **Setup** card shows everything configured.
 
-| What                        | Placeholder now                                      | Replace with                                  | Guide                    |
-| --------------------------- | ---------------------------------------------------- | --------------------------------------------- | ------------------------ |
-| `ADMIN_EMAILS`              | `dryerisdry@gmail.com` (temporary, Arnav)            | The club's 2–3 admin Google accounts (#14)    | `SETUP_AUTH.md`          |
-| `AUTH_GOOGLE_ID`, `_SECRET` | empty — Google sign-in off, dev sign-in only locally | OAuth client on the club Google account (#13) | `SETUP_AUTH.md`          |
-| `AUTH_SECRET`               | generated in your `.env.local` only                  | A fresh secret per Netlify deploy context     | `SETUP_AUTH.md`          |
-| Upstash Redis variables     | empty — dashboard says "Data store not connected"    | Club Upstash database (#9)                    | `SETUP_STORAGE.md`       |
-| R2 variables                | empty — uploads answer 503                           | Club R2 bucket and token (#10)                | `SETUP_STORAGE.md`       |
-| Turnstile keys              | empty                                                | Club Cloudflare Turnstile site (#22, Stage 8) | Stage 8                  |
-| `CRON_SECRET`               | empty                                                | A generated secret (Stage 10)                 | Stage 10                 |
-| Contact details             | "Coming soon" in `src/content/contact.json`          | Club email, phone, address, map link (#7)     | `pnpm check:launch` gate |
+| What                        | Placeholder now                                              | Replace with                                           | Guide                             |
+| --------------------------- | ------------------------------------------------------------ | ------------------------------------------------------ | --------------------------------- |
+| `ADMIN_EMAILS`              | `dryerisdry@gmail.com` (temporary, Arnav)                    | The club's 2–3 admin Google accounts (#14)             | `SETUP_AUTH.md`                   |
+| `AUTH_GOOGLE_ID`, `_SECRET` | empty — Google sign-in off, dev sign-in only locally         | OAuth client on the club Google account (#13)          | `SETUP_AUTH.md`                   |
+| `AUTH_SECRET`               | generated in your `.env.local` only                          | A fresh secret per Netlify deploy context              | `SETUP_AUTH.md`                   |
+| Upstash Redis variables     | empty — dashboard says "Data store not connected"            | Club Upstash database (#9)                             | `SETUP_STORAGE.md`                |
+| R2 variables                | empty — uploads answer 503                                   | Club R2 bucket and token (#10)                         | `SETUP_STORAGE.md`                |
+| Turnstile keys              | empty                                                        | Club Cloudflare Turnstile site (#22, Stage 8)          | Stage 8                           |
+| `CRON_SECRET`               | empty                                                        | A generated secret (Stage 10)                          | Stage 10                          |
+| Contact details             | "Coming soon" in `src/content/contact.json`                  | Club email, phone, address, map link (#7)              | `pnpm check:launch` gate          |
+| `DATA_BACKEND`              | `local` in your `.env.local` (records + uploads in `.data/`) | Remove once Upstash + R2 are set (D-031)               | `SETUP_STORAGE.md`                |
+| Events and photos           | `[Demo]` events and club photos from `pnpm seed --demo`      | Real events (#15) and photos (#18), added in the panel | `/admin/events`, `/admin/gallery` |
+| Sample registration link    | The recruitment Google Form link, in demo events only        | Each event's real link (typically VIERP, #16)          | `/admin/events`                   |
 
 ---
 
@@ -63,14 +66,14 @@ later stage needs them. Step-by-step setup: [`SETUP_STORAGE.md`](./SETUP_STORAGE
 | 13  | Google Cloud OAuth client under the **club** Google account, with localhost and production callback URLs | Open — Google sign-in is built and switches on with the keys (D-030) |
 | 14  | `ADMIN_EMAILS` — the 2–3 accounts that get admin access                                                  | Placeholder: `dryerisdry@gmail.com` until the club accounts exist    |
 
-## Blocking Stage 7 — events and gallery
+## Events and gallery content (Stage 7 built with placeholders)
 
-| #   | Item                                                                                      | Status |
-| --- | ----------------------------------------------------------------------------------------- | ------ |
-| 15  | 3–5 **past events** with dates, details and photos (consent checked) to seed the timeline | Open   |
-| 16  | One example **registration link** (typically VIERP)                                       | Open   |
-| 17  | Preferred **poster aspect ratio** (e.g. 4:5 or 16:9) — the crop step is locked to it      | Open   |
-| 18  | A first batch of **standalone club photos** (consent checked), with a category for each   | Open   |
+| #   | Item                                                                                      | Status                                                                           |
+| --- | ----------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| 15  | 3–5 **past events** with dates, details and photos (consent checked) to seed the timeline | Open — `[Demo]` placeholders until supplied; add them in `/admin/events` (D-031) |
+| 16  | One example **registration link** (typically VIERP)                                       | Placeholder: the recruitment form link, in demo events only (D-031)              |
+| 17  | Preferred **poster aspect ratio**                                                         | Resolved: any ratio, shown whole in a 4:5 frame (D-031)                          |
+| 18  | A first batch of **standalone club photos** (consent checked), with a category for each   | Open — the drive is not finalised; `[Demo]` photos until then (D-031)            |
 
 ## Blocking Stage 8 — team, recruitment and sponsorships
 

@@ -1,10 +1,19 @@
 import { z } from 'zod';
 
+import { CLUB_UTC_OFFSET_MINUTES } from '@/lib/dates';
+
 import { CategorySchema } from './category';
 import { entitySchemas, httpsUrl, instant, longText, recordId, text } from './fields';
 import { ImageSchema } from './image';
 
-export const EVENT_MODES = ['offline', 'online', 'hybrid'] as const;
+/** How people attend. Order is the order the admin form offers them in. */
+export const EVENT_MODES = [
+  { id: 'offline', label: 'In person' },
+  { id: 'online', label: 'Online' },
+  { id: 'hybrid', label: 'In person and online' },
+] as const;
+
+export type EventMode = (typeof EVENT_MODES)[number]['id'];
 
 /** Photos per event: enough for a full recap, few enough for one gallery page. */
 export const MAX_EVENT_PHOTOS = 60;
@@ -16,13 +25,13 @@ const { input, record } = entitySchemas(
     category: CategorySchema,
     /** One or two sentences: the card text on /events. */
     summary: text(20, 160),
-    /** Markdown. */
+    /** Plain text; a blank line starts a new paragraph (shown as text, never HTML). */
     description: longText(5000),
     startsAt: instant,
     /** Omitted for a single-session event: see `eventEndsAt`. */
     endsAt: instant.nullable().default(null),
     venue: text(2, 120),
-    mode: z.enum(EVENT_MODES),
+    mode: z.enum(EVENT_MODES.map((mode) => mode.id) as [EventMode, ...EventMode[]]),
     /** Where people register (typically VIERP). Registration never happens on this site. */
     registrationUrl: httpsUrl.nullable().default(null),
     poster: ImageSchema.nullable().default(null),
@@ -88,8 +97,7 @@ export type Event = z.output<typeof EventSchema>;
  */
 export type EventPhase = 'draft' | 'current' | 'awaiting' | 'timeline';
 
-/** The club's time zone, India Standard Time: UTC+05:30 all year (no DST). */
-const CLUB_UTC_OFFSET_MS = (5 * 60 + 30) * 60 * 1000;
+const CLUB_UTC_OFFSET_MS = CLUB_UTC_OFFSET_MINUTES * 60 * 1000;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 /**

@@ -1,6 +1,5 @@
 import { getAdminSession } from '@/lib/auth/session';
-import { DataError, repositories } from '@/lib/data';
-import { isConfigured } from '@/lib/integrations';
+import { dataAvailability, DataError, repositories } from '@/lib/data';
 
 /**
  * POST /api/admin/upload — a short-lived URL the admin panel uploads one file
@@ -32,7 +31,7 @@ export async function POST(request: Request) {
     return reply({ error: 'Sign in as an admin to upload files.' }, 401);
   }
 
-  if (!isConfigured('r2')) {
+  if (!dataAvailability().files) {
     return reply({ error: 'File storage is not configured on this site yet.' }, 503);
   }
 

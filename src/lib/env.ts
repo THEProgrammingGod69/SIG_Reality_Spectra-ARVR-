@@ -50,6 +50,12 @@ export const serverEnvSchema = z
 
     // ---- Stage 5: data layer (Upstash Redis + Cloudflare R2) ----------------
     /** Upstash REST endpoint and token, from the database page on upstash.com. */
+    /**
+     * Where data lives. `upstash` (records) + R2 (files) is the real thing.
+     * `local` keeps both in the gitignored `.data/` folder, for working before
+     * the accounts exist (D-031); refused on Netlify by the guard below.
+     */
+    DATA_BACKEND: z.enum(['upstash', 'local']).default('upstash'),
     UPSTASH_REDIS_REST_URL: z.url({ protocol: /^https$/ }).optional(),
     UPSTASH_REDIS_REST_TOKEN: z.string().min(1).optional(),
     /**
@@ -133,6 +139,13 @@ export const serverEnvSchema = z
         code: 'custom',
         path: ['AUTH_DEV_SIGN_IN'],
         message: 'The development sign-in is never allowed on a Netlify deploy',
+      });
+    }
+    if (value.DATA_BACKEND === 'local') {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['DATA_BACKEND'],
+        message: 'Local data lives on one computer; a Netlify deploy must use "upstash"',
       });
     }
     const isLive = value.CONTEXT === 'production';

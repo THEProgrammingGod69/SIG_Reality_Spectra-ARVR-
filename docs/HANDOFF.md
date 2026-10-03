@@ -4,57 +4,156 @@ Snapshot of where the project stands, so a fresh session can continue without th
 old conversation. Read in this order: this file → `CLAUDE.md` → `docs/DECISIONS.md`
 → `docs/ARCHITECTURE.md` → `docs/OPEN_ITEMS.md`.
 
-## State (as of 2026-10-02)
+## State (as of 2026-10-03)
 
-| Item          | Value                                                                                         |
-| ------------- | --------------------------------------------------------------------------------------------- |
-| Repo          | github.com/THEProgrammingGod69/SIG_Reality_Spectra-ARVR- (private), `main`                    |
-| Local folder  | `D:\Academic Nottes VIT\SIG\SIG_Draft_Code`                                                   |
-| Hosting       | **Netlify** (D-025)                                                                           |
-| Last commit   | `0560575` — Stage 6 (tag `stage-6`, pushed)                                                   |
-| Rollback tags | `stage-1` – `stage-6`, `architecture-v2`, `architecture-v3`                                   |
-| Done          | Stages 1–6, all committed, tagged and pushed                                                  |
-| Next          | **Stage 7 — events and gallery** (brief below). Start only when Arnav says go                 |
-| Gates         | `pnpm check` + `pnpm test:e2e` green (see Stage 6 below); `pnpm test:live` waits for accounts |
-| Credentials   | **Placeholders** (D-030): swap list at the top of `docs/OPEN_ITEMS.md`                        |
+| Item          | Value                                                                                           |
+| ------------- | ----------------------------------------------------------------------------------------------- |
+| Repo          | github.com/THEProgrammingGod69/SIG_Reality_Spectra-ARVR- (private), `main`                      |
+| Local folder  | `D:\Academic Nottes VIT\SIG\SIG_Draft_Code`                                                     |
+| Hosting       | **Netlify** (D-025)                                                                             |
+| Last commit   | `fb56eb3` — handoff after Stage 6 (tag `stage-6` on `0560575`, pushed)                          |
+| Rollback tags | `stage-1` – `stage-6`, `architecture-v2`, `architecture-v3`                                     |
+| Done          | Stages 1–6 committed, tagged, pushed                                                            |
+| **Stage 7**   | **Built, all gates green, NOT committed yet** — commit + tag `stage-7` on Arnav's "commit"      |
+| Gates         | `pnpm check` + `pnpm test:e2e` green: 242 unit, 76 e2e (dev server and `CI=1` production build) |
+| Next          | Commit Stage 7 → Stage 8 → Stage 9 → Stage 10, one at a time, each on Arnav's go                |
+| Credentials   | **Placeholders** (D-030): swap list at the top of `docs/OPEN_ITEMS.md`                          |
 
 ## Start of the next chat
 
 1. Read this file, then `CLAUDE.md`, `docs/DECISIONS.md` (D-001 – D-030),
-   `docs/ARCHITECTURE.md`, `docs/OPEN_ITEMS.md`, `src/lib/data/README.md`,
-   `src/lib/schemas/README.md`, `src/lib/auth/README.md` and
-   `src/components/admin/README.md`.
-2. Report which Stage 7 inputs are still missing, then wait for Arnav's go.
+   `docs/ARCHITECTURE.md`, `docs/OPEN_ITEMS.md`, and the READMEs in
+   `src/lib/data`, `src/lib/schemas`, `src/lib/auth`, `src/components/admin`.
+2. Run `git status` — the uncommitted Stage 7 work is there. Do **not** discard it.
+3. Report the state of Stage 7 and the inputs still missing for 8–10, then wait
+   for Arnav's go.
 
-Working locally: `.env.local` has a generated `AUTH_SECRET` and
-`ADMIN_EMAILS="dryerisdry@gmail.com"`; `pnpm dev` → `/admin` → "Sign in
-(development)".
+Working locally: `.env.local` (gitignored) has a generated `AUTH_SECRET`,
+`ADMIN_EMAILS="dryerisdry@gmail.com"` and `DATA_BACKEND="local"`. `pnpm dev` →
+`/admin` → "Sign in (development)". `pnpm seed --demo` has already filled the
+local `dev` data (7 [Demo] events, 28 club photos, team, 1 request) in `.data/`.
 
-## Stage 7 brief — events and gallery, admin ↔ public
+## Working agreement with Arnav (applies to every stage)
 
-1. **Uploader** (`src/components/admin`): new record id in the browser, WebP
-   compression, `/api/admin/upload` ticket, PUT to R2 with progress and retry,
-   width/height measured, alt text required; poster crop locked to one ratio.
-2. **/admin/events**: list by phase (draft, current, awaiting, timeline);
-   editor for details, registration link and poster; for ended events the
-   recap, photos (≤ 60) and "add to timeline"; add past events directly;
-   delete with confirmation. Server Actions through `adminAction()`; forms on
-   react-hook-form + `EventInputSchema`; `useUnsavedChanges`; conflict →
-   reload.
-3. **/admin/gallery**: bulk upload standalone photos with category and alt
-   text; edit caption/category; delete.
-4. **/events** (public): current events on top with registration link, the
-   timeline with photos (`getPublicEvents()` inside `<Suspense>`); empty states.
-5. **/gallery** (public): both sources, newest first, category filters, load
-   more; fixed aspect ratios; survives 0, 1, 3, 40 items (rule 9).
-6. Tests: save → visible on the public page at the next load; phases; uploads
-   checked; layouts at 0/1/40 items.
+- One stage at a time. Analyse → list missing inputs → wait for "go" → build →
+  `pnpm check` + `pnpm test:e2e` (dev server **and** `CI=1` production build)
+  → report → **do not commit until he says "commit"** → commit, `git tag -a
+stage-N`, push branch and tag, then a small "docs: handoff" commit.
+- No redundancy or duplication: reuse `entity.ts`, `adminAction()`,
+  `FormField`/`inputProps`, `UploadDropzone`/`ImageField`, `EventList`-style
+  shared pieces rather than copying.
+- "You decide" → decide, explain, log a new `docs/DECISIONS.md` entry.
+- Placeholders for anything the club hasn't supplied; add each to the swap list.
+- Windows: use PowerShell for `pnpm` (Git Bash's pnpm shim is broken); write
+  long edit scripts to a file instead of bash heredocs/`node -e` with
+  backticks; prefix Git Bash commands with `MSYS_NO_PATHCONV=1` when passing
+  `/paths` as arguments. Never `cd` in Bash without a subshell.
+- The browser pane's screenshots often time out (window behind). For visual
+  checks use the headless script pattern: Playwright `chromium.launch()` →
+  full-page screenshot into the scratchpad → Read the PNG.
 
-**Inputs needed (OPEN_ITEMS):** #15 past events with photos, #16 a sample
-registration link, #17 poster aspect ratio, #18 first standalone photos; and
-**#9 Upstash + #10 R2** — without them the editors cannot save, so Stage 7
-would need a local in-memory store mode to be tested end to end (decide at the
-start of Stage 7).
+---
+
+## Stage 7 — what was built (awaiting commit)
+
+If Stage 7 is still uncommitted when the next chat starts, `git status` shows
+it; confirm with Arnav, then commit, tag `stage-7` and push before Stage 8.
+
+- **Local data mode (D-031):** `DATA_BACKEND=local` keeps records in
+  `.data/records-{ns}.json` (`adapters/file-store.ts`, writes queued) and files
+  in `.data/media` (`adapters/file-storage.ts`, HMAC-signed PUTs on
+  `/api/local-media/[...key]`); refused on Netlify; same contract tests as
+  Upstash. `dataAvailability()`, `adminRead()` in `src/lib/data/index.ts`;
+  public reads return empty states without a store.
+- **Uploader and form kit** (`src/components/admin`): `upload-file.ts`,
+  `upload-dropzone.tsx`, `image-fields.tsx`, `form-field.tsx`
+  (`inputProps`/`checkboxProps` render saved values server-side),
+  `form-feedback.tsx`, `event-list.tsx`, `event-phase-badge.tsx`,
+  `data-unavailable.tsx`; admin UI textarea, native-select, checkbox.
+- **/admin/events** (by phase), `/new`, `/[id]`; **/admin/gallery** (batch
+  upload, edit, delete). **/events** (posters whole in 4:5, Register, timeline)
+  and **/gallery** (filters, "Show more", viewer), shared `PhotoGrid`.
+- **Seed:** `pnpm seed --demo` with sharp-generated placeholders in 6 ratios.
+- Images of any ratio; plain-text descriptions; `PagePlaceholder` deleted;
+  e2e uses ≤ 4 local workers and a 90 s limit for the long Stage 7 flows.
+- Docs: D-031, CLAUDE.md, ARCHITECTURE (revision 6), OPEN_ITEMS (#15–#18,
+  swap list), SETUP_STORAGE (local mode), READMEs.
+
+---
+
+## Stage 8 brief — team, recruitment, sponsorship requests (admin ↔ public)
+
+Data layer, schemas and repositories already exist (Stage 5); reuse the Stage 7
+patterns.
+
+1. **/admin/team**: list core team then secretaries (`groupTeam`), add/edit
+   form (`TeamMemberInputSchema`: name, position, tier, domain for
+   secretaries, photo via `ImageField` target `member-photo`, order), drag or
+   up/down reorder via `team.reorder()`, delete. Replace `PlannedTool`.
+2. **/about**: `TeamSection` gets `getTeam()` — cards with photo (square crop,
+   initials fallback), name, position, secretary's domain name; empty state kept.
+3. **/admin/recruitment**: open/closed, form link, roles PDF upload
+   (`UploadDropzone` target `roles-pdf`, `recruitment.save()`). **/recruitment**
+   and the header CTA switch from `interimRecruitment` to `getRecruitment()`;
+   then delete `src/content/recruitment.json` and `interimRecruitment` (run
+   `pnpm seed` against the target store first so the status carries over).
+4. **Sponsorship form on /contact** (replaces `sponsorship-notice.tsx`):
+   react-hook-form + `SponsorshipFormSchema`, a public Server Action (no
+   adminAction) calling `sponsorships.submit()`, honeypot field, **Cloudflare
+   Turnstile** (placeholder keys → widget hidden + server check skipped only
+   when keys are absent **and** not on Netlify; log a decision), rate limit
+   (e.g. 3 per IP per hour; Upstash key `sig:{ns}:ratelimit:*`, file store in
+   local mode — keep it behind the data layer). Clear success/failure states.
+5. **/admin/sponsorships**: inbox newest first, paged (`sponsorships.list`),
+   detail, status new/contacted/closed (`setStatus`), delete; dashboard count
+   already wired.
+6. Tests: unit for any new pure logic; e2e for team ↔ About, recruitment
+   toggle ↔ /recruitment + header, PDF placeholder vs link, contact form
+   submit → inbox, honeypot rejection, validation.
+
+**Inputs:** #19 team list (placeholder demo members exist), #20 roles PDF
+(placeholder "coming soon" exists), #22 Turnstile keys (placeholder).
+
+---
+
+## Stage 9 brief — animation polish, performance, accessibility, security
+
+1. Motion polish within rule 4: sheet/dialog/viewer entrances (transform +
+   opacity on motion tokens), page-level reveal consistency, reduced motion.
+2. Performance: Lighthouse/Web Vitals per page, image `sizes` audit, lazy
+   chunks, hero tier check; Android 50 fps sign-off (OPEN_ITEMS #1).
+3. Accessibility: axe pass on every public and admin page (add
+   `@axe-core/playwright` only with a logged decision), keyboard paths,
+   focus order, contrast test still green.
+4. **Security headers** (`next.config.ts` `headers()`): CSP allowing self,
+   R2/local media, Turnstile, analytics; HSTS, frame-ancestors none,
+   referrer-policy, permissions-policy; verify the admin still works.
+5. **Analytics decision** (Vercel Analytics doesn't run on Netlify — D-025):
+   choose (e.g. Netlify Analytics or a privacy-friendly script), log it.
+6. SEO: generated OpenGraph images, sitemap check.
+
+---
+
+## Stage 10 brief — testing, deployment, backup + orphan sweep, handover
+
+1. **`/api/cron/nightly`** (CRON_SECRET bearer): JSON backup of every record to
+   R2 `{ns}/backups/{yyyy-mm-dd}.json` (keep 30), and the **orphan sweep**:
+   delete files older than a day that no record references
+   (`media.listKeys()` vs every record's files). Plus a **Netlify scheduled
+   function** that calls it, and a documented restore script in `scripts/`.
+2. Mobile WebKit Playwright project; e2e against a deploy preview.
+3. **Go-live with real credentials** — work through the swap list at the top
+   of `docs/OPEN_ITEMS.md`: Upstash + R2 (`docs/SETUP_STORAGE.md`, then
+   `pnpm test:live`), Google OAuth + club `ADMIN_EMAILS` (`docs/SETUP_AUTH.md`),
+   Turnstile, `CRON_SECRET`, remove `DATA_BACKEND=local`, contact details
+   (`pnpm check:launch` must pass), domain + DNS, Netlify env per context
+   (`DATA_NAMESPACE` prod/preview). Confirm OPEN_ITEMS #26 (admin save visible
+   at next reload on Netlify).
+4. Delete demo data from the production namespace (it is never seeded there,
+   but verify), remove remaining temporary scaffolding listed in CLAUDE.md §10.
+5. **Handover docs** for a coordinator who has never seen the code: "add an
+   event", "add photos", "change admins", "open recruitment", backups/restore,
+   yearly handover checklist.
 
 ## Stage 6 — what was built
 
@@ -167,17 +266,6 @@ start of Stage 7).
   could not be measured headless (software WebGL); check on real hardware.
 - Windows note: Windows PowerShell's `Set-Content`/`Get-Content` mangle UTF-8
   (BOM, `—` → `â€”`). Edit files with an editor or Node, never PowerShell piping.
-
-## Working agreement with Arnav
-
-- One stage per session. Finish locally → `pnpm check` + `pnpm test:e2e` → commit
-  → `git tag -a stage-N` → push branch **and** tag.
-- When he says "you decide" / "-": make the call, explain why, log it as a new
-  entry in `docs/DECISIONS.md` (`Decided by: lead`). Never edit old entries.
-- Keep `CLAUDE.md`, `docs/ARCHITECTURE.md`, `docs/OPEN_ITEMS.md` and the plan PDF
-  consistent. PDF source: `D:\Academic Nottes VIT\SIG\plan_pdf_source`
-  (`node render.cjs && python finalize.py`); copy output into `docs/`.
-- Windows machine: long bash heredocs break in the tool — write scripts to a file.
 
 ## Stage 2 brief — animation system + hero (done; kept for reference)
 

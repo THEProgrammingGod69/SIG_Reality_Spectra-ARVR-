@@ -44,7 +44,7 @@ the browser). That the URL is ours and belongs to the record is checked when
 the record is saved (`src/lib/data/media.ts`).
 
 **Event** — id (UUID) · title (3–80) · category · summary (20–160) ·
-description (markdown, ≤ 5000) · startsAt · endsAt (optional, after start) ·
+description (plain text, blank line = new paragraph, ≤ 5000) · startsAt · endsAt (optional, after start) ·
 venue · mode (`offline` · `online` · `hybrid`) · registrationUrl (https;
 required when published) · poster · published · recap (≤ 2000) · photos (≤ 60,
 no duplicates) · inTimeline (needs ≥ 1 photo).

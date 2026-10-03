@@ -62,6 +62,16 @@ export function createMedia({
     return key.startsWith(ownPrefix) && !key.includes('..') ? key : null;
   }
 
+  /** A fresh storage key for one file of this target and record. */
+  function newKey(target: UploadTarget, recordId: string | null, contentType: string): string {
+    const extension = uploadExtension(target, contentType);
+    if (extension === null) throw new MediaError(`Not an allowed file type for ${target}`);
+    return objectKey(
+      namespace,
+      `${uploadFolder(target, recordId)}${crypto.randomUUID()}.${extension}`,
+    );
+  }
+
   const media = {
     /** `request` is untrusted JSON from the browser; it is validated here. */
     async createUpload(request: unknown): Promise<UploadTicket> {
@@ -69,14 +79,28 @@ export function createMedia({
       if (!parsed.success)
         throw InvalidDataError.fromZod(parsed.error, 'This file cannot be uploaded.');
       const { target, recordId, contentType } = parsed.data;
-      const file = `${crypto.randomUUID()}.${uploadExtension(target, contentType)}`;
-      const key = objectKey(namespace, uploadFolder(target, recordId) + file);
+      const key = newKey(target, recordId, contentType);
       return {
         uploadUrl: await storage.presignPut(key, UPLOAD_URL_TTL_SECONDS),
         headers: { 'Content-Type': contentType },
         url: base + key,
         expiresAt: new Date(now().getTime() + UPLOAD_URL_TTL_SECONDS * 1000).toISOString(),
       };
+    },
+
+    /**
+     * Store a file from the server (the seed script's demo images) and return
+     * its public URL. Admin uploads never come this way (rule 11).
+     */
+    async putFile(
+      target: UploadTarget,
+      recordId: string | null,
+      body: Uint8Array,
+      contentType: string,
+    ): Promise<string> {
+      const key = newKey(target, recordId, contentType);
+      await storage.put(key, body, contentType);
+      return base + key;
     },
 
     async verify({ url, target, recordId }: MediaRef): Promise<void> {

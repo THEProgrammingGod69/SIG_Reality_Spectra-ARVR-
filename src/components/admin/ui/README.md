@@ -32,14 +32,17 @@ The registry code is a starting point. Before it ships:
    `rounded-control` / `rounded-card`; text on the type scale (`text-body-sm`).
 5. **Icons** through `<Icon>` (1.5 stroke).
 
-| Component    | From shadcn | Notes                                                    |
-| ------------ | ----------- | -------------------------------------------------------- |
-| alert-dialog | yes         | trimmed to what the panel uses; opens instantly          |
-| badge        | yes         | `success` / `warning` / `destructive` outline tones      |
-| button       | yes         | press scale only; sizes `sm` · `default` · `lg` · `icon` |
-| card         | yes         | `rounded-card`, `shadow-card`                            |
-| input, label | yes         |                                                          |
-| separator    | yes         |                                                          |
-| sheet        | yes         | left/right only; opens instantly                         |
+| Component     | From shadcn | Notes                                                    |
+| ------------- | ----------- | -------------------------------------------------------- |
+| alert-dialog  | yes         | trimmed to what the panel uses; opens instantly          |
+| badge         | yes         | `success` / `warning` / `destructive` outline tones      |
+| button        | yes         | press scale only; sizes `sm` · `default` · `lg` · `icon` |
+| card          | yes         | `rounded-card`, `shadow-card`                            |
+| input, label  | yes         |                                                          |
+| separator     | yes         |                                                          |
+| sheet         | yes         | left/right only; opens instantly                         |
+| textarea      | yes         | grows with its content (`field-sizing-content`)          |
+| native-select | in-house    | styled native `<select>`; the platform picker (D-031)    |
+| checkbox      | in-house    | native checkbox in the accent colour (D-031)             |
 
 Skeletons and empty states come from the public `src/components/ui`.

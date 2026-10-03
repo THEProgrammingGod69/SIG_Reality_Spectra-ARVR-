@@ -11,13 +11,22 @@ import {
 
 type Entry = { data: string; version: string; score: number };
 
+/** Every record, as plain JSON: what the local file store keeps on disk. */
+export type StoreSnapshot = Partial<Record<Collection, Record<string, Entry>>>;
+
 /**
  * An in-memory `RecordStore`: the reference implementation of the contract,
- * used by the unit tests. It is never used by the app — each serverless
+ * used by the unit tests and, loaded from a snapshot, by the local file store
+ * (`file-store.ts`). Never the app's store on a server — each serverless
  * instance would have its own copy.
  */
-export function createMemoryStore() {
-  const collections = new Map<Collection, Map<string, Entry>>();
+export function createMemoryStore(initial: StoreSnapshot = {}) {
+  const collections = new Map<Collection, Map<string, Entry>>(
+    Object.entries(initial).map(([collection, records]) => [
+      collection as Collection,
+      new Map(Object.entries(records)),
+    ]),
+  );
   const entries = (collection: Collection) => {
     let map = collections.get(collection);
     if (!map) collections.set(collection, (map = new Map()));
@@ -67,6 +76,12 @@ export function createMemoryStore() {
   };
 
   return Object.assign(store, {
+    /** Every record, as plain JSON. */
+    snapshot(): StoreSnapshot {
+      return Object.fromEntries(
+        [...collections].map(([collection, map]) => [collection, Object.fromEntries(map)]),
+      );
+    },
     /** Test helper: overwrite a record's raw JSON, bypassing every check. */
     corrupt(collection: Collection, id: string, data: string) {
       const entry = entries(collection).get(id);

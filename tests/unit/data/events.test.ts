@@ -246,6 +246,12 @@ describe('events repository', () => {
   });
 
   describe('corrupt data', () => {
+    it('treats a record that does not exist as absent, without logging', async () => {
+      const log = vi.spyOn(console, 'error').mockImplementation(() => {});
+      expect(await h.events.get(OTHER)).toBeNull();
+      expect(log).not.toHaveBeenCalled();
+    });
+
     it('is logged and skipped, never thrown at a public page', async () => {
       await h.events.create(draft(), ADMIN);
       await h.events.create(draft({ id: OTHER }), ADMIN);

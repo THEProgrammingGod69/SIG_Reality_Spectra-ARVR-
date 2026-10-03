@@ -16,6 +16,8 @@ const isCI = Boolean(process.env.CI);
 if (existsSync('.env.local')) process.loadEnvFile('.env.local');
 process.env.AUTH_SECRET ||= 'e2e-only-secret-never-used-outside-the-test-run';
 process.env.ADMIN_EMAILS ||= 'e2e-admin@example.org';
+// Without Upstash, records and uploads go to the local data mode (D-031).
+process.env.DATA_BACKEND ||= process.env.UPSTASH_REDIS_REST_URL ? 'upstash' : 'local';
 if (isCI) process.env.AUTH_DEV_SIGN_IN = 'true';
 
 export default defineConfig({
@@ -23,7 +25,9 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: isCI,
   retries: isCI ? 2 : 0,
-  workers: isCI ? 1 : undefined,
+  // One dev server compiles pages on demand and optimises every image it
+  // serves; more parallel browsers than this time out instead of testing.
+  workers: isCI ? 1 : 4,
   reporter: isCI ? [['github'], ['html', { open: 'never' }]] : [['list']],
 
   use: {

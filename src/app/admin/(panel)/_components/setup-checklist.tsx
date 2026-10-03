@@ -7,6 +7,7 @@ import {
   CardTitle,
 } from '@/components/admin/ui/card';
 import { setup } from '@/lib/auth/config';
+import { dataAvailability } from '@/lib/data';
 import { integrations } from '@/lib/integrations';
 
 /**
@@ -27,7 +28,17 @@ export function SetupChecklist() {
             : `${missing} of ${integrations.length} services still use placeholder (empty) credentials.`}
         </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex flex-col gap-4">
+        {dataAvailability().backend === 'local' ? (
+          <p className="rounded-control border border-warning/40 p-3 text-body-sm text-foreground">
+            <Badge variant="warning" className="me-2">
+              Local data
+            </Badge>
+            Records and uploads are kept in the .data folder on this computer (D-031). Nothing here
+            reaches the live site; it switches to Upstash and R2 once their variables are set and
+            DATA_BACKEND is removed.
+          </p>
+        ) : null}
         <ul className="flex flex-col divide-y">
           {integrations.map((integration) => (
             <li

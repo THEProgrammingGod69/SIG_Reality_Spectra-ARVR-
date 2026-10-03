@@ -141,7 +141,9 @@ export function createEntity<Fields, FieldsIn, Rec extends Fields & SystemFields
   }
 
   async function get(id: string): Promise<Rec | null> {
-    return parseStored(id, await store.get(config.collection, id));
+    const raw = await store.get(config.collection, id);
+    // No record is an answer, not a fault; only an index pointing nowhere is.
+    return raw === null ? null : parseStored(id, raw);
   }
 
   async function requireCurrent(id: string, expectedUpdatedAt: string): Promise<Rec> {

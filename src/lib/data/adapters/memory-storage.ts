@@ -15,7 +15,8 @@ export function createMemoryStorage() {
       return objects.get(key) ?? null;
     },
     async put(key, body, contentType) {
-      objects.set(key, { size: new TextEncoder().encode(body).byteLength, contentType });
+      const bytes = typeof body === 'string' ? new TextEncoder().encode(body) : body;
+      objects.set(key, { size: bytes.byteLength, contentType });
     },
     async delete(key) {
       objects.delete(key);

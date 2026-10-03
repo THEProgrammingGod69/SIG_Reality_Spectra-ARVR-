@@ -1,7 +1,7 @@
-import { DatabaseZap, ServerCrash } from 'lucide-react';
-import { connection } from 'next/server';
 import type { ReactNode } from 'react';
 
+import { DataUnavailable } from '@/components/admin/data-unavailable';
+import { EventList } from '@/components/admin/event-list';
 import { Badge } from '@/components/admin/ui/badge';
 import { Button } from '@/components/admin/ui/button';
 import {
@@ -13,20 +13,16 @@ import {
   CardTitle,
 } from '@/components/admin/ui/card';
 import { GuardedLink } from '@/components/admin/unsaved-changes';
-import { EmptyState } from '@/components/ui/empty-state';
 import { Skeleton } from '@/components/ui/skeleton';
-import { repositories } from '@/lib/data';
-import { formatDateTime } from '@/lib/dates';
-import { isConfigured } from '@/lib/integrations';
-import { type Event, eventPhase } from '@/lib/schemas/event';
+import { adminRead, type DataServices } from '@/lib/data';
+import { eventPhase } from '@/lib/schemas/event';
 import type { AdminRouteHref } from '@/lib/site';
 
 /** How many events each list shows before "see all". */
 const LIST_LIMIT = 5;
 
 /** Everything the dashboard reports, read fresh (admin reads are never cached). */
-async function loadOverview(now: Date) {
-  const { events, sponsorships, recruitment } = repositories();
+async function loadOverview({ events, sponsorships, recruitment }: DataServices, now: Date) {
   const [allEvents, requests, settings] = await Promise.all([
     events.list(),
     sponsorships.list(),
@@ -46,32 +42,10 @@ async function loadOverview(now: Date) {
 
 /** The dashboard's live part. Reads the data store at request time. */
 export async function Overview() {
-  if (!isConfigured('redis')) {
-    return (
-      <EmptyState
-        icon={DatabaseZap}
-        title="Data store not connected"
-        description="Events, requests and recruitment appear here once the Upstash Redis variables are set (docs/SETUP_STORAGE.md)."
-      />
-    );
-  }
+  const read = await adminRead('the dashboard', loadOverview);
+  if ('unavailable' in read) return <DataUnavailable reason={read.unavailable} />;
 
-  await connection();
-  let overview: Awaited<ReturnType<typeof loadOverview>>;
-  try {
-    overview = await loadOverview(new Date());
-  } catch (error) {
-    console.error('[admin] The dashboard could not read the data store.', error);
-    return (
-      <EmptyState
-        icon={ServerCrash}
-        title="Could not reach the data store"
-        description="The site's data could not be read just now. Reload in a moment; if it keeps happening, check the Upstash variables."
-      />
-    );
-  }
-
-  const { upcoming, awaiting, newRequests, totalRequests, recruitment } = overview;
+  const { upcoming, awaiting, newRequests, totalRequests, recruitment } = read.data;
   return (
     <div className="grid gap-6 md:grid-cols-2">
       <OverviewCard
@@ -80,17 +54,7 @@ export async function Overview() {
         href="/admin/events"
         action="Manage events"
       >
-        <EventList
-          items={upcoming}
-          empty="No upcoming events."
-          badge={({ phase }) =>
-            phase === 'current' ? (
-              <Badge variant="success">Published</Badge>
-            ) : (
-              <Badge variant="outline">Draft</Badge>
-            )
-          }
-        />
+        <EventList items={upcoming} empty="No upcoming events." limit={LIST_LIMIT} />
       </OverviewCard>
 
       <OverviewCard
@@ -102,7 +66,7 @@ export async function Overview() {
         <EventList
           items={awaiting}
           empty="Nothing waiting: every ended event is on the timeline."
-          badge={() => <Badge variant="warning">Needs recap</Badge>}
+          limit={LIST_LIMIT}
         />
       </OverviewCard>
 
@@ -176,42 +140,6 @@ function OverviewCard({
         </Button>
       </CardFooter>
     </Card>
-  );
-}
-
-type PhasedEvent = { event: Event; phase: ReturnType<typeof eventPhase> };
-
-function EventList({
-  items,
-  empty,
-  badge,
-}: {
-  items: readonly PhasedEvent[];
-  empty: string;
-  badge: (item: PhasedEvent) => ReactNode;
-}) {
-  if (items.length === 0) {
-    return <p className="text-body-sm text-muted-foreground">{empty}</p>;
-  }
-  return (
-    <>
-      <ul className="flex flex-col divide-y">
-        {items.slice(0, LIST_LIMIT).map((item) => (
-          <li key={item.event.id} className="flex items-center justify-between gap-3 py-3">
-            <div className="min-w-0">
-              <p className="line-clamp-1 text-body-sm font-medium text-foreground">
-                {item.event.title}
-              </p>
-              <p className="text-xs text-muted-foreground">{formatDateTime(item.event.startsAt)}</p>
-            </div>
-            {badge(item)}
-          </li>
-        ))}
-      </ul>
-      {items.length > LIST_LIMIT ? (
-        <p className="text-xs text-muted-foreground">and {items.length - LIST_LIMIT} more</p>
-      ) : null}
-    </>
   );
 }
 

@@ -1,23 +1,10 @@
-import { expect, type Page, test } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 
 import { adminRoutes } from '@/lib/site';
 
-/**
- * Admin access (Stage 6, D-030). Signs in with the development sign-in as the
- * first ADMIN_EMAILS address (playwright.config.ts sets one where none exists).
- */
-const ADMIN = process.env.ADMIN_EMAILS!.split(',')[0]!.trim().toLowerCase();
+import { ADMIN, hasFiles, hasRecords, signIn } from './helpers';
 
-async function signIn(page: Page, path = '/admin', email = ADMIN) {
-  await page.goto(path);
-  await expect(page).toHaveURL(/\/admin\/login/);
-  await page.getByLabel('Admin email').fill(email);
-  await page.getByRole('button', { name: 'Sign in (development)' }).click();
-  // The first sign-in compiles the action on the dev server, so allow time.
-  await page.waitForURL((url) => url.pathname !== '/admin/login' || url.searchParams.has('error'), {
-    timeout: 30_000,
-  });
-}
+/** Admin access (Stage 6, D-030). */
 
 test.describe('signed out', () => {
   for (const route of adminRoutes) {
@@ -80,9 +67,7 @@ test.describe('signed in', () => {
     await signIn(page);
 
     await expect(page.getByRole('heading', { level: 1, name: 'Dashboard' })).toBeVisible();
-    if (!process.env.UPSTASH_REDIS_REST_URL) {
-      await expect(page.getByText('Data store not connected')).toBeVisible();
-    }
+    if (!hasRecords) await expect(page.getByText('Data store not connected')).toBeVisible();
     await expect(page.getByText('Session signing secret')).toBeVisible();
     await expect(page.getByText('Admin allowlist')).toBeVisible();
   });
@@ -106,8 +91,8 @@ test.describe('signed in', () => {
         size: 1000,
       },
     });
-    // Signed in, so never 401: a ticket when R2 is configured, otherwise 503.
-    expect(response.status()).toBe(process.env.R2_BUCKET ? 200 : 503);
+    // Signed in, so never 401: a ticket where files can be stored, otherwise 503.
+    expect(response.status()).toBe(hasFiles ? 200 : 503);
   });
 });
 

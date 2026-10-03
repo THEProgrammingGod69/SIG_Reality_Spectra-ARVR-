@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { entitySchemas, httpsUrl } from './fields';
+import { entitySchemas, httpsUrl, mediaUrl } from './fields';
 
 /**
  * Recruitment settings, one record for the whole site (/admin/recruitment).
@@ -17,7 +17,7 @@ const { input, record } = entitySchemas(
   {
     open: z.boolean(),
     formUrl: httpsUrl.nullable().default(null),
-    rolesPdfUrl: httpsUrl.nullable().default(null),
+    rolesPdfUrl: mediaUrl.nullable().default(null),
   },
   (settings, ctx) => {
     if (settings.open && settings.formUrl === null) {

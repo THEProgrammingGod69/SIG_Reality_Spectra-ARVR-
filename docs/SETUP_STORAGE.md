@@ -12,6 +12,18 @@ the **club's Google account**, never a personal one, so the next committee
 inherits it. You need about 15 minutes. No code changes are needed: everything
 below ends up as environment variables.
 
+## Before the accounts exist: local data mode
+
+Set `DATA_BACKEND="local"` in `.env.local` (with `AUTH_SECRET` set) and the site
+keeps its records and uploads in the gitignored `.data/` folder on your
+computer (D-031). Everything works the same — admin saves, uploads, the public
+pages — but nothing leaves your machine, and Netlify refuses to deploy with it.
+`pnpm seed --demo` fills it with labelled sample events and photos.
+
+When the accounts below are ready, set their variables and remove
+`DATA_BACKEND` (or set it to `upstash`). Local data is not copied across: add
+the real events and photos in the admin panel.
+
 ---
 
 ## 1. Upstash Redis

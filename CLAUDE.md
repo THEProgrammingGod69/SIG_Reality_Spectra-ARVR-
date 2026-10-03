@@ -14,14 +14,14 @@ group at **VIT Pune**.
 
 **Public visitors never log in.** Six public pages:
 
-| Page           | Shows                                                                                                             |
-| -------------- | ----------------------------------------------------------------------------------------------------------------- |
-| `/` Home       | Hero (name + one-line intro) · mission, vision and short "about us" · domains overview (no team, D-027)           |
-| `/about`       | Club details · the core team, then the secretary of each domain (name, photo, position), D-027                    |
-| `/events`      | Current event on top (details + registration link) · timeline of past events with photos                          |
-| `/gallery`     | All photos — event photos and standalone club photos — filterable by category (workshops, hackathons, meetups, …) |
-| `/recruitment` | The club's domains, always · roles PDF and Google Form link, **only while recruitment is open**                   |
-| `/contact`     | Contact details · sponsorship/collaboration request form (goes to the admin panel)                                |
+| Page           | Shows                                                                                                       |
+| -------------- | ----------------------------------------------------------------------------------------------------------- |
+| `/` Home       | Hero (name + one-line intro) · mission, vision and short "about us" · domains overview (no team, D-027)     |
+| `/about`       | Club details · the core team, then the secretary of each domain (name, photo, position), D-027              |
+| `/events`      | Current event on top (details + registration link) · timeline of past events with photos                    |
+| `/gallery`     | All photos — event photos and standalone club photos — filterable by category (hackathons, competitions, …) |
+| `/recruitment` | The club's domains, always · roles PDF and Google Form link, **only while recruitment is open**             |
+| `/contact`     | Contact details · sponsorship/collaboration request form (goes to the admin panel)                          |
 
 **Admins** (2–3 allowlisted Google accounts) sign in at `/admin` to manage five
 things:
@@ -189,6 +189,7 @@ src/
     dev/             developer tools: /dev/ui, /dev/motion — 404 in production
     api/admin/upload presigned-upload route (Stage 5)
     api/auth/        Auth.js endpoints (Stage 6)
+    api/local-media/ local data mode only: receives and serves uploads (Stage 7)
     api/cron/nightly backup + orphan sweep, CRON_SECRET  (Stage 10)
     globals.css      design tokens live here, in @theme
     robots.ts
@@ -219,6 +220,7 @@ src/
   content/           site, domains, contact, interim recruitment — JSON, validated at build time
   proxy.ts           the /admin guard (Next 16's renamed middleware)       (Stage 6)
 scripts/             seed.mts — pnpm seed [--demo]                            (Stage 5)
+.data/               local data mode records + uploads, gitignored (D-031)  (Stage 7)
 tests/
   unit/              Vitest — schemas, utilities, data layer on in-memory adapters
   e2e/               Playwright
@@ -230,7 +232,7 @@ Each folder has a `README.md` describing what belongs in it. Read it before
 adding a file there.
 
 **`src/lib/site.ts` is the single source of truth for the sitemap.** Navbar,
-footer, placeholder pages, `sitemap.xml` and the route smoke tests all read from
+footer, page metadata, `sitemap.xml` and the route smoke tests all read from
 it. Adding a public page means one entry there plus one `page.tsx` — a unit test
 fails if those two ever disagree.
 
@@ -351,7 +353,7 @@ One stage per session. `/clear` between stages. Commit and tag each stage
 | 4     | Static content layer + page shells (Home, About, Recruitment, Contact) + SEO | **Done**    |
 | 5     | Data layer: schemas, repository, browser uploads, cache tags                 | **Done**    |
 | 6     | Admin authentication + panel shell + dashboard                               | **Done**    |
-| 7     | Events and gallery (event photos + standalone photos) — admin ↔ public       | Not started |
+| 7     | Events and gallery (event photos + standalone photos) — admin ↔ public       | **Done**    |
 | 8     | Team, recruitment and sponsorship requests — admin ↔ public                  | Not started |
 | 9     | Animation polish, performance, accessibility, security headers               | Not started |
 | 10    | Testing, deployment, nightly backup + orphan sweep, handover                 | Not started |
@@ -362,14 +364,15 @@ updated to match; `docs/ARCHITECTURE.md` is the current design.
 
 **Temporary scaffolding, to delete as it is replaced:**
 
-- `src/components/ui/page-placeholder.tsx` — delete once every route has content.
 - `src/content/recruitment.json` — replaced by the admin-managed
   RecruitmentSettings in Stage 8 (D-024); it is already validated by that
   record's schema (D-028), and `pnpm seed` copies it into Redis.
-- `PlannedTool` in `src/components/admin/admin-page.tsx` — each tool page's
-  "Built in Stage N" state, replaced by its screens in Stages 7–8.
+- `PlannedTool` in `src/components/admin/admin-page.tsx` — the Team,
+  Recruitment and Sponsorships pages' "Built in Stage 8" state.
 - Placeholder credentials (temporary admin `dryerisdry@gmail.com`, no Google
   keys, no Upstash/R2) — the swap list is at the top of `docs/OPEN_ITEMS.md`.
+- Local data mode (`DATA_BACKEND=local`) and the `[Demo]` events and photos from
+  `pnpm seed --demo` — until the accounts and the real content exist (D-031).
 - `src/components/sections/sponsorship-notice.tsx` — replaced by the
   sponsorship request form in Stage 8 (D-024).
 - The empty state in `src/components/sections/team-section.tsx` — Stage 8 passes
@@ -388,39 +391,42 @@ updated to match; `docs/ARCHITECTURE.md` is the current design.
 The full reasoning is in [`docs/DECISIONS.md`](./docs/DECISIONS.md). What a
 contributor must know before writing UI:
 
-| Topic             | Decision                                                                                                                                                        |
-| ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Hero              | **Orbit Lab**: dark lab, low spectrum horizon, rings, one wireframe headset (D-001)                                                                             |
-| Fonts             | **Space Grotesk** (display), **Inter** (body), **JetBrains Mono** (labels); via `next/font`, four files at most (D-002)                                         |
-| Caption colour    | `text-subtle` is **`#797F8D`** (≥ 4.5:1 on bg, surface and raised); captions only (D-003)                                                                       |
-| Palette           | The Style Board tokens; the spectrum is light, at most ~10% of any screen                                                                                       |
-| Component source  | **React Bits only** (D-004); the events timeline is built in-house                                                                                              |
-| Motion            | Rule 4 has no exceptions (D-009); TrueFocus is replaced by our own `FocusText`                                                                                  |
-| WebGL             | One context in the hero, at most two heavy WebGL components per page; no `ogl` (D-010, D-011)                                                                   |
-| Hero text         | The name is real text at first paint; the intro plays around it, skippable, once per session (D-010)                                                            |
-| Navigation        | PillNav on desktop (patched to `next/link`), StaggeredMenu on mobile; no Dock (D-012)                                                                           |
-| Home              | Hero, mission/vision/about, domains; no team section (D-027). No stat counters in v1 (D-007)                                                                    |
-| Contact           | One page: details and the sponsorship form (D-006)                                                                                                              |
-| Sponsorship inbox | Admin panel only; no email integration (D-008)                                                                                                                  |
-| Repository        | Stays private while React Bits code is inside it (D-014)                                                                                                        |
-| Colours           | Style Board palette is live in `globals.css` since Stage 2 (D-015); Stage 3 adds type, spacing, radii, shadows                                                  |
-| Hero build        | MagicRings shader ported into the one R3F canvas (D-016); static still is token SVG (D-017); scroll-out pin (D-018)                                             |
-| Motion tokens     | `--dur-*`, `--ease-*`, `--stagger`, `--motion-rise` in CSS; JS reads them via `readMotionTokens()` — never a literal                                            |
-| Design tokens     | Type scale `text-display-*`/`text-body*`/`text-label`, `py-section`, `px-gutter`, `h-header`, `max-w-content`, `rounded-card`/`-control`, `shadow-card`/`-glow` |
-| Shell             | Fixed header over the page; `data-full-bleed` sections run under it. PillNav (`lg`+) and MobileMenu rebuilt from React Bits (D-020)                             |
-| Logo              | Original badge + white-ring mark, raster via `next/image`; masters in `references/brand` (D-021)                                                                |
-| Rule 4 and colour | No colour/background transitions: hover colour is instant, overlays fade with opacity (D-022)                                                                   |
-| Content           | Copy lives only in `src/content/*.json`, read through `src/lib/content.ts` (server-only); client components get props (D-023)                                   |
-| QR codes          | Generated on the server from the stored link (`<QrCode>`); shown from `md` up, buttons on phones (D-023)                                                        |
-| Placeholders      | Missing contact details are `null` → "Coming soon", never a fake link; no fake sponsorship form (D-024)                                                         |
-| Contrast          | Every token pairing is audited for WCAG AA by `tests/unit/contrast.test.ts`; control borders use `--color-subtle`                                               |
-| Hosting and files | Netlify; Upstash Redis and Cloudflare R2 used directly; one `DATA_NAMESPACE` per environment (D-025)                                                            |
-| Categories        | Hackathon · competition · workshop · other, shared by events and gallery photos (D-026)                                                                         |
-| Team              | Core team, then one secretary per domain; About only (D-027)                                                                                                    |
-| Recruitment PDF   | Optional: recruitment opens with the form link; "coming soon" until the PDF is uploaded (D-028)                                                                 |
-| Data layer        | One generic repository over `RecordStore` + `ObjectStorage` ports; atomic Lua writes; public reads `'use cache'` (D-029)                                        |
-| Admin access      | Google sign-in + allowlist re-checked per request; development sign-in locally only; three locks (D-030)                                                        |
-| Admin UI          | Reviewed shadcn subset on token aliases (no `accent`/`muted`); in-house toasts; `useUnsavedChanges` + `GuardedLink` (D-030)                                     |
+| Topic              | Decision                                                                                                                                                        |
+| ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Hero               | **Orbit Lab**: dark lab, low spectrum horizon, rings, one wireframe headset (D-001)                                                                             |
+| Fonts              | **Space Grotesk** (display), **Inter** (body), **JetBrains Mono** (labels); via `next/font`, four files at most (D-002)                                         |
+| Caption colour     | `text-subtle` is **`#797F8D`** (≥ 4.5:1 on bg, surface and raised); captions only (D-003)                                                                       |
+| Palette            | The Style Board tokens; the spectrum is light, at most ~10% of any screen                                                                                       |
+| Component source   | **React Bits only** (D-004); the events timeline is built in-house                                                                                              |
+| Motion             | Rule 4 has no exceptions (D-009); TrueFocus is replaced by our own `FocusText`                                                                                  |
+| WebGL              | One context in the hero, at most two heavy WebGL components per page; no `ogl` (D-010, D-011)                                                                   |
+| Hero text          | The name is real text at first paint; the intro plays around it, skippable, once per session (D-010)                                                            |
+| Navigation         | PillNav on desktop (patched to `next/link`), StaggeredMenu on mobile; no Dock (D-012)                                                                           |
+| Home               | Hero, mission/vision/about, domains; no team section (D-027). No stat counters in v1 (D-007)                                                                    |
+| Contact            | One page: details and the sponsorship form (D-006)                                                                                                              |
+| Sponsorship inbox  | Admin panel only; no email integration (D-008)                                                                                                                  |
+| Repository         | Stays private while React Bits code is inside it (D-014)                                                                                                        |
+| Colours            | Style Board palette is live in `globals.css` since Stage 2 (D-015); Stage 3 adds type, spacing, radii, shadows                                                  |
+| Hero build         | MagicRings shader ported into the one R3F canvas (D-016); static still is token SVG (D-017); scroll-out pin (D-018)                                             |
+| Motion tokens      | `--dur-*`, `--ease-*`, `--stagger`, `--motion-rise` in CSS; JS reads them via `readMotionTokens()` — never a literal                                            |
+| Design tokens      | Type scale `text-display-*`/`text-body*`/`text-label`, `py-section`, `px-gutter`, `h-header`, `max-w-content`, `rounded-card`/`-control`, `shadow-card`/`-glow` |
+| Shell              | Fixed header over the page; `data-full-bleed` sections run under it. PillNav (`lg`+) and MobileMenu rebuilt from React Bits (D-020)                             |
+| Logo               | Original badge + white-ring mark, raster via `next/image`; masters in `references/brand` (D-021)                                                                |
+| Rule 4 and colour  | No colour/background transitions: hover colour is instant, overlays fade with opacity (D-022)                                                                   |
+| Content            | Copy lives only in `src/content/*.json`, read through `src/lib/content.ts` (server-only); client components get props (D-023)                                   |
+| QR codes           | Generated on the server from the stored link (`<QrCode>`); shown from `md` up, buttons on phones (D-023)                                                        |
+| Placeholders       | Missing contact details are `null` → "Coming soon", never a fake link; no fake sponsorship form (D-024)                                                         |
+| Contrast           | Every token pairing is audited for WCAG AA by `tests/unit/contrast.test.ts`; control borders use `--color-subtle`                                               |
+| Hosting and files  | Netlify; Upstash Redis and Cloudflare R2 used directly; one `DATA_NAMESPACE` per environment (D-025)                                                            |
+| Categories         | Hackathon · competition · workshop · other, shared by events and gallery photos (D-026)                                                                         |
+| Team               | Core team, then one secretary per domain; About only (D-027)                                                                                                    |
+| Recruitment PDF    | Optional: recruitment opens with the form link; "coming soon" until the PDF is uploaded (D-028)                                                                 |
+| Data layer         | One generic repository over `RecordStore` + `ObjectStorage` ports; atomic Lua writes; public reads `'use cache'` (D-029)                                        |
+| Admin access       | Google sign-in + allowlist re-checked per request; development sign-in locally only; three locks (D-030)                                                        |
+| Admin UI           | Reviewed shadcn subset on token aliases (no `accent`/`muted`); in-house toasts; `useUnsavedChanges` + `GuardedLink` (D-030)                                     |
+| Local data         | `DATA_BACKEND=local`: records + uploads in `.data/`, same upload flow as R2; refused on Netlify (D-031)                                                         |
+| Images             | Any ratio: posters whole in a 4:5 frame, photos as square centre-cropped tiles, viewer shows them whole; WebP ≤ 2400 px (D-031)                                 |
+| Admin-written text | Plain text as paragraphs (`<Paragraphs>`), never HTML; no Markdown renderer (D-031)                                                                             |
 
 ---
 

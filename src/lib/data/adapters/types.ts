@@ -100,8 +100,8 @@ export interface ObjectStorage {
   presignPut(key: string, expiresInSeconds: number): Promise<string>;
   /** Size and type of a stored object, or null if there is none. */
   head(key: string): Promise<ObjectInfo | null>;
-  /** Server-side writes: the nightly backup's JSON (Stage 10). */
-  put(key: string, body: string, contentType: string): Promise<void>;
+  /** Server-side writes: demo images from the seed script, nightly backups (Stage 10). */
+  put(key: string, body: string | Uint8Array, contentType: string): Promise<void>;
   /** Deleting a missing object is not an error. */
   delete(key: string): Promise<void>;
   /** Every key starting with `prefix`. */

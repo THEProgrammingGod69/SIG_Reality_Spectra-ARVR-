@@ -40,6 +40,7 @@ the call and it was made on the reasoning shown).
 | D-028 | Recruitment opens with the form alone; the roles PDF is optional               | team       |
 | D-029 | Data layer: one generic repository over two storage ports                      | lead       |
 | D-030 | Admin access: Auth.js beta pinned, development sign-in, reviewed shadcn subset | team, lead |
+| D-031 | Stage 7: local data mode, any-ratio images, placeholders until real content    | team, lead |
 
 ---
 
@@ -593,3 +594,42 @@ allowlisted email without a password.
 - **Setup checklist on the dashboard** (`src/lib/integrations.ts`) lists every
   outside service and whether its credentials are set, so placeholders stay
   visible until they are replaced.
+
+## D-031 — Stage 7: local data mode, any-ratio images, placeholders until real content
+
+**Choices (Arnav, Stage 7).** The club's accounts are still unavailable
+(Upstash, R2 — swap list in OPEN_ITEMS), the event details are not final, and
+the drive of photos is unsorted and comes in many ratios and sizes. So Stage 7
+is built and tested on placeholders: demo events and photos from
+`pnpm seed --demo`, and the recruitment form link standing in as the sample
+registration link.
+
+**Lead calls.**
+
+- **Local data mode.** `DATA_BACKEND=local` keeps records in
+  `.data/records-{namespace}.json` and files in `.data/media` (gitignored),
+  served by `/api/local-media/[...key]`. Uploads use the same flow as R2: an
+  HMAC-signed, expiring PUT URL (signed with `AUTH_SECRET`), verified on attach.
+  The file store is the in-memory store loaded from the file, with writes
+  queued so parallel saves cannot lose records; it passes the same contract
+  tests as Upstash. It is for one developer's computer only: `env.ts` fails any
+  Netlify deploy that sets it, and switching to Upstash + R2 is only a change of
+  variables. Media URLs may therefore be an R2 https URL or a
+  `/api/local-media/…` path (`mediaUrl` in `schemas/fields.ts`).
+- **Images of any ratio** (OPEN_ITEMS #17 resolved). There is no locked crop:
+  posters are shown whole (`object-contain`) in a fixed 4:5 frame, so a poster
+  of any shape never breaks the card grid (rule 9); gallery and timeline photos
+  are square, centre-cropped tiles, and the viewer shows each photo whole.
+  The uploader converts every image to WebP in the browser, long edge ≤ 2400 px.
+- **Plain-text descriptions and recaps.** Markdown would need a renderer that
+  is not in the locked stack; text is shown as paragraphs (blank line = new
+  paragraph), never as HTML, so nothing an admin types can inject markup.
+- **In-house native select and checkbox** for the admin forms (the platform's
+  own pickers are the most accessible on phones); textarea follows shadcn.
+- **Forms render their saved values on the server** (`inputProps()`), so a
+  form is never empty before its JavaScript loads.
+- **Admin reads go through `adminRead()`**, which shows "data store not
+  connected" or "could not reach the data store" instead of an error page;
+  public reads return their empty states where no store is configured.
+- **E2E runs use at most 4 parallel browsers locally**: one dev server cannot
+  serve more once the pages carry many images.

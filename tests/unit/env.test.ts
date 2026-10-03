@@ -47,6 +47,13 @@ describe('serverEnvSchema', () => {
       }
     });
 
+    it('fails a Netlify deploy that uses local data', () => {
+      const deploy = { CONTEXT: 'deploy-preview', DATA_NAMESPACE: 'preview' };
+      expect(serverEnvSchema.safeParse({ ...deploy, DATA_BACKEND: 'local' }).success).toBe(false);
+      expect(serverEnvSchema.safeParse({ DATA_BACKEND: 'local' }).success).toBe(true);
+      expect(serverEnvSchema.parse({}).DATA_BACKEND).toBe('upstash');
+    });
+
     it('fails a Netlify deploy that turns the development sign-in on', () => {
       const deploy = { CONTEXT: 'deploy-preview', DATA_NAMESPACE: 'preview' };
       expect(serverEnvSchema.safeParse({ ...deploy, AUTH_DEV_SIGN_IN: 'true' }).success).toBe(

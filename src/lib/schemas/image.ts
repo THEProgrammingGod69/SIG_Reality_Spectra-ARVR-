@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { httpsUrl, text } from './fields';
+import { mediaUrl, text } from './fields';
 
 /**
  * An uploaded image as records store it: event posters and photos, gallery
@@ -15,7 +15,7 @@ import { httpsUrl, text } from './fields';
  * record is saved (`src/lib/data/media.ts`).
  */
 export const ImageSchema = z.object({
-  url: httpsUrl,
+  url: mediaUrl,
   alt: text(3, 200),
   width: z.int().min(1).max(20_000),
   height: z.int().min(1).max(20_000),
