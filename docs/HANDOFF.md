@@ -11,10 +11,10 @@ old conversation. Read in this order: this file → `CLAUDE.md` → `docs/DECISI
 | Repo          | github.com/THEProgrammingGod69/SIG_Reality_Spectra-ARVR- (private), `main`                      |
 | Local folder  | `D:\Academic Nottes VIT\SIG\SIG_Draft_Code`                                                     |
 | Hosting       | **Netlify** (D-025)                                                                             |
-| Last commit   | `fb56eb3` — handoff after Stage 6 (tag `stage-6` on `0560575`, pushed)                          |
-| Rollback tags | `stage-1` – `stage-6`, `architecture-v2`, `architecture-v3`                                     |
-| Done          | Stages 1–6 committed, tagged, pushed                                                            |
-| **Stage 7**   | **Built, all gates green, NOT committed yet** — commit + tag `stage-7` on Arnav's "commit"      |
+| Last commit   | `9da7b3b` — Stage 7 (tag `stage-7`, pushed)                                                     |
+| Rollback tags | `stage-1` – `stage-7`, `architecture-v2`, `architecture-v3`                                     |
+| Done          | Stages 1–7, all committed, tagged and pushed                                                    |
+| Then          | Stage 9, then Stage 10, one at a time, each on Arnav's go                                       |
 | Gates         | `pnpm check` + `pnpm test:e2e` green: 242 unit, 76 e2e (dev server and `CI=1` production build) |
 | Next          | Commit Stage 7 → Stage 8 → Stage 9 → Stage 10, one at a time, each on Arnav's go                |
 | Credentials   | **Placeholders** (D-030): swap list at the top of `docs/OPEN_ITEMS.md`                          |
@@ -54,7 +54,7 @@ stage-N`, push branch and tag, then a small "docs: handoff" commit.
 
 ---
 
-## Stage 7 — what was built (awaiting commit)
+## Stage 7 — what was built
 
 If Stage 7 is still uncommitted when the next chat starts, `git status` shows
 it; confirm with Arnav, then commit, tag `stage-7` and push before Stage 8.
