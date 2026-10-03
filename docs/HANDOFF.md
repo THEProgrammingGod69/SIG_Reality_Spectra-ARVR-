@@ -6,32 +6,30 @@ old conversation. Read in this order: this file → `CLAUDE.md` → `docs/DECISI
 
 ## State (as of 2026-10-03)
 
-| Item          | Value                                                                                           |
-| ------------- | ----------------------------------------------------------------------------------------------- |
-| Repo          | github.com/THEProgrammingGod69/SIG_Reality_Spectra-ARVR- (private), `main`                      |
-| Local folder  | `D:\Academic Nottes VIT\SIG\SIG_Draft_Code`                                                     |
-| Hosting       | **Netlify** (D-025)                                                                             |
-| Last commit   | `9da7b3b` — Stage 7 (tag `stage-7`, pushed)                                                     |
-| Rollback tags | `stage-1` – `stage-7`, `architecture-v2`, `architecture-v3`                                     |
-| Done          | Stages 1–7, all committed, tagged and pushed                                                    |
-| Then          | Stage 9, then Stage 10, one at a time, each on Arnav's go                                       |
-| Gates         | `pnpm check` + `pnpm test:e2e` green: 242 unit, 76 e2e (dev server and `CI=1` production build) |
-| Next          | Commit Stage 7 → Stage 8 → Stage 9 → Stage 10, one at a time, each on Arnav's go                |
-| Credentials   | **Placeholders** (D-030): swap list at the top of `docs/OPEN_ITEMS.md`                          |
+| Item          | Value                                                                         |
+| ------------- | ----------------------------------------------------------------------------- |
+| Repo          | github.com/THEProgrammingGod69/SIG_Reality_Spectra-ARVR- (private), `main`    |
+| Local folder  | `D:Academic Nottes VITSIGSIG_Draft_Code`                                   |
+| Hosting       | **Netlify** (D-025)                                                           |
+| Last commit   | `b59e8d5` — Stage 8 (tag `stage-8`, pushed)                                   |
+| Rollback tags | `stage-1` – `stage-8`, `architecture-v2`, `architecture-v3`                   |
+| Done          | Stages 1–8, all committed, tagged and pushed                                  |
+| Next          | Stage 9, then Stage 10, one at a time, each on Arnav's go                     |
+| Gates         | `pnpm check` + `pnpm test:e2e` green: 258 unit, 83 e2e (dev and `CI=1` build) |
+| Credentials   | **Placeholders** (D-030): swap list at the top of `docs/OPEN_ITEMS.md`        |
 
 ## Start of the next chat
 
-1. Read this file, then `CLAUDE.md`, `docs/DECISIONS.md` (D-001 – D-030),
+1. Read this file, then `CLAUDE.md`, `docs/DECISIONS.md` (D-001 – D-032),
    `docs/ARCHITECTURE.md`, `docs/OPEN_ITEMS.md`, and the READMEs in
    `src/lib/data`, `src/lib/schemas`, `src/lib/auth`, `src/components/admin`.
-2. Run `git status` — the uncommitted Stage 7 work is there. Do **not** discard it.
-3. Report the state of Stage 7 and the inputs still missing for 8–10, then wait
-   for Arnav's go.
+2. Run `git status` (only the untracked `.claude/` launch config is expected).
+3. Report the inputs still missing for Stages 9–10, then wait for Arnav's go.
 
 Working locally: `.env.local` (gitignored) has a generated `AUTH_SECRET`,
 `ADMIN_EMAILS="dryerisdry@gmail.com"` and `DATA_BACKEND="local"`. `pnpm dev` →
-`/admin` → "Sign in (development)". `pnpm seed --demo` has already filled the
-local `dev` data (7 [Demo] events, 28 club photos, team, 1 request) in `.data/`.
+`/admin` → "Sign in (development)". Local `dev` data in `.data/` has demo
+events, photos, team, one request, and recruitment open.
 
 ## Working agreement with Arnav (applies to every stage)
 
@@ -81,38 +79,23 @@ it; confirm with Arnav, then commit, tag `stage-7` and push before Stage 8.
 
 ---
 
-## Stage 8 brief — team, recruitment, sponsorship requests (admin ↔ public)
+## Stage 8 — what was built (D-032)
 
-Data layer, schemas and repositories already exist (Stage 5); reuse the Stage 7
-patterns.
-
-1. **/admin/team**: list core team then secretaries (`groupTeam`), add/edit
-   form (`TeamMemberInputSchema`: name, position, tier, domain for
-   secretaries, photo via `ImageField` target `member-photo`, order), drag or
-   up/down reorder via `team.reorder()`, delete. Replace `PlannedTool`.
-2. **/about**: `TeamSection` gets `getTeam()` — cards with photo (square crop,
-   initials fallback), name, position, secretary's domain name; empty state kept.
-3. **/admin/recruitment**: open/closed, form link, roles PDF upload
-   (`UploadDropzone` target `roles-pdf`, `recruitment.save()`). **/recruitment**
-   and the header CTA switch from `interimRecruitment` to `getRecruitment()`;
-   then delete `src/content/recruitment.json` and `interimRecruitment` (run
-   `pnpm seed` against the target store first so the status carries over).
-4. **Sponsorship form on /contact** (replaces `sponsorship-notice.tsx`):
-   react-hook-form + `SponsorshipFormSchema`, a public Server Action (no
-   adminAction) calling `sponsorships.submit()`, honeypot field, **Cloudflare
-   Turnstile** (placeholder keys → widget hidden + server check skipped only
-   when keys are absent **and** not on Netlify; log a decision), rate limit
-   (e.g. 3 per IP per hour; Upstash key `sig:{ns}:ratelimit:*`, file store in
-   local mode — keep it behind the data layer). Clear success/failure states.
-5. **/admin/sponsorships**: inbox newest first, paged (`sponsorships.list`),
-   detail, status new/contacted/closed (`setStatus`), delete; dashboard count
-   already wired.
-6. Tests: unit for any new pure logic; e2e for team ↔ About, recruitment
-   toggle ↔ /recruitment + header, PDF placeholder vs link, contact form
-   submit → inbox, honeypot rejection, validation.
-
-**Inputs:** #19 team list (placeholder demo members exist), #20 roles PDF
-(placeholder "coming soon" exists), #22 Turnstile keys (placeholder).
+- **/admin/team** (core then secretaries, editor + photo, core reorder) → About
+  cards (square photo or initials, secretary's domain).
+- **/admin/recruitment** (open, form link, roles PDF) → /recruitment, header
+  CTA, mobile-menu "Open now" tag. `recruitment.json` and the empty banner
+  slot are gone; an unsaved store means closed. `pnpm seed` needs `--demo`.
+- **Contact form** → **/admin/sponsorships** (paged inbox, status, delete).
+  Honeypot, Turnstile (fails closed on Netlify without keys), validation,
+  3 requests/sender/hour via `RecordStore.hit()` (hashed address).
+- Shared kit: `ConfirmDelete`, `SaveBar`, `useRecordVersion`, `CheckboxField`,
+  `PdfField`, `publicRead` + `LoadFailed`, `blankToNull` in `src/lib/forms.ts`.
+- Fixes: the proxy no longer re-issues the session cookie (prefetches could
+  undo sign-out; sessions now a fixed 8 h); local file-store queue is
+  process-wide; friendly field messages; e2e waits for streamed content.
+- Windows note: Playwright can orphan `next dev`; kill stray node `next`
+  processes before a run if port 3000 is taken.
 
 ---
 
