@@ -4,27 +4,27 @@ Snapshot of where the project stands, so a fresh session can continue without th
 old conversation. Read in this order: this file → `CLAUDE.md` → `docs/DECISIONS.md`
 → `docs/ARCHITECTURE.md` → `docs/OPEN_ITEMS.md`.
 
-## State (as of 2026-10-03)
+## State (as of 2026-10-04)
 
-| Item          | Value                                                                         |
-| ------------- | ----------------------------------------------------------------------------- |
-| Repo          | github.com/THEProgrammingGod69/SIG_Reality_Spectra-ARVR- (private), `main`    |
-| Local folder  | `D:\Academic Nottes VIT\SIG\SIG_Draft_Code`                                   |
-| Hosting       | **Netlify** (D-025)                                                           |
-| Last commit   | `b59e8d5` — Stage 8 (tag `stage-8`, pushed)                                   |
-| Rollback tags | `stage-1` – `stage-8`, `architecture-v2`, `architecture-v3`                   |
-| Done          | Stages 1–8, all committed, tagged and pushed                                  |
-| Next          | Stage 9, then Stage 10, one at a time, each on Arnav's go                     |
-| Gates         | `pnpm check` + `pnpm test:e2e` green: 258 unit, 83 e2e (dev and `CI=1` build) |
-| Credentials   | **Placeholders** (D-030): swap list at the top of `docs/OPEN_ITEMS.md`        |
+| Item          | Value                                                                          |
+| ------------- | ------------------------------------------------------------------------------ |
+| Repo          | github.com/THEProgrammingGod69/SIG_Reality_Spectra-ARVR- (private), `main`     |
+| Local folder  | `D:\Academic Nottes VIT\SIG\SIG_Draft_Code`                                    |
+| Hosting       | **Netlify** (D-025)                                                            |
+| Last commit   | `a76a50b` — Stage 9 (tag `stage-9`, pushed)                                    |
+| Rollback tags | `stage-1` – `stage-9`, `architecture-v2`, `architecture-v3`                    |
+| Done          | Stages 1–9, all committed, tagged and pushed                                   |
+| Next          | Stage 10 (the last), on Arnav's go                                             |
+| Gates         | `pnpm check` + `pnpm test:e2e` green: 275 unit, 101 e2e (dev and `CI=1` build) |
+| Credentials   | **Placeholders** (D-030): swap list at the top of `docs/OPEN_ITEMS.md`         |
 
 ## Start of the next chat
 
-1. Read this file, then `CLAUDE.md`, `docs/DECISIONS.md` (D-001 – D-032),
+1. Read this file, then `CLAUDE.md`, `docs/DECISIONS.md` (D-001 – D-033),
    `docs/ARCHITECTURE.md`, `docs/OPEN_ITEMS.md`, and the READMEs in
    `src/lib/data`, `src/lib/schemas`, `src/lib/auth`, `src/components/admin`.
 2. Run `git status` (only the untracked `.claude/` launch config is expected).
-3. Report the inputs still missing for Stages 9–10, then wait for Arnav's go.
+3. Report the inputs still missing for Stage 10, then wait for Arnav's go.
 
 Working locally: `.env.local` (gitignored) has a generated `AUTH_SECRET`,
 `ADMIN_EMAILS="dryerisdry@gmail.com"` and `DATA_BACKEND="local"`. `pnpm dev` →
@@ -52,33 +52,6 @@ stage-N`, push branch and tag, then a small "docs: handoff" commit.
 
 ---
 
-## Stage 7 — what was built
-
-If Stage 7 is still uncommitted when the next chat starts, `git status` shows
-it; confirm with Arnav, then commit, tag `stage-7` and push before Stage 8.
-
-- **Local data mode (D-031):** `DATA_BACKEND=local` keeps records in
-  `.data/records-{ns}.json` (`adapters/file-store.ts`, writes queued) and files
-  in `.data/media` (`adapters/file-storage.ts`, HMAC-signed PUTs on
-  `/api/local-media/[...key]`); refused on Netlify; same contract tests as
-  Upstash. `dataAvailability()`, `adminRead()` in `src/lib/data/index.ts`;
-  public reads return empty states without a store.
-- **Uploader and form kit** (`src/components/admin`): `upload-file.ts`,
-  `upload-dropzone.tsx`, `image-fields.tsx`, `form-field.tsx`
-  (`inputProps`/`checkboxProps` render saved values server-side),
-  `form-feedback.tsx`, `event-list.tsx`, `event-phase-badge.tsx`,
-  `data-unavailable.tsx`; admin UI textarea, native-select, checkbox.
-- **/admin/events** (by phase), `/new`, `/[id]`; **/admin/gallery** (batch
-  upload, edit, delete). **/events** (posters whole in 4:5, Register, timeline)
-  and **/gallery** (filters, "Show more", viewer), shared `PhotoGrid`.
-- **Seed:** `pnpm seed --demo` with sharp-generated placeholders in 6 ratios.
-- Images of any ratio; plain-text descriptions; `PagePlaceholder` deleted;
-  e2e uses ≤ 4 local workers and a 90 s limit for the long Stage 7 flows.
-- Docs: D-031, CLAUDE.md, ARCHITECTURE (revision 6), OPEN_ITEMS (#15–#18,
-  swap list), SETUP_STORAGE (local mode), READMEs.
-
----
-
 ## Stage 8 — what was built (D-032)
 
 - **/admin/team** (core then secretaries, editor + photo, core reorder) → About
@@ -99,21 +72,30 @@ it; confirm with Arnav, then commit, tag `stage-7` and push before Stage 8.
 
 ---
 
-## Stage 9 brief — animation polish, performance, accessibility, security
+## Stage 9 — what was built (D-033)
 
-1. Motion polish within rule 4: sheet/dialog/viewer entrances (transform +
-   opacity on motion tokens), page-level reveal consistency, reduced motion.
-2. Performance: Lighthouse/Web Vitals per page, image `sizes` audit, lazy
-   chunks, hero tier check; Android 50 fps sign-off (OPEN_ITEMS #1).
-3. Accessibility: axe pass on every public and admin page (add
-   `@axe-core/playwright` only with a logged decision), keyboard paths,
-   focus order, contrast test still green.
-4. **Security headers** (`next.config.ts` `headers()`): CSP allowing self,
-   R2/local media, Turnstile, analytics; HSTS, frame-ancestors none,
-   referrer-policy, permissions-policy; verify the admin still works.
-5. **Analytics decision** (Vercel Analytics doesn't run on Netlify — D-025):
-   choose (e.g. Netlify Analytics or a privacy-friendly script), log it.
-6. SEO: generated OpenGraph images, sitemap check.
+- **Motion:** admin sheet/dialogs on keyframe tokens (`animate-fade-*`,
+  `-rise-*`, `-slide-*`, backdrop in `admin/ui/overlay.ts`); `<Tilt>` on
+  team cards; reveals on the Stage 7–8 sections; page fade is plain CSS.
+- **Performance:** public client components never import a schema module
+  (zod): constants come as props, the contact form loads validation on first
+  focus. Image `sizes` match the grids; first gallery tile preloaded.
+  Software WebGL (no GPU, headless) gets the static hero. Lighthouse:
+  A11y/Best Practices/SEO 100 everywhere, Performance 91–93 (Home ~60 in the
+  GPU-less lab).
+- **Accessibility:** `tests/e2e/a11y.spec.ts` (axe, WCAG 2.2 AA) on every page,
+  key states and every admin screen.
+- **Security:** `src/lib/security-headers.ts` via next.config.ts (CSP, HSTS,
+  framing, referrer, permissions, COOP; noindex on /admin and /api);
+  `tests/e2e/security.spec.ts` fails on any CSP violation.
+- **Analytics:** Cloudflare Web Analytics, token `NEXT_PUBLIC_CF_WEB_ANALYTICS_TOKEN`
+  (placeholder: empty).
+- **SEO:** `/og/[page]` share images (prerendered, Space Grotesk TTFs in
+  `src/assets/fonts`), Event JSON-LD on /events, `<JsonLd>`,
+  `src/lib/token-values.ts` (mirrored tokens, unit-tested).
+- Lighthouse on Windows here: chrome-launcher cannot spawn Chrome; launch
+  Playwright's Chromium with `--remote-debugging-port=9222` and pass
+  `--port=9222` to `npx lighthouse`.
 
 ---
 
