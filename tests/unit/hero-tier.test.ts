@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   HERO_TIER_BUDGET,
+  isSoftwareRenderer,
   LOW_TIER_LIMITS,
   parseHeroTierOverride,
   selectHeroTier,
@@ -110,5 +111,29 @@ describe('parseHeroTierOverride', () => {
     expect(parseHeroTierOverride('')).toBeNull();
     expect(parseHeroTierOverride('?hero-tier=ultra')).toBeNull();
     expect(parseHeroTierOverride('?tier=high')).toBeNull();
+  });
+});
+
+describe('isSoftwareRenderer (D-034)', () => {
+  it.each([
+    'ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)',
+    'Google SwiftShader',
+    'llvmpipe (LLVM 15.0.7, 256 bits)',
+    'Microsoft Basic Render Driver',
+  ])('recognises a CPU renderer: %s', (renderer) => {
+    expect(isSoftwareRenderer(renderer)).toBe(true);
+  });
+
+  it.each([
+    'ANGLE (NVIDIA, NVIDIA GeForce RTX 3060 Direct3D11 vs_5_0 ps_5_0, D3D11)',
+    'Apple GPU',
+    'Adreno (TM) 650',
+    'Mali-G57 MC2',
+  ])('leaves a real GPU alone: %s', (renderer) => {
+    expect(isSoftwareRenderer(renderer)).toBe(false);
+  });
+
+  it('cannot tell without a name, so does not assume software', () => {
+    expect(isSoftwareRenderer(null)).toBe(false);
   });
 });

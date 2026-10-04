@@ -79,25 +79,36 @@ export function parseHeroTierOverride(search: string): HeroTier | null {
 }
 
 /**
- * Whether a WebGL 2 context can be made, without keeping the probe alive.
- * With `failIfMajorPerformanceCaveat` the browser refuses a context it would
- * draw in software, which is how software rendering is detected. Client-only.
+ * Renderers that draw WebGL on the CPU: Chrome's SwiftShader (also behind
+ * ANGLE, as headless Chrome uses), Mesa's llvmpipe/softpipe, and Windows'
+ * fallback driver. Pure, so it is unit-tested.
  */
-function probeWebGL2(options?: WebGLContextAttributes): boolean {
+export function isSoftwareRenderer(renderer: string | null): boolean {
+  return renderer !== null && /swiftshader|llvmpipe|softpipe|software|basic render/i.test(renderer);
+}
+
+type WebGLProbe = { available: boolean; renderer: string | null };
+
+/**
+ * Make a WebGL 2 context, read what draws it, and release it at once so the
+ * probe never counts against the context budget. Client-only.
+ */
+function probeWebGL2(options?: WebGLContextAttributes): WebGLProbe {
   try {
     const gl = document.createElement('canvas').getContext('webgl2', options);
-    if (!gl) return false;
-    // Release the probe immediately so it never counts against the context budget.
+    if (!gl) return { available: false, renderer: null };
+    const info = gl.getExtension('WEBGL_debug_renderer_info');
+    const renderer = info ? String(gl.getParameter(info.UNMASKED_RENDERER_WEBGL)) : null;
     gl.getExtension('WEBGL_lose_context')?.loseContext();
-    return true;
+    return { available: true, renderer };
   } catch {
-    return false;
+    return { available: false, renderer: null };
   }
 }
 
 /** WebGL 2 support. Client-only. */
 export function detectWebGL2(): boolean {
-  return probeWebGL2();
+  return probeWebGL2().available;
 }
 
 type NavigatorWithHints = Navigator & {
@@ -109,11 +120,16 @@ type NavigatorWithHints = Navigator & {
 export function readHeroTierSignals(): HeroTierSignals {
   const nav = navigator as NavigatorWithHints;
 
-  const webgl = detectWebGL2();
+  const probe = probeWebGL2();
   return {
     reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
-    webgl,
-    softwareRendering: webgl && !probeWebGL2({ failIfMajorPerformanceCaveat: true }),
+    webgl: probe.available,
+    // Software if the renderer says so, or if the browser refuses a context
+    // that must not carry a major performance caveat.
+    softwareRendering:
+      probe.available &&
+      (isSoftwareRenderer(probe.renderer) ||
+        !probeWebGL2({ failIfMajorPerformanceCaveat: true }).available),
     viewportWidth: window.innerWidth,
     hardwareConcurrency: nav.hardwareConcurrency || undefined,
     deviceMemory: nav.deviceMemory,

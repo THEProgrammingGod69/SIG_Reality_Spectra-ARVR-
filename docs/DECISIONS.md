@@ -44,6 +44,7 @@ the call and it was made on the reasoning shown).
 | D-032 | Stage 8: contact-form spam checks, recruitment moves to the admin panel         | lead       |
 | D-033 | Stage 9: motion polish, performance, accessibility, security headers, analytics | lead       |
 | D-034 | Stage 10a: nightly backup and orphan sweep, restore, WebKit tests, handbook     | lead       |
+| D-035 | Final quality pass: Next.js security update, software-GPU detection, audits     | lead       |
 
 ---
 
@@ -821,3 +822,30 @@ they arrive, following [`GO_LIVE.md`](./GO_LIVE.md).
 - **Handover** is a plain-language handbook (`docs/handbook/`) for coordinators
   — events, gallery, team, recruitment, sponsorships — plus admins, backups and
   the yearly handover checklist for whoever looks after the site.
+
+## D-035 — Final quality pass: Next.js security update, software-GPU detection, audits
+
+**Context.** After Stage 10a, a full quality pass over the finished site:
+dependency audit, Lighthouse (mobile and desktop) on the production build,
+a crawl of every link, and full-page screenshots at phone and desktop width.
+
+**Findings and calls.**
+
+- **Next.js 16.3.5 → 16.3.8** (and `eslint-config-next`). The audit reported a
+  critical advisory, GHSA-vcvr-r3jv-pc5j: remote code execution in
+  `next/og`'s ImageResponse, which the share images use. They are drawn at
+  build time from fixed content, never from a visitor's input, so exposure was
+  low, but the fix is a patch release in the same line. Every test was re-run
+  on it. The one remaining audit warning, `braces` under ESLint's tooling, is
+  development-only, never runs on the site, and has no patched version.
+- **Software GPUs are recognised by name too.** Modern headless Chrome draws
+  WebGL through ANGLE + SwiftShader without tripping
+  `failIfMajorPerformanceCaveat`, so the hero still ran its 3D scene on the CPU
+  there (Home: Lighthouse mobile 65, 1.2 s blocking). The tier now also reads
+  the renderer's name (`WEBGL_debug_renderer_info`): SwiftShader, llvmpipe,
+  softpipe and Microsoft Basic Render get the static still. Home: **92**, 30 ms.
+- **Gallery batches of 30**, not 24: whole rows at 1, 2, 3, 5 and 6 columns.
+- **Results** on the production build: Lighthouse desktop 99–100 on every
+  page, mobile 90–93, Accessibility / Best Practices / SEO 100 everywhere;
+  86 internal URLs all answer 200, and the Instagram, WhatsApp and Google Form
+  links are live; no page scrolls sideways at 390 px or 1440 px.

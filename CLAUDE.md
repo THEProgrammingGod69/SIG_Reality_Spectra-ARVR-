@@ -140,7 +140,7 @@ These are not style preferences. Breaking one is a bug.
 
 ## 4. Next.js 16 — things that differ from older knowledge
 
-This project runs **Next.js 16.3.5**. Several APIs changed from 14/15. Check
+This project runs **Next.js 16.3.8** (16.3.5 until a security update, D-035). Several APIs changed from 14/15. Check
 `node_modules/next/dist/docs/` before using an API you are unsure about.
 
 - **Turbopack is the default** for `next dev` and `next build`; no `--turbopack`

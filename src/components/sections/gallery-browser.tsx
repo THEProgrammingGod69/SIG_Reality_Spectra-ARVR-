@@ -12,7 +12,9 @@ import type { Category } from '@/lib/schemas/category';
 import { PhotoGrid } from './photo-grid';
 
 /** Photos per "page"; "Show more" reveals the next batch. */
-const BATCH = 24;
+// 30 fills whole rows at 1, 2, 3, 5 and 6 columns: phones, tablets and wide
+// desktops never end a batch on a half-empty row.
+const BATCH = 30;
 
 /**
  * /gallery: every photo, newest first, filterable by the shared categories.

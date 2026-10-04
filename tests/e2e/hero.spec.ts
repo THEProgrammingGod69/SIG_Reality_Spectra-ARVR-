@@ -40,7 +40,8 @@ test.describe('hero with reduced motion', () => {
     await page.goto('/');
     const section = await heroSection(page);
 
-    await expect(section).toHaveAttribute('data-hero-tier', 'static');
+    // The tier is picked after hydration: slow on a cold dev server.
+    await expect(section).toHaveAttribute('data-hero-tier', 'static', { timeout: 15_000 });
     await expect(page.getByTestId('hero-still')).toHaveCSS('opacity', '1');
     await expect(page.getByRole('heading', heroName())).toBeVisible();
 
@@ -78,7 +79,9 @@ test.describe('hero with JavaScript', () => {
   test('picks a device tier after hydration', async ({ page }) => {
     await page.goto('/');
     const section = await heroSection(page);
-    await expect(section).toHaveAttribute('data-hero-tier', /^(static|low|high)$/);
+    await expect(section).toHaveAttribute('data-hero-tier', /^(static|low|high)$/, {
+      timeout: 15_000,
+    });
   });
 
   test('plays the intro at most once per session', async ({ page }) => {
@@ -103,6 +106,8 @@ test.describe('hero with JavaScript', () => {
     // still exercised there.
     await page.goto('/?hero-tier=low');
     const section = await heroSection(page);
+    // Read the tier only once hydration has decided it.
+    await expect(section).not.toHaveAttribute('data-hero-tier', 'pending', { timeout: 15_000 });
     const tier = await section.getAttribute('data-hero-tier');
     test.skip(tier === 'static', 'No hardware WebGL 2 here: the static tier has no intro.');
 
