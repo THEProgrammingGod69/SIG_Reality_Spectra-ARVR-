@@ -6,10 +6,12 @@ import type { ComponentProps } from 'react';
 import { cn } from '@/lib/cn';
 
 import { buttonVariants } from './button';
+import { overlayClassName } from './overlay';
 
 /*
  * shadcn/ui AlertDialog, reviewed (D-030): token colours; the registry's
- * tw-animate-css entrance is dropped (not installed), so it opens instantly.
+ * tw-animate-css entrance is replaced by the project's keyframe tokens: the
+ * backdrop fades, the dialog fades and rises (transform and opacity, D-033).
  */
 
 function AlertDialog(props: ComponentProps<typeof AlertDialogPrimitive.Root>) {
@@ -22,14 +24,12 @@ function AlertDialogContent({
 }: ComponentProps<typeof AlertDialogPrimitive.Content>) {
   return (
     <AlertDialogPrimitive.Portal>
-      <AlertDialogPrimitive.Overlay
-        data-slot="alert-dialog-overlay"
-        className="fixed inset-0 z-(--z-overlay) bg-(--color-void)/60"
-      />
+      <AlertDialogPrimitive.Overlay data-slot="alert-dialog-overlay" className={overlayClassName} />
       <AlertDialogPrimitive.Content
         data-slot="alert-dialog-content"
         className={cn(
           'fixed top-1/2 left-1/2 z-(--z-overlay) grid w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-card border bg-popover p-6 text-popover-foreground shadow-card sm:max-w-lg',
+          'data-[state=closed]:animate-rise-out data-[state=open]:animate-rise-in',
           className,
         )}
         {...props}

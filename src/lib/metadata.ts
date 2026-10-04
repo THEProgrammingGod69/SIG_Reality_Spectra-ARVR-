@@ -8,7 +8,8 @@ import { routeTitle, siteConfig, type SiteRoute } from './site';
  *
  * Next.js merges metadata shallowly — a page's `openGraph` replaces the root
  * layout's entirely — so each page must state its own; this helper is that one
- * place. Stage 9 adds the generated OpenGraph images.
+ * place. Each page also gets its own generated share image (`ogImagePath()`,
+ * drawn by `src/app/og/[page]/route.tsx`, D-033).
  */
 
 /** Home page and fallback title: "SIG Reality Spectra — Special Interest Group, VIT Pune". */
@@ -17,6 +18,19 @@ export const defaultTitle = `${siteConfig.name} — ${siteConfig.kind}, ${siteCo
 export const titleTemplate = `%s | ${siteConfig.name}`;
 
 export const OG_LOCALE = 'en_IN';
+
+/** The size every share image is drawn at: the one all platforms accept. */
+export const OG_IMAGE_SIZE = { width: 1200, height: 630 } as const;
+
+/** A page's share-image slug: "home" for /, otherwise its path, e.g. "about". */
+export function ogImageSlug(route: SiteRoute): string {
+  return route.href === '/' ? 'home' : route.href.slice(1);
+}
+
+/** Where a page's share image is served. */
+export function ogImagePath(route: SiteRoute): string {
+  return `/og/${ogImageSlug(route)}`;
+}
 
 type PageMetadataOptions = {
   /** Replace the route's meta description (Home uses the positioning line). */
@@ -29,6 +43,8 @@ export function pageMetadata(route: SiteRoute, options: PageMetadataOptions = {}
   // The <title> gets the template suffix from the root layout; share titles spell it out.
   const shareTitle = isHome ? defaultTitle : titleTemplate.replace('%s', routeTitle(route));
 
+  const image = { url: ogImagePath(route), ...OG_IMAGE_SIZE, alt: shareTitle };
+
   return {
     ...(isHome ? { title: { absolute: defaultTitle } } : { title: routeTitle(route) }),
     description,
@@ -40,7 +56,8 @@ export function pageMetadata(route: SiteRoute, options: PageMetadataOptions = {}
       url: route.href,
       title: shareTitle,
       description,
+      images: [image],
     },
-    twitter: { card: 'summary_large_image', title: shareTitle, description },
+    twitter: { card: 'summary_large_image', title: shareTitle, description, images: [image] },
   };
 }

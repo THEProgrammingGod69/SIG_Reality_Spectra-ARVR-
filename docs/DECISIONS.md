@@ -8,40 +8,41 @@ bottom; never edit an old one — supersede it with a new entry.
 **Decided by** is either _team_ (the club decided) or _lead_ (the club delegated
 the call and it was made on the reasoning shown).
 
-| ID    | Decision                                                                       | Decided by |
-| ----- | ------------------------------------------------------------------------------ | ---------- |
-| D-001 | Hero direction: **Orbit Lab**                                                  | lead       |
-| D-002 | Fonts: **Space Grotesk · Inter · JetBrains Mono**                              | lead       |
-| D-003 | Caption colour `text-subtle` is **`#797F8D`**                                  | team       |
-| D-004 | Vendored components come from **React Bits only**                              | lead       |
-| D-005 | Gallery shows **event photos and standalone club photos**                      | team       |
-| D-006 | Contact and sponsorship are **one page**                                       | team       |
-| D-007 | No stat counters on Home in v1                                                 | lead       |
-| D-008 | No email: sponsorship requests live in the admin inbox                         | lead       |
-| D-009 | Rule 4 has **no exceptions**; blur/layout-animating effects are rewritten      | lead       |
-| D-010 | The hero has **one WebGL context**, and its name is real text at first paint   | lead       |
-| D-011 | No `ogl`, no second WebGL library                                              | lead       |
-| D-012 | Navigation: PillNav on desktop, StaggeredMenu on mobile                        | lead       |
-| D-013 | Component shortlist and rejections                                             | lead       |
-| D-014 | Repo stays private while vendored React Bits code is inside                    | lead       |
-| D-015 | Style Board colours adopted in Stage 2 ("tokens before hero")                  | lead       |
-| D-016 | MagicRings is ported into the R3F scene, not used as its own canvas            | lead       |
-| D-017 | The static hero still is an inline SVG drawn from tokens, not a WebP           | lead       |
-| D-018 | Hero scroll-out: pinned 150vh on 3D tiers only, handing over dimmed            | lead       |
-| D-019 | Stage 3 additions: Lucide icons and one `cn()` helper                          | lead       |
-| D-020 | Site shell: React Bits nav and effects rebuilt; header overlays the page       | lead       |
-| D-021 | Logo: the original badge ships as raster; the pack's dark badge is rejected    | lead       |
-| D-022 | Rule 4 covers colour: no colour or background transitions                      | lead       |
-| D-023 | Content layer in `src/content`; QR codes generated from the links              | lead       |
-| D-024 | Interim recruitment, honest placeholders, no fake sponsorship form             | team       |
-| D-025 | Hosting on **Netlify**; files in **Cloudflare R2**; Upstash used directly      | team, lead |
-| D-026 | Categories: hackathon · competition · workshop · other                         | team       |
-| D-027 | Team: core + domain secretaries only; no team section on Home                  | team       |
-| D-028 | Recruitment opens with the form alone; the roles PDF is optional               | team       |
-| D-029 | Data layer: one generic repository over two storage ports                      | lead       |
-| D-030 | Admin access: Auth.js beta pinned, development sign-in, reviewed shadcn subset | team, lead |
-| D-031 | Stage 7: local data mode, any-ratio images, placeholders until real content    | team, lead |
-| D-032 | Stage 8: contact-form spam checks, recruitment moves to the admin panel        | lead       |
+| ID    | Decision                                                                        | Decided by |
+| ----- | ------------------------------------------------------------------------------- | ---------- |
+| D-001 | Hero direction: **Orbit Lab**                                                   | lead       |
+| D-002 | Fonts: **Space Grotesk · Inter · JetBrains Mono**                               | lead       |
+| D-003 | Caption colour `text-subtle` is **`#797F8D`**                                   | team       |
+| D-004 | Vendored components come from **React Bits only**                               | lead       |
+| D-005 | Gallery shows **event photos and standalone club photos**                       | team       |
+| D-006 | Contact and sponsorship are **one page**                                        | team       |
+| D-007 | No stat counters on Home in v1                                                  | lead       |
+| D-008 | No email: sponsorship requests live in the admin inbox                          | lead       |
+| D-009 | Rule 4 has **no exceptions**; blur/layout-animating effects are rewritten       | lead       |
+| D-010 | The hero has **one WebGL context**, and its name is real text at first paint    | lead       |
+| D-011 | No `ogl`, no second WebGL library                                               | lead       |
+| D-012 | Navigation: PillNav on desktop, StaggeredMenu on mobile                         | lead       |
+| D-013 | Component shortlist and rejections                                              | lead       |
+| D-014 | Repo stays private while vendored React Bits code is inside                     | lead       |
+| D-015 | Style Board colours adopted in Stage 2 ("tokens before hero")                   | lead       |
+| D-016 | MagicRings is ported into the R3F scene, not used as its own canvas             | lead       |
+| D-017 | The static hero still is an inline SVG drawn from tokens, not a WebP            | lead       |
+| D-018 | Hero scroll-out: pinned 150vh on 3D tiers only, handing over dimmed             | lead       |
+| D-019 | Stage 3 additions: Lucide icons and one `cn()` helper                           | lead       |
+| D-020 | Site shell: React Bits nav and effects rebuilt; header overlays the page        | lead       |
+| D-021 | Logo: the original badge ships as raster; the pack's dark badge is rejected     | lead       |
+| D-022 | Rule 4 covers colour: no colour or background transitions                       | lead       |
+| D-023 | Content layer in `src/content`; QR codes generated from the links               | lead       |
+| D-024 | Interim recruitment, honest placeholders, no fake sponsorship form              | team       |
+| D-025 | Hosting on **Netlify**; files in **Cloudflare R2**; Upstash used directly       | team, lead |
+| D-026 | Categories: hackathon · competition · workshop · other                          | team       |
+| D-027 | Team: core + domain secretaries only; no team section on Home                   | team       |
+| D-028 | Recruitment opens with the form alone; the roles PDF is optional                | team       |
+| D-029 | Data layer: one generic repository over two storage ports                       | lead       |
+| D-030 | Admin access: Auth.js beta pinned, development sign-in, reviewed shadcn subset  | team, lead |
+| D-031 | Stage 7: local data mode, any-ratio images, placeholders until real content     | team, lead |
+| D-032 | Stage 8: contact-form spam checks, recruitment moves to the admin panel         | lead       |
+| D-033 | Stage 9: motion polish, performance, accessibility, security headers, analytics | lead       |
 
 ---
 
@@ -699,3 +700,73 @@ built and tested on placeholders, as in D-031.
   caught it). The proxy now passes on cookie removals only
   (`cookieRemovalsOnly()` in `src/lib/auth/policy.ts`), so a session lasts a
   fixed 8 hours from sign-in, as D-030 describes, and signing out sticks.
+
+## D-033 — Stage 9: motion polish, performance, accessibility, security headers, analytics
+
+**Context.** Stage 9 hardens what Stages 1–8 built before go-live. Arnav
+approved the defaults proposed in the Stage 9 brief: Cloudflare Web Analytics
+with a placeholder token, and `@axe-core/playwright` as a dev dependency.
+
+**Lead calls.**
+
+- **Motion.** The admin's Radix sheet and dialogs now enter and leave with
+  keyframe tokens in globals.css (`animate-fade-*`, `-rise-*`, `-slide-*`):
+  transform and opacity only, on the duration tokens, so reduced motion makes
+  them instant. Keyframes rather than transitions, because Radix keeps a
+  closing overlay mounted exactly until its exit animation ends. The backdrop
+  class lives once (`admin/ui/overlay.ts`). New **`<Tilt>`** primitive (our
+  TiltedCard, on Magnetic's rules: mouse only, a 4° lean, off under reduced
+  motion) on About's team cards; the team, current events and contact form
+  enter with `<Reveal>`/`<Stagger>` like the other sections.
+- **The page fade is CSS.** `PageTransition` used Motion for one opacity fade,
+  which put the 44 KB library on every page; it is the `animate-fade-in` token
+  now. Motion loads only for the hero title (Home) and admin toasts.
+- **No schema module in public client code.** A client component that imports
+  a schema file pulls all of zod into the browser (its top-level `z.*` calls
+  cannot be tree-shaken): /gallery paid 89 KB for a list of categories. Client
+  components receive such constants as props (`GalleryBrowser` gets
+  `categories`, `SponsorshipForm` gets `types`), and the contact form loads
+  zod and its schema on first focus, not with the page — still the one shared
+  schema (rule 3). /gallery 353 → 264 KB, /contact 369 → 278 KB of JavaScript.
+- **Images.** `sizes` match the real grid columns (phones get full-width tiles,
+  not half-width ones); the first gallery tile is preloaded as the page's
+  largest paint; the photo viewer loads its photo eagerly.
+- **Software WebGL gets the static hero.** A WebGL context requested with
+  `failIfMajorPerformanceCaveat` is refused when the browser would draw it on
+  the CPU (no GPU, a blocked driver, headless browsers). Such devices now get
+  the designed still (D-017) instead of a scene that costs every frame in
+  main-thread time. The production e2e run therefore sees the static tier; the
+  dev run still exercises the 3D intro through `?hero-tier=low`.
+- **Measured, not guessed.** Lighthouse (mobile, throttled) on the production
+  build: Accessibility, Best Practices and SEO 100 on every page; Performance
+  91–93 on the content pages. Home is ~60 in the lab because the headless
+  browser has no GPU; real throttled runs paint the largest element at first
+  paint (~1.1 s). The Android 50 fps sign-off (OPEN_ITEMS #1) still needs a
+  real phone.
+- **Accessibility.** `tests/e2e/a11y.spec.ts` runs axe-core (WCAG 2.2 A/AA) on
+  every public page, the open phone menu, the photo viewer, the contact form
+  with errors, the sign-in page, every admin screen and a delete dialog, plus
+  the contact form's keyboard order. It found one issue, fixed: Contact's
+  details list nested its `dt`/`dd` pairs too deep.
+- **Security headers** (`src/lib/security-headers.ts`, applied in
+  next.config.ts): a CSP allowing scripts only from the site, Turnstile and the
+  analytics beacon; connections to the site, the account's R2 upload endpoint
+  and the analytics report; frames for Turnstile and a Google Maps embed;
+  `object-src`/`frame-ancestors 'none'`, `base-uri`/`form-action 'self'`.
+  `'unsafe-inline'` stays for scripts and styles: a nonce would make every
+  prerendered page dynamic. Plus HSTS (https only), `nosniff`, `DENY` framing,
+  a strict referrer policy, a Permissions-Policy that turns off camera,
+  microphone, location, payment and USB (WebXR stays allowed for the club's
+  own pages), COOP, and `X-Robots-Tag: noindex` on /admin and /api. An e2e
+  test fails on any CSP violation across every public and admin page.
+- **Analytics: Cloudflare Web Analytics.** Free, cookieless (no consent
+  banner), and the club already uses Cloudflare for R2 and Turnstile. Loads
+  only on the public site, only with `NEXT_PUBLIC_CF_WEB_ANALYTICS_TOKEN`, never
+  under `next dev`; listed on the dashboard's Setup card.
+- **SEO.** Each page gets its own 1200×630 share image (`/og/[page]`,
+  prerendered at build) in Space Grotesk on the brand palette; the static TTFs
+  (OFL) are in `src/assets/fonts`, server-only, since the renderer cannot read
+  WOFF2. Colours come from `src/lib/token-values.ts`, mirrored tokens a unit
+  test keeps equal to globals.css (the browser theme colour moved there too).
+  /events adds schema.org Event data for its current events; JSON-LD renders
+  through one `<JsonLd>` component.

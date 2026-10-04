@@ -12,6 +12,7 @@ them all at `/dev/motion` (development only).
 | `focus-text.tsx`        | `<FocusText>` — our TrueFocus (D-009): words dim, corners translate |
 | `enter-on-scroll.ts`    | the shared entrance used by Reveal and Stagger                      |
 | `magnetic.tsx`          | `<Magnetic>` — our Magnet: pull toward a mouse pointer (Stage 3)    |
+| `tilt.tsx`              | `<Tilt>` — our TiltedCard: a 4° lean toward the mouse (Stage 9)     |
 | `use-motion-tokens.ts`  | `useMotionTokens()` — live tokens for render-time props (Stage 3)   |
 | `scroll-lock.ts`        | `lockScroll()` for overlays; also stops Lenis (Stage 3)             |
 
@@ -32,5 +33,6 @@ Rules:
   plugins are registered once.
 
 The page transition lives with the site chrome (`components/site/page-transition.tsx`);
-the magnetic button is `Button`/`ButtonLink` with `magnetic`. Stage 9 adds a
-tilt card on the same rules.
+the magnetic button is `Button`/`ButtonLink` with `magnetic`; `<Tilt>` is on
+About's team cards. Overlays (the admin sheet and dialogs) use the keyframe
+tokens in globals.css (`animate-fade-*`, `-rise-*`, `-slide-*`, D-033).

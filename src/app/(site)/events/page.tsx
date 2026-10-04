@@ -4,12 +4,15 @@ import { CurrentEvents } from '@/components/sections/current-events';
 import { EventTimeline } from '@/components/sections/event-timeline';
 import { LoadFailed } from '@/components/sections/load-failed';
 import { PageIntro } from '@/components/sections/page-intro';
+import { JsonLd } from '@/components/site/json-ld';
 import { Section } from '@/components/ui/section';
 import { Skeleton } from '@/components/ui/skeleton';
 import { socialLinks } from '@/lib/content';
 import { getPublicEvents, publicRead } from '@/lib/data';
+import { publicEnv } from '@/lib/env.public';
 import { pageMetadata } from '@/lib/metadata';
 import { clubCredit, getRoute, routeTitle } from '@/lib/site';
+import { eventsJsonLd } from '@/lib/structured-data';
 
 const route = getRoute('/events');
 
@@ -43,6 +46,9 @@ async function Events() {
   }
   return (
     <>
+      {read.data.current.length > 0 ? (
+        <JsonLd data={eventsJsonLd(read.data.current, publicEnv.NEXT_PUBLIC_SITE_URL)} />
+      ) : null}
       <CurrentEvents events={read.data.current} socials={socialLinks} />
       <EventTimeline events={read.data.timeline} />
     </>

@@ -2,6 +2,9 @@ import { Users } from 'lucide-react';
 import Image from 'next/image';
 import type { ReactNode } from 'react';
 
+import { Reveal } from '@/components/motion/reveal';
+import { Stagger } from '@/components/motion/stagger';
+import { Tilt } from '@/components/motion/tilt';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardBody, CardMedia, CardTitle } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -27,14 +30,14 @@ type TeamSectionProps = {
 export function TeamSection({ id, title, lead, children }: TeamSectionProps) {
   return (
     <Section labelledBy={id}>
-      <div className="max-w-prose">
+      <Reveal className="max-w-prose">
         <Heading level={2} id={id}>
           {title}
         </Heading>
         <Text tone="muted" className="mt-4">
           {lead}
         </Text>
-      </div>
+      </Reveal>
       <div className="mt-10">{children}</div>
     </Section>
   );
@@ -72,16 +75,21 @@ export function TeamMembers({
           <Heading level={3} size="sm" id={`team-${group.id}`}>
             {group.label}
           </Heading>
-          <ul className="mt-6 grid grid-cols-[repeat(auto-fill,minmax(min(100%,13rem),1fr))] gap-6">
+          <Stagger
+            as="ul"
+            className="mt-6 grid grid-cols-[repeat(auto-fill,minmax(min(100%,13rem),1fr))] gap-6"
+          >
             {group.members.map((member) => (
               <li key={member.id}>
-                <MemberCard
-                  member={member}
-                  domain={member.domainId ? domainNames[member.domainId] : undefined}
-                />
+                <Tilt>
+                  <MemberCard
+                    member={member}
+                    domain={member.domainId ? domainNames[member.domainId] : undefined}
+                  />
+                </Tilt>
               </li>
             ))}
-          </ul>
+          </Stagger>
         </section>
       ))}
     </div>
@@ -98,7 +106,8 @@ function MemberCard({ member, domain }: { member: PublicMember; domain: string |
             src={member.photo.url}
             alt={member.photo.alt}
             fill
-            sizes="(min-width: 64rem) 16rem, (min-width: 40rem) 33vw, 100vw"
+            // 13rem-minimum tiles: one column on phones, two from 28rem, three from 48rem.
+            sizes="(min-width: 64rem) 16rem, (min-width: 48rem) 33vw, (min-width: 28rem) 50vw, 100vw"
             className="object-cover"
           />
         ) : (

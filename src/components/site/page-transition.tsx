@@ -1,9 +1,6 @@
 'use client';
 
-import { motion } from 'motion/react';
 import { useEffect, useState, type ReactNode } from 'react';
-
-import { useMotionTokens } from '@/components/motion/use-motion-tokens';
 
 /** Becomes true after the first page has hydrated; later pages are navigations. */
 const session = { hydrated: false };
@@ -15,11 +12,11 @@ const session = { hydrated: false };
  * Opacity only — no transform on this wrapper, because a transformed ancestor
  * would break the hero's pinned (position: fixed) scroll-out. The first page
  * load never fades: the hero name must be visible at first paint (D-010), so
- * only client-side navigations animate. Under reduced motion the duration
- * token is zero.
+ * only client-side navigations animate. It is the `animate-fade-in` keyframe
+ * token, plain CSS, so no animation library loads for it (D-033); under
+ * reduced motion its duration token is zero.
  */
 export function PageTransition({ children }: { children: ReactNode }) {
-  const tokens = useMotionTokens();
   // Decided once per mount; false during hydration so server and client agree.
   const [animate] = useState(() => typeof window !== 'undefined' && session.hydrated);
 
@@ -27,13 +24,5 @@ export function PageTransition({ children }: { children: ReactNode }) {
     session.hydrated = true;
   }, []);
 
-  return (
-    <motion.div
-      initial={animate ? { opacity: 0 } : false}
-      animate={{ opacity: 1 }}
-      transition={{ duration: tokens?.dur.short ?? 0, ease: tokens?.ease.outExpo }}
-    >
-      {children}
-    </motion.div>
-  );
+  return <div className={animate ? 'animate-fade-in' : undefined}>{children}</div>;
 }

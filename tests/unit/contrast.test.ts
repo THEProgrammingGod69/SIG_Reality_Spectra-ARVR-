@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import { contrastRatio, luminance, WCAG_AA_TEXT, WCAG_AA_UI } from '@/lib/contrast';
+import { TOKEN_VALUES } from '@/lib/token-values';
 
 /**
  * WCAG AA audit of the colour tokens, as the design system actually pairs
@@ -103,10 +104,11 @@ describe('colour tokens meet WCAG AA', () => {
   });
 });
 
-describe('browser theme colour', () => {
-  it('matches --color-bg (metadata cannot read CSS variables)', () => {
-    const layout = readFileSync(join(root, 'src', 'app', 'layout.tsx'), 'utf8');
-    const themeColor = /themeColor:\s*'(#[0-9a-f]{3,6})'/i.exec(layout)?.[1];
-    expect(themeColor?.toLowerCase()).toBe(colour('bg').toLowerCase());
-  });
+describe('mirrored token values', () => {
+  it.each(Object.entries(TOKEN_VALUES))(
+    '%s matches its --color token (metadata and share images cannot read CSS variables)',
+    (name, value) => {
+      expect(value.toLowerCase()).toBe(colour(name).toLowerCase());
+    },
+  );
 });

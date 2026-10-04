@@ -24,7 +24,8 @@ The registry code is a starting point. Before it ships:
    in `globals.css`. `accent` and `muted` are **not**: rewrite `bg-accent` hover
    fills and `bg-muted` to `bg-secondary`. No raw colours (`bg-black/50` →
    `bg-(--color-void)/60`).
-3. **Motion** (rule 4, D-022): delete `transition-all`, `transition-[color,…]`
+3. **Motion** (rule 4, D-022, D-033): use the `animate-fade-*`/`-rise-*`/`-slide-*`
+   keyframe tokens for enter/exit; delete `transition-all`, `transition-[color,…]`
    and plain `transition`; delete `animate-in`/`animate-out`/`fade-*`/`zoom-*`/
    `slide-*` classes (tw-animate-css is not installed). A press scale or an
    opacity fade on the motion tokens is fine.
@@ -34,15 +35,16 @@ The registry code is a starting point. Before it ships:
 
 | Component     | From shadcn | Notes                                                    |
 | ------------- | ----------- | -------------------------------------------------------- |
-| alert-dialog  | yes         | trimmed to what the panel uses; opens instantly          |
+| alert-dialog  | yes         | trimmed; fades and rises on the keyframe tokens (D-033)  |
 | badge         | yes         | `success` / `warning` / `destructive` outline tones      |
 | button        | yes         | press scale only; sizes `sm` · `default` · `lg` · `icon` |
 | card          | yes         | `rounded-card`, `shadow-card`                            |
 | input, label  | yes         |                                                          |
 | separator     | yes         |                                                          |
-| sheet         | yes         | left/right only; opens instantly                         |
+| sheet         | yes         | left/right only; slides on the keyframe tokens (D-033)   |
 | textarea      | yes         | grows with its content (`field-sizing-content`)          |
 | native-select | in-house    | styled native `<select>`; the platform picker (D-031)    |
 | checkbox      | in-house    | native checkbox in the accent colour (D-031)             |
+| overlay.ts    | in-house    | the one backdrop class for the sheet and dialogs (D-033) |
 
 Skeletons and empty states come from the public `src/components/ui`.

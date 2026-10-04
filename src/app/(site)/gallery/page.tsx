@@ -7,6 +7,7 @@ import { Section } from '@/components/ui/section';
 import { Skeleton } from '@/components/ui/skeleton';
 import { getGallery, publicRead } from '@/lib/data';
 import { pageMetadata } from '@/lib/metadata';
+import { CATEGORIES } from '@/lib/schemas/category';
 import { clubCredit, getRoute, routeTitle } from '@/lib/site';
 
 const route = getRoute('/gallery');
@@ -34,5 +35,5 @@ export default function GalleryPage() {
 async function Gallery() {
   const read = await publicRead('the gallery', getGallery);
   if ('failed' in read) return <LoadFailed what="The gallery" />;
-  return <GalleryBrowser items={read.data} />;
+  return <GalleryBrowser items={read.data} categories={CATEGORIES} />;
 }

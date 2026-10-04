@@ -77,8 +77,8 @@ a lab that builds real things, or a gaming landing page?
 | Admin auth         | Auth.js (`next-auth@5.0.0-beta.32`, pinned) — Google, JWT sessions, allowlist in env (D-030) |
 | Forms              | react-hook-form + Zod                                                                        |
 | Spam protection    | Cloudflare Turnstile + honeypot                                                              |
-| Analytics          | Chosen in Stage 9 (Vercel Analytics does not run on Netlify — D-025)                         |
-| Testing            | Playwright (E2E) + Vitest (schemas/utils)                                                    |
+| Analytics          | Cloudflare Web Analytics, cookieless, public site only (D-033)                               |
+| Testing            | Playwright (E2E) + Vitest (schemas/utils) + axe-core (accessibility, D-033)                  |
 | Hosting            | Netlify + club-owned GitHub org (D-025)                                                      |
 
 If a library looks like a better fit mid-build, raise it — do not silently swap it.
@@ -191,6 +191,7 @@ src/
     api/auth/        Auth.js endpoints (Stage 6)
     api/local-media/ local data mode only: receives and serves uploads (Stage 7)
     api/cron/nightly backup + orphan sweep, CRON_SECRET  (Stage 10)
+    og/[page]        each public page's share image, prerendered            (Stage 9)
     globals.css      design tokens live here, in @theme
     robots.ts
   components/
@@ -208,6 +209,8 @@ src/
     integrations.ts  which outside services have credentials (dashboard)  (Stage 6)
     dates.ts         dates in the club's time zone                        (Stage 6)
     forms.ts         helpers shared by admin and public forms (blankToNull) (Stage 8)
+    security-headers.ts  CSP and security headers for next.config.ts      (Stage 9)
+    token-values.ts  token values for places that cannot read CSS (OG images, theme colour) (Stage 9)
     turnstile.ts     the contact form's spam check: mode + verification   (Stage 8)
     motion/          motion tokens reader, GSAP setup, hero device tiers (Stage 2)
     cn.ts            the one class-name helper (public UI and shadcn admin)
@@ -218,7 +221,7 @@ src/
     content.ts       the validated src/content files (server-only)          (Stage 4)
     metadata.ts      pageMetadata(): title, canonical, OpenGraph per page   (Stage 4)
     structured-data.ts  schema.org JSON-LD for the club                     (Stage 4)
-  assets/            imported static assets (brand logo images)        (Stage 3)
+  assets/            brand logo images (Stage 3); fonts/ = OG-image TTFs, server-only (Stage 9)
   content/           site, domains, contact — JSON, validated at build time
   proxy.ts           the /admin guard (Next 16's renamed middleware)       (Stage 6)
 scripts/             seed.mts — pnpm seed --demo                              (Stages 5–8)
@@ -357,7 +360,7 @@ One stage per session. `/clear` between stages. Commit and tag each stage
 | 6     | Admin authentication + panel shell + dashboard                               | **Done**    |
 | 7     | Events and gallery (event photos + standalone photos) — admin ↔ public       | **Done**    |
 | 8     | Team, recruitment and sponsorship requests — admin ↔ public                  | **Done**    |
-| 9     | Animation polish, performance, accessibility, security headers               | Not started |
+| 9     | Animation polish, performance, accessibility, security headers               | **Done**    |
 | 10    | Testing, deployment, nightly backup + orphan sweep, handover                 | Not started |
 
 The architecture was revised after Stage 1 (six-page sitemap, admin-managed
@@ -423,6 +426,11 @@ contributor must know before writing UI:
 | Admin-written text | Plain text as paragraphs (`<Paragraphs>`), never HTML; no Markdown renderer (D-031)                                                                             |
 | Contact form       | Honeypot, Turnstile (fails closed on Netlify without keys), 3 requests/sender/hour in the data layer; no form where it cannot work (D-032)                      |
 | Recruitment status | Admin-managed only (`recruitment.json` deleted); header button + mobile-menu tag show "open"; no site-wide banner (D-032)                                       |
+| Overlay motion     | Admin sheet/dialogs enter and leave on keyframe tokens (`animate-fade-*`/`-rise-*`/`-slide-*`); `<Tilt>` on team cards (D-033)                                  |
+| Public JavaScript  | Client components never import a schema module (it pulls in zod): pass constants as props, load validation on demand (D-033)                                    |
+| Hero tiers         | Software-rendered WebGL (no GPU) gets the static still, like reduced motion (D-033)                                                                             |
+| Security headers   | CSP + HSTS + framing/sniffing/referrer/permissions policies from `src/lib/security-headers.ts`; zero CSP violations is an e2e test (D-033)                      |
+| Share images       | One per page at `/og/[page]`, prerendered; colours from `token-values.ts`, checked against globals.css (D-033)                                                  |
 | Admin form kit     | `FormField`/`CheckboxField`, `ImageField`/`PdfField`, `SaveBar`, `ConfirmDelete`, `useRecordVersion` — reuse, never copy (D-032)                                |
 | Public reads       | Through `publicRead()` inside `<Suspense>`; a failure shows `<LoadFailed>`, never an error page (D-032)                                                         |
 

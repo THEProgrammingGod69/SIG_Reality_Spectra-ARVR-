@@ -21,14 +21,24 @@ const publicEnvSchema = z.object({
     })
     .default('http://localhost:3000'),
 
-  /** Cloudflare Turnstile public site key. Added in Stage 8. */
+  /** Cloudflare Turnstile public site key (Stage 8, D-032). */
   NEXT_PUBLIC_TURNSTILE_SITE_KEY: z.string().min(1).optional(),
+
+  /**
+   * Cloudflare Web Analytics site token (Stage 9, D-033): public by design —
+   * it is in the page's beacon tag. Without it, no analytics script loads.
+   */
+  NEXT_PUBLIC_CF_WEB_ANALYTICS_TOKEN: z
+    .string()
+    .regex(/^[a-f0-9]{32}$/, 'The 32-character token from Cloudflare → Web Analytics')
+    .optional(),
 });
 
 // `|| undefined`: a variable copied blank from .env.example means "not set yet".
 const parsed = publicEnvSchema.safeParse({
   NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL || undefined,
   NEXT_PUBLIC_TURNSTILE_SITE_KEY: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || undefined,
+  NEXT_PUBLIC_CF_WEB_ANALYTICS_TOKEN: process.env.NEXT_PUBLIC_CF_WEB_ANALYTICS_TOKEN || undefined,
 });
 
 if (!parsed.success) {

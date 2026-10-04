@@ -53,6 +53,12 @@ const INTEGRATIONS = [
     variables: ['NEXT_PUBLIC_TURNSTILE_SITE_KEY', 'TURNSTILE_SECRET_KEY'],
   },
   {
+    id: 'analytics',
+    label: 'Visitor analytics (Cloudflare Web Analytics)',
+    purpose: 'Cookieless page-view counts for the public site; off without its token (D-033).',
+    variables: ['NEXT_PUBLIC_CF_WEB_ANALYTICS_TOKEN'],
+  },
+  {
     id: 'cron',
     label: 'Nightly job secret',
     purpose: 'Authorises the nightly backup and file clean-up (Stage 10).',

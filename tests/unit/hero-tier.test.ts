@@ -34,6 +34,14 @@ describe('selectHeroTier', () => {
     expect(selectHeroTier({ ...desktop, webgl: false }).tier).toBe('static');
   });
 
+  it('serves the static still when WebGL would be drawn by the CPU (D-033)', () => {
+    expect(selectHeroTier({ ...desktop, softwareRendering: true })).toEqual({
+      tier: 'static',
+      reason: 'software WebGL (no GPU)',
+    });
+    expect(selectHeroTier({ ...desktop, softwareRendering: false }).tier).toBe('high');
+  });
+
   it('lets reduced motion win over every other signal', () => {
     const weakPhone: HeroTierSignals = {
       reducedMotion: true,

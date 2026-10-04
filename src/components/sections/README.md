@@ -4,7 +4,8 @@ Composed page sections: the hero, the content sections of Home, About,
 Recruitment and Contact, and the events and gallery sections.
 
 Sections receive data as props from their page. They never call the repository
-layer themselves.
+layer themselves, and client sections never import a schema module at runtime —
+it would pull zod into the browser; take the constants as props (D-033).
 
 Built in **Stage 2** (Hero) and **Stages 4, 7 and 8** (the rest).
 
@@ -25,22 +26,22 @@ Built in **Stage 2** (Hero) and **Stages 4, 7 and 8** (the rest).
 
 ## Stage 7
 
-| File                  | Used on         | What it renders                                                                  |
-| --------------------- | --------------- | -------------------------------------------------------------------------------- |
-| `current-events.tsx`  | Events          | Current events, soonest first: poster whole in a 4:5 frame, details, Register    |
-| `event-timeline.tsx`  | Events          | Timeline of past events: date, category, recap, first photos ("+N" for the rest) |
-| `gallery-browser.tsx` | Gallery         | Category filters with counts, photo grid, "Show more" (client)                   |
-| `photo-grid.tsx`      | Events, Gallery | Square centre-cropped tiles and the full-size viewer (Modal, arrow keys)         |
-| `paragraphs.tsx`      | Events          | Admin-written text as paragraphs, never HTML (D-031)                             |
+| File                  | Used on         | What it renders                                                                       |
+| --------------------- | --------------- | ------------------------------------------------------------------------------------- |
+| `current-events.tsx`  | Events          | Current events, soonest first: poster whole in a 4:5 frame, details, Register         |
+| `event-timeline.tsx`  | Events          | Timeline of past events: date, category, recap, first photos ("+N" for the rest)      |
+| `gallery-browser.tsx` | Gallery         | Category filters (categories passed in) with counts, photo grid, "Show more" (client) |
+| `photo-grid.tsx`      | Events, Gallery | Square centre-cropped tiles and the full-size viewer (Modal, arrow keys)              |
+| `paragraphs.tsx`      | Events          | Admin-written text as paragraphs, never HTML (D-031)                                  |
 
 ## Stage 8
 
-| File                      | Used on                             | What it renders                                                                   |
-| ------------------------- | ----------------------------------- | --------------------------------------------------------------------------------- |
-| `team-section.tsx`        | About                               | The team, by tier: square photo or initials, name, position, secretary's domain   |
-| `sponsorship-section.tsx` | Contact                             | The request form, or the club's channels where the form cannot work (D-032)       |
-| `sponsorship-form.tsx`    | Contact                             | The form (client): validation, honeypot, Turnstile widget, sent and failed states |
-| `load-failed.tsx`         | Events, Gallery, About, Recruitment | What a section shows when `publicRead()` failed: a calm note, never an error page |
+| File                      | Used on                             | What it renders                                                                              |
+| ------------------------- | ----------------------------------- | -------------------------------------------------------------------------------------------- |
+| `team-section.tsx`        | About                               | The team, by tier: square photo or initials, name, position, domain; `<Tilt>` cards          |
+| `sponsorship-section.tsx` | Contact                             | The request form, or the club's channels where the form cannot work (D-032)                  |
+| `sponsorship-form.tsx`    | Contact                             | The form (client): validation loaded on first focus, honeypot, Turnstile, sent/failed states |
+| `load-failed.tsx`         | Events, Gallery, About, Recruitment | What a section shows when `publicRead()` failed: a calm note, never an error page            |
 
 ## `hero/` (Stage 2)
 

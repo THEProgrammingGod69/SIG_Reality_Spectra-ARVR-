@@ -9,7 +9,9 @@ The public site's chrome, built in **Stage 3** and rendered by
 | `pill-nav.tsx`        | Desktop links — our rebuild of React Bits' PillNav (D-020)                                             |
 | `mobile-menu.tsx`     | Full-screen menu below `lg` — our rebuild of StaggeredMenu (D-020); "Open now" tag while recruiting    |
 | `site-footer.tsx`     | Logo badge, every page by group, contact channels once set, VIT Pune credit                            |
-| `page-transition.tsx` | Opacity fade on client navigations only (never the first load)                                         |
+| `page-transition.tsx` | Opacity fade on client navigations only (never the first load); plain CSS, no library (D-033)          |
+| `web-analytics.tsx`   | Cloudflare Web Analytics beacon: only with its token, never under `next dev` (D-033)                   |
+| `json-ld.tsx`         | `<JsonLd>`: schema.org data as an escaped script tag (Home, Events)                                    |
 
 Rules:
 

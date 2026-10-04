@@ -1,11 +1,13 @@
 import { Handshake } from 'lucide-react';
 import type { ComponentProps } from 'react';
 
+import { Reveal } from '@/components/motion/reveal';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Heading } from '@/components/ui/heading';
 import { Section } from '@/components/ui/section';
 import { Text } from '@/components/ui/text';
 import type { LiveSocial } from '@/lib/content';
+import { SPONSORSHIP_TYPES } from '@/lib/schemas/sponsorship';
 
 import { SocialButtons } from './social-buttons';
 import { SponsorshipForm } from './sponsorship-form';
@@ -28,7 +30,7 @@ type SponsorshipSectionProps = {
 export function SponsorshipSection({ action, turnstileSiteKey, socials }: SponsorshipSectionProps) {
   return (
     <Section labelledBy="sponsorship">
-      <div className="max-w-prose">
+      <Reveal className="max-w-prose">
         <Heading level={2} id="sponsorship">
           Sponsorship and collaboration
         </Heading>
@@ -36,10 +38,14 @@ export function SponsorshipSection({ action, turnstileSiteKey, socials }: Sponso
           Organisations, speakers and partners who want to work with the club can send a request for
           sponsorships, workshops and collaborations. The team replies by email.
         </Text>
-      </div>
-      <div className="mt-10 max-w-prose">
+      </Reveal>
+      <Reveal className="mt-10 max-w-prose">
         {action ? (
-          <SponsorshipForm action={action} turnstileSiteKey={turnstileSiteKey} />
+          <SponsorshipForm
+            action={action}
+            types={SPONSORSHIP_TYPES}
+            turnstileSiteKey={turnstileSiteKey}
+          />
         ) : (
           <EmptyState
             icon={Handshake}
@@ -48,7 +54,7 @@ export function SponsorshipSection({ action, turnstileSiteKey, socials }: Sponso
             action={<SocialButtons socials={socials} className="justify-center" />}
           />
         )}
-      </div>
+      </Reveal>
     </Section>
   );
 }

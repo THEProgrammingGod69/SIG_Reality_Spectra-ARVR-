@@ -98,10 +98,13 @@ test.describe('hero with JavaScript', () => {
       });
     });
 
-    await page.goto('/');
+    // Headless browsers draw WebGL in software, which gets the static still
+    // (D-033); the development server honours ?hero-tier, so the intro is
+    // still exercised there.
+    await page.goto('/?hero-tier=low');
     const section = await heroSection(page);
     const tier = await section.getAttribute('data-hero-tier');
-    test.skip(tier === 'static', 'No WebGL 2 in this browser: the static tier has no intro.');
+    test.skip(tier === 'static', 'No hardware WebGL 2 here: the static tier has no intro.');
 
     await expect(section).toHaveAttribute('data-hero-intro', 'done', { timeout: 15_000 });
 

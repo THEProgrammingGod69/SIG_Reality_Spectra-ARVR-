@@ -1,5 +1,7 @@
 import type { NextConfig } from 'next';
 
+import { NOINDEX_HEADERS, type SecurityOptions, securityHeaders } from './src/lib/security-headers';
+
 /**
  * The public origin of the club's R2 bucket (custom domain or r2.dev URL).
  * Read here, at build time, so next/image accepts uploaded images; the value is
@@ -14,6 +16,18 @@ function mediaHostname(): string | null {
 }
 
 const mediaHost = mediaHostname();
+
+/** Where the browser PUTs uploads: the account's R2 endpoint (presigned URLs). */
+const uploadOrigin = /^[a-f0-9]{32}$/.test(process.env.R2_ACCOUNT_ID ?? '')
+  ? `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`
+  : null;
+
+const security: SecurityOptions = {
+  development: process.env.NODE_ENV === 'development',
+  https: (process.env.NEXT_PUBLIC_SITE_URL ?? '').startsWith('https://'),
+  mediaOrigin: mediaHost ? `https://${mediaHost}` : null,
+  uploadOrigin,
+};
 
 const nextConfig: NextConfig = {
   /**
@@ -58,6 +72,19 @@ const nextConfig: NextConfig = {
 
   // Do not leak the framework version in response headers.
   poweredByHeader: false,
+
+  /**
+   * Security headers on every response (Stage 9, D-033): CSP, HSTS, framing,
+   * sniffing, referrer and permissions policies (src/lib/security-headers.ts),
+   * plus `X-Robots-Tag: noindex` on the admin panel and the API (rule 7).
+   */
+  async headers() {
+    return [
+      { source: '/:path*', headers: securityHeaders(security) },
+      { source: '/admin/:path*', headers: NOINDEX_HEADERS },
+      { source: '/api/:path*', headers: NOINDEX_HEADERS },
+    ];
+  },
 
   // Trailing slashes off so /events and /events/ never split analytics or cache tags.
   trailingSlash: false,

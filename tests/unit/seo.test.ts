@@ -4,9 +4,9 @@ import { describe, expect, it } from 'vitest';
 import robots from '@/app/robots';
 import sitemap from '@/app/sitemap';
 import { qrPath } from '@/components/ui/qr-code';
-import { defaultTitle, pageMetadata } from '@/lib/metadata';
+import { defaultTitle, OG_IMAGE_SIZE, ogImagePath, pageMetadata } from '@/lib/metadata';
 import { getRoute, siteConfig, siteRoutes } from '@/lib/site';
-import { jsonLdScript, organizationJsonLd } from '@/lib/structured-data';
+import { eventsJsonLd, jsonLdScript, organizationJsonLd } from '@/lib/structured-data';
 
 describe('sitemap.xml', () => {
   it('lists every public page, absolute, and nothing else', () => {
@@ -89,5 +89,60 @@ describe('QR codes', () => {
   it('differ for different links and are stable for the same link', () => {
     expect(qrPath('https://a.example/').path).toBe(qrPath('https://a.example/').path);
     expect(qrPath('https://a.example/').path).not.toBe(qrPath('https://b.example/').path);
+  });
+});
+
+describe('share images (D-033)', () => {
+  it('gives every page its own image, at the size every platform accepts', () => {
+    const paths = siteRoutes.map((route) => {
+      const { openGraph, twitter } = pageMetadata(route);
+      const [image] = (openGraph?.images ?? []) as { url: string; width: number }[];
+      expect(image).toMatchObject({ url: ogImagePath(route), ...OG_IMAGE_SIZE });
+      expect(JSON.stringify(twitter)).toContain(ogImagePath(route));
+      return image!.url;
+    });
+    expect(paths).toContain('/og/home');
+    expect(new Set(paths).size).toBe(siteRoutes.length);
+  });
+});
+
+describe('event structured data (D-033)', () => {
+  const event = {
+    title: 'XR Build Night',
+    summary: 'An overnight build sprint for AR and VR prototypes.',
+    startsAt: '2030-06-01T12:30:00.000Z',
+    endsAt: null,
+    venue: 'Lab 3, VIT Pune',
+    mode: 'hybrid' as const,
+    registrationUrl: 'https://vierp.example.org/register',
+    poster: { url: '/api/local-media/dev/poster.webp', alt: 'Poster', width: 1080, height: 1350 },
+  };
+  const [data] = eventsJsonLd([event], 'https://club.example.org')['@graph'];
+
+  it('describes each current event with its dates, place and registration', () => {
+    expect(data).toMatchObject({
+      '@type': 'Event',
+      name: event.title,
+      startDate: event.startsAt,
+      // A single-day event ends at midnight in India (18:30 UTC).
+      endDate: '2030-06-01T18:30:00.000Z',
+      eventAttendanceMode: 'https://schema.org/MixedEventAttendanceMode',
+      image: ['https://club.example.org/api/local-media/dev/poster.webp'],
+      offers: { url: event.registrationUrl },
+    });
+    expect(data?.location).toEqual([
+      { '@type': 'Place', name: event.venue, address: siteConfig.parentOrganisation },
+      { '@type': 'VirtualLocation', url: event.registrationUrl },
+    ]);
+  });
+
+  it('leaves out what an event does not have', () => {
+    const [bare] = eventsJsonLd(
+      [{ ...event, mode: 'offline', registrationUrl: null, poster: null }],
+      'https://club.example.org',
+    )['@graph'];
+    expect(bare).not.toHaveProperty('image');
+    expect(bare).not.toHaveProperty('offers');
+    expect(bare?.location).toMatchObject({ '@type': 'Place' });
   });
 });

@@ -29,15 +29,17 @@ function Detail({
   label: string;
   children: ReactNode;
 }) {
+  // A <dl> group is a <div> holding just its <dt> and <dd> (WCAG, axe
+  // `dlitem`), so the decorative icon sits inside the <dt>, in the gutter.
   return (
-    <div className="flex items-start gap-4">
-      <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-full bg-(--color-surface-raised) text-(--color-muted)">
-        <Icon icon={icon} size="md" />
-      </span>
-      <div className="flex min-w-0 flex-col gap-1">
-        <dt className="font-mono text-label text-(--color-muted) uppercase">{label}</dt>
-        <dd className="wrap-anywhere text-(--color-text)">{children}</dd>
-      </div>
+    <div className="relative flex min-h-10 min-w-0 flex-col gap-1 ps-14">
+      <dt className="font-mono text-label text-(--color-muted) uppercase">
+        <span className="absolute start-0 top-0 inline-flex size-10 items-center justify-center rounded-full bg-(--color-surface-raised) text-(--color-muted)">
+          <Icon icon={icon} size="md" />
+        </span>
+        {label}
+      </dt>
+      <dd className="wrap-anywhere text-(--color-text)">{children}</dd>
     </div>
   );
 }

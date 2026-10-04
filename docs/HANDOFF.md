@@ -9,7 +9,7 @@ old conversation. Read in this order: this file → `CLAUDE.md` → `docs/DECISI
 | Item          | Value                                                                         |
 | ------------- | ----------------------------------------------------------------------------- |
 | Repo          | github.com/THEProgrammingGod69/SIG_Reality_Spectra-ARVR- (private), `main`    |
-| Local folder  | `D:Academic Nottes VITSIGSIG_Draft_Code`                                   |
+| Local folder  | `D:\Academic Nottes VIT\SIG\SIG_Draft_Code`                                   |
 | Hosting       | **Netlify** (D-025)                                                           |
 | Last commit   | `b59e8d5` — Stage 8 (tag `stage-8`, pushed)                                   |
 | Rollback tags | `stage-1` – `stage-8`, `architecture-v2`, `architecture-v3`                   |

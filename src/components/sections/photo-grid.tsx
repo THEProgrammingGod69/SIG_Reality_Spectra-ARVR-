@@ -33,6 +33,16 @@ const tiles = {
 } as const;
 
 /**
+ * How wide each tile renders, so the browser fetches the right image: `md`
+ * tiles (14rem minimum) are one full-width column on phones, two from 30rem,
+ * and about 18rem on a full-width desktop row.
+ */
+const TILE_SIZES = {
+  sm: '8rem',
+  md: '(min-width: 64rem) 18rem, (min-width: 30rem) 50vw, 100vw',
+} as const;
+
+/**
  * Square tiles, cropped to the centre so photos of any shape line up; opening
  * one shows it whole, with the rest one keypress away.
  */
@@ -57,8 +67,12 @@ export function PhotoGrid({ photos, limit, eager = 0, tile = 'md', className }: 
                   src={photo.image.url}
                   alt={photo.image.alt}
                   fill
-                  sizes={tile === 'sm' ? '8rem' : '(min-width: 64rem) 18rem, 50vw'}
-                  loading={index < eager ? 'eager' : 'lazy'}
+                  sizes={TILE_SIZES[tile]}
+                  // The first tile of a grid that opens the page is its largest
+                  // paint: fetch it first. The rest of the first row loads at once.
+                  {...(index === 0 && eager > 0
+                    ? { preload: true }
+                    : { loading: index < eager ? 'eager' : 'lazy' })}
                   className="object-cover transition-transform duration-(--dur-medium) ease-out-expo group-hover:scale-105"
                 />
                 {more ? (
@@ -121,6 +135,8 @@ function PhotoViewer({
             width={photo.image.width}
             height={photo.image.height}
             sizes="(min-width: 64rem) 60rem, 100vw"
+            // The photo someone just opened: never wait for it to be "near".
+            loading="eager"
             className="max-h-[70dvh] w-auto rounded-control object-contain"
           />
         </div>

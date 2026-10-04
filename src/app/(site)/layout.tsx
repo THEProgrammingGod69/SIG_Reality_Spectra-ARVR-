@@ -1,6 +1,7 @@
 import { SmoothScroll } from '@/components/motion/smooth-scroll';
 import { SiteFooter } from '@/components/site/site-footer';
 import { SiteHeader } from '@/components/site/site-header';
+import { WebAnalytics } from '@/components/site/web-analytics';
 import { siteChannels } from '@/lib/content';
 import { getRecruitment, publicRead } from '@/lib/data';
 
@@ -47,6 +48,7 @@ export default async function SiteLayout({ children }: LayoutProps<'/'>) {
       </main>
 
       <SiteFooter />
+      <WebAnalytics />
     </>
   );
 }

@@ -1,6 +1,7 @@
 import { CalendarDays, CalendarX2, MapPin } from 'lucide-react';
 import Image from 'next/image';
 
+import { Stagger } from '@/components/motion/stagger';
 import { Badge } from '@/components/ui/badge';
 import { ButtonLink } from '@/components/ui/button';
 import {
@@ -51,13 +52,16 @@ export function CurrentEvents({
           className="mt-10"
         />
       ) : (
-        <ul className="mt-10 grid grid-cols-[repeat(auto-fill,minmax(min(100%,20rem),1fr))] gap-6">
+        <Stagger
+          as="ul"
+          className="mt-10 grid grid-cols-[repeat(auto-fill,minmax(min(100%,20rem),1fr))] gap-6"
+        >
           {events.map((event, index) => (
             <li key={event.id}>
               <EventCard event={event} featured={index === 0} />
             </li>
           ))}
-        </ul>
+        </Stagger>
       )}
     </Section>
   );
@@ -73,7 +77,8 @@ function EventCard({ event, featured }: { event: PublicEvent; featured: boolean 
             src={event.poster.url}
             alt={event.poster.alt}
             fill
-            sizes="(min-width: 64rem) 24rem, (min-width: 40rem) 50vw, 100vw"
+            // 20rem-minimum cards: two columns only once two fit beside each other.
+            sizes="(min-width: 64rem) 24rem, (min-width: 44rem) 50vw, 100vw"
             className="object-contain"
             preload={featured}
           />

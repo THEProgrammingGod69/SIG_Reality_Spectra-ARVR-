@@ -1,10 +1,9 @@
 'use client';
 
-import { zodResolver } from '@hookform/resolvers/zod';
 import { CircleAlert, CircleCheck, Send } from 'lucide-react';
 import Script from 'next/script';
 import { useEffect, useRef, useState } from 'react';
-import { type Path, useForm } from 'react-hook-form';
+import { type Path, type Resolver, useForm } from 'react-hook-form';
 import type { z } from 'zod';
 
 import { Button } from '@/components/ui/button';
@@ -13,7 +12,7 @@ import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
 import type { ActionResult } from '@/lib/action-result';
 import { blankToNull } from '@/lib/forms';
-import { SPONSORSHIP_TYPES, SponsorshipFormSchema } from '@/lib/schemas/sponsorship';
+import type { SponsorshipFormSchema } from '@/lib/schemas/sponsorship';
 
 type Values = z.input<typeof SponsorshipFormSchema>;
 type Sent = z.output<typeof SponsorshipFormSchema>;
@@ -24,14 +23,24 @@ type Submit = (submission: {
   turnstileToken: string | null;
 }) => Promise<ActionResult<null>>;
 
-const EMPTY: Values = {
-  name: '',
-  organisation: '',
-  email: '',
-  phone: null,
-  type: SPONSORSHIP_TYPES[0].id,
-  message: '',
-};
+/** The request types, in order (`SPONSORSHIP_TYPES`), passed in by the page. */
+type TypeOption = { id: Values['type']; label: string };
+
+/**
+ * The validation, loaded on demand: zod and the schema are a large share of
+ * the page's JavaScript and nobody needs them until they type. Prefetched when
+ * the form is first focused, so a submit never waits for it (D-033). Still the
+ * one shared schema the Server Action uses (rule 3).
+ */
+let validation: Promise<Resolver<Values, unknown, Sent>> | undefined;
+const loadValidation = () =>
+  (validation ??= Promise.all([
+    import('@hookform/resolvers/zod'),
+    import('@/lib/schemas/sponsorship'),
+  ]).then(([{ zodResolver }, { SponsorshipFormSchema }]) => zodResolver(SponsorshipFormSchema)));
+
+const resolver: Resolver<Values, unknown, Sent> = async (values, context, options) =>
+  (await loadValidation())(values, context, options);
 
 /**
  * The sponsorship and collaboration request form on /contact (D-032). One
@@ -41,16 +50,23 @@ const EMPTY: Values = {
  */
 export function SponsorshipForm({
   action,
+  types,
   turnstileSiteKey,
 }: {
   action: Submit;
+  types: readonly TypeOption[];
   /** Null where Turnstile is off (a developer's computer, the tests). */
   turnstileSiteKey: string | null;
 }) {
-  const form = useForm<Values, unknown, Sent>({
-    resolver: zodResolver(SponsorshipFormSchema),
-    defaultValues: EMPTY,
-  });
+  const empty: Values = {
+    name: '',
+    organisation: '',
+    email: '',
+    phone: null,
+    type: types[0]!.id,
+    message: '',
+  };
+  const form = useForm<Values, unknown, Sent>({ resolver, defaultValues: empty });
   const { register, handleSubmit, formState, setError, reset } = form;
   const { errors, isSubmitting } = formState;
   const [token, setToken] = useState<string | null>(null);
@@ -79,7 +95,7 @@ export function SponsorshipForm({
       setFailure(result.message);
       return;
     }
-    reset(EMPTY);
+    reset(empty);
     setSent(true);
   });
 
@@ -105,6 +121,7 @@ export function SponsorshipForm({
   return (
     <form
       onSubmit={send}
+      onFocus={() => void loadValidation()}
       noValidate
       aria-labelledby="sponsorship"
       className="grid gap-6 rounded-card border border-(--color-border) bg-(--color-surface) p-6 md:grid-cols-2 md:p-8"
@@ -149,7 +166,7 @@ export function SponsorshipForm({
       <Field label="What is it about?" error={errors.type?.message} className="md:col-span-2">
         {(control) => (
           <Select {...control} {...register('type')}>
-            {SPONSORSHIP_TYPES.map((type) => (
+            {types.map((type) => (
               <option key={type.id} value={type.id}>
                 {type.label}
               </option>

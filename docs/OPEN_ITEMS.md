@@ -23,6 +23,7 @@ then confirm the dashboard's **Setup** card shows everything configured.
 | Upstash Redis variables     | empty — dashboard says "Data store not connected"            | Club Upstash database (#9)                             | `SETUP_STORAGE.md`                |
 | R2 variables                | empty — uploads answer 503                                   | Club R2 bucket and token (#10)                         | `SETUP_STORAGE.md`                |
 | Turnstile keys              | empty — check off locally; the form is hidden on Netlify     | Club Cloudflare Turnstile site (#22)                   | D-032                             |
+| Analytics token             | empty — no analytics script loads                            | Cloudflare Web Analytics site token (club account)     | `.env.example`, D-033             |
 | `CRON_SECRET`               | empty                                                        | A generated secret (Stage 10)                          | Stage 10                          |
 | Contact details             | "Coming soon" in `src/content/contact.json`                  | Club email, phone, address, map link (#7)              | `pnpm check:launch` gate          |
 | `DATA_BACKEND`              | `local` in your `.env.local` (records + uploads in `.data/`) | Remove once Upstash + R2 are set (D-031)               | `SETUP_STORAGE.md`                |
@@ -36,9 +37,9 @@ then confirm the dashboard's **Setup** card shows everything configured.
 
 ## Blocking Stage 2 — animation system and landing hero
 
-| #   | Item                                          | Why it blocks                                                   | Status                                                                                                                                                                                                                           |
-| --- | --------------------------------------------- | --------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | **A real mid-range Android phone** to test on | The 50+ fps low-tier budget cannot be signed off from a desktop | Open — Stage 2 is built; only this sign-off remains. Open `/?hero-tier=low` on the phone (dev server on the LAN), scroll the hero, and note the fps; the low tier is tuned in `HERO_TIER_BUDGET` (`src/lib/motion/hero-tier.ts`) |
+| #   | Item                                          | Why it blocks                                                   | Status                                                                                                                                                                                                                                                                                                             |
+| --- | --------------------------------------------- | --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1   | **A real mid-range Android phone** to test on | The 50+ fps low-tier budget cannot be signed off from a desktop | Open — Stage 2 is built; only this sign-off remains (Stage 9: a phone without GPU-accelerated WebGL now gets the static still, D-033). Open `/?hero-tier=low` on the phone (dev server on the LAN), scroll the hero, and note the fps; the low tier is tuned in `HERO_TIER_BUDGET` (`src/lib/motion/hero-tier.ts`) |
 
 ## Before go-live — remaining contact details
 

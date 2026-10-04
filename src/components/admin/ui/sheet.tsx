@@ -8,10 +8,13 @@ import type { ComponentProps } from 'react';
 
 import { cn } from '@/lib/cn';
 
+import { overlayClassName } from './overlay';
+
 /*
  * shadcn/ui Sheet, reviewed (D-030). The registry version slides with
- * tw-animate-css classes, which this project does not install; the sheet opens
- * instantly instead. Stage 9 may add a transform/opacity entrance (rule 4).
+ * tw-animate-css classes, which this project does not install; it slides with
+ * the project's own keyframe tokens instead (`animate-slide-*`, transform and
+ * opacity only, instant under reduced motion — rule 4, D-033).
  */
 
 function Sheet(props: ComponentProps<typeof SheetPrimitive.Root>) {
@@ -34,15 +37,14 @@ function SheetContent({
 }: ComponentProps<typeof SheetPrimitive.Content> & { side?: 'left' | 'right' }) {
   return (
     <SheetPrimitive.Portal>
-      <SheetPrimitive.Overlay
-        data-slot="sheet-overlay"
-        className="fixed inset-0 z-(--z-overlay) bg-(--color-void)/60"
-      />
+      <SheetPrimitive.Overlay data-slot="sheet-overlay" className={overlayClassName} />
       <SheetPrimitive.Content
         data-slot="sheet-content"
         className={cn(
           'fixed inset-y-0 z-(--z-overlay) flex h-full w-3/4 flex-col gap-4 bg-background shadow-card sm:max-w-sm',
-          side === 'right' ? 'right-0 border-l' : 'left-0 border-r',
+          side === 'right'
+            ? 'right-0 border-l data-[state=closed]:animate-slide-out-right data-[state=open]:animate-slide-in-right'
+            : 'left-0 border-r data-[state=closed]:animate-slide-out-left data-[state=open]:animate-slide-in-left',
           className,
         )}
         {...props}

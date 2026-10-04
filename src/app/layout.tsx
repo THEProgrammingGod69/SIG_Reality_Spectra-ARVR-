@@ -5,6 +5,7 @@ import { siteInfo } from '@/lib/content';
 import { publicEnv } from '@/lib/env.public';
 import { defaultTitle, OG_LOCALE, titleTemplate } from '@/lib/metadata';
 import { siteConfig } from '@/lib/site';
+import { TOKEN_VALUES } from '@/lib/token-values';
 
 import './globals.css';
 
@@ -38,7 +39,8 @@ const mono = JetBrains_Mono({
  * Root metadata: the defaults for pages that set none (404, admin). Public
  * pages state their own complete set through `pageMetadata()`. `metadataBase`
  * makes relative URLs absolute. The favicon and Apple icon are `icon.png` and
- * `apple-icon.png` beside this file; Stage 9 adds generated OpenGraph images.
+ * `apple-icon.png` beside this file; share images are generated per page
+ * (`src/app/og/[page]`, via `pageMetadata()`).
  */
 export const metadata: Metadata = {
   metadataBase: new URL(publicEnv.NEXT_PUBLIC_SITE_URL),
@@ -56,9 +58,9 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  // Browser chrome colour. Metadata cannot read CSS variables, so this mirrors
-  // `--color-bg` in globals.css; a unit test fails if the two drift apart.
-  themeColor: '#07060c',
+  // Browser chrome colour. Metadata cannot read CSS variables, so this is the
+  // mirrored `--color-bg` (src/lib/token-values.ts, checked by a unit test).
+  themeColor: TOKEN_VALUES.bg,
   colorScheme: 'dark',
 };
 

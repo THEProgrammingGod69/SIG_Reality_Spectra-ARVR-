@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
 import { cn } from '@/lib/cn';
 import type { GalleryItem } from '@/lib/data';
-import { CATEGORIES, type Category } from '@/lib/schemas/category';
+import type { Category } from '@/lib/schemas/category';
 
 import { PhotoGrid } from './photo-grid';
 
@@ -18,7 +18,18 @@ const BATCH = 24;
  * /gallery: every photo, newest first, filterable by the shared categories.
  * Filters list only categories that have photos; counts show what each holds.
  */
-export function GalleryBrowser({ items }: { items: readonly GalleryItem[] }) {
+export function GalleryBrowser({
+  items,
+  categories,
+}: {
+  items: readonly GalleryItem[];
+  /**
+   * The shared categories, in order (`CATEGORIES`). Passed by the page rather
+   * than imported, so this client component never pulls the schema module —
+   * and zod with it — into the browser (D-033).
+   */
+  categories: readonly { id: Category; label: string }[];
+}) {
   const [category, setCategory] = useState<Category | null>(null);
   const [shown, setShown] = useState(BATCH);
 
@@ -34,7 +45,7 @@ export function GalleryBrowser({ items }: { items: readonly GalleryItem[] }) {
 
   const counts = new Map<Category, number>();
   for (const item of items) counts.set(item.category, (counts.get(item.category) ?? 0) + 1);
-  const filters = CATEGORIES.filter((entry) => counts.has(entry.id));
+  const filters = categories.filter((entry) => counts.has(entry.id));
   const visible = category === null ? items : items.filter((item) => item.category === category);
 
   const choose = (next: Category | null) => {

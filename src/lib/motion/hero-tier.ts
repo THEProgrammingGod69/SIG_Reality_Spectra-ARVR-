@@ -1,7 +1,8 @@
 /**
  * Device tiers for the 3D hero (docs/ARCHITECTURE.md, Technical Plan fig. 9).
  *
- *   static — reduced motion or no WebGL 2: the designed still, no canvas, no 3D JS
+ *   static — reduced motion, no WebGL 2, or WebGL drawn in software (no GPU):
+ *            the designed still, no canvas, no 3D JS
  *   low    — a weaker device: half the particles, no pointer tilt, lower DPR
  *   high   — the full scene
  *
@@ -16,6 +17,11 @@ export type HeroTierSignals = {
   readonly reducedMotion: boolean;
   /** WebGL 2 is available (three.js r163+ requires it). */
   readonly webgl: boolean;
+  /**
+   * WebGL would be drawn by the CPU (no GPU acceleration: SwiftShader, llvmpipe,
+   * a blocked driver). Every frame of the scene would then cost main-thread time.
+   */
+  readonly softwareRendering?: boolean | undefined;
   readonly viewportWidth: number;
   /** `navigator.hardwareConcurrency`; absent in some browsers. */
   readonly hardwareConcurrency?: number | undefined;
@@ -38,6 +44,7 @@ export type HeroTierDecision = { readonly tier: HeroTier; readonly reason: strin
 export function selectHeroTier(signals: HeroTierSignals): HeroTierDecision {
   if (signals.reducedMotion) return { tier: 'static', reason: 'prefers-reduced-motion' };
   if (!signals.webgl) return { tier: 'static', reason: 'no WebGL 2' };
+  if (signals.softwareRendering) return { tier: 'static', reason: 'software WebGL (no GPU)' };
 
   if (signals.saveData) return { tier: 'low', reason: 'data saver on' };
   if (signals.viewportWidth <= LOW_TIER_LIMITS.maxViewportWidth) {
@@ -71,11 +78,14 @@ export function parseHeroTierOverride(search: string): HeroTier | null {
   return HERO_TIERS.find((tier) => tier === value) ?? null;
 }
 
-/** WebGL 2 support, without keeping the probe context alive. Client-only. */
-export function detectWebGL2(): boolean {
+/**
+ * Whether a WebGL 2 context can be made, without keeping the probe alive.
+ * With `failIfMajorPerformanceCaveat` the browser refuses a context it would
+ * draw in software, which is how software rendering is detected. Client-only.
+ */
+function probeWebGL2(options?: WebGLContextAttributes): boolean {
   try {
-    const canvas = document.createElement('canvas');
-    const gl = canvas.getContext('webgl2');
+    const gl = document.createElement('canvas').getContext('webgl2', options);
     if (!gl) return false;
     // Release the probe immediately so it never counts against the context budget.
     gl.getExtension('WEBGL_lose_context')?.loseContext();
@@ -83,6 +93,11 @@ export function detectWebGL2(): boolean {
   } catch {
     return false;
   }
+}
+
+/** WebGL 2 support. Client-only. */
+export function detectWebGL2(): boolean {
+  return probeWebGL2();
 }
 
 type NavigatorWithHints = Navigator & {
@@ -94,9 +109,11 @@ type NavigatorWithHints = Navigator & {
 export function readHeroTierSignals(): HeroTierSignals {
   const nav = navigator as NavigatorWithHints;
 
+  const webgl = detectWebGL2();
   return {
     reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
-    webgl: detectWebGL2(),
+    webgl,
+    softwareRendering: webgl && !probeWebGL2({ failIfMajorPerformanceCaveat: true }),
     viewportWidth: window.innerWidth,
     hardwareConcurrency: nav.hardwareConcurrency || undefined,
     deviceMemory: nav.deviceMemory,

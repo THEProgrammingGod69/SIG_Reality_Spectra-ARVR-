@@ -191,6 +191,63 @@
       transform: translateX(100%);
     }
   }
+
+  /* Overlay entrances and exits (Stage 9) — transform and opacity only.
+     Keyframe animations, not transitions, because Radix keeps a closing
+     dialog or sheet mounted exactly until its exit animation ends. They read
+     the motion tokens, so reduced motion makes them instant. */
+  --animate-fade-in: fade-in var(--dur-short) var(--ease-out-expo);
+  --animate-fade-out: fade-out var(--dur-micro) var(--ease-in-out);
+  --animate-rise-in: rise-in var(--dur-short) var(--ease-out-expo);
+  --animate-rise-out: rise-out var(--dur-micro) var(--ease-in-out);
+  --animate-slide-in-right: slide-in-right var(--dur-short) var(--ease-out-expo);
+  --animate-slide-out-right: slide-out-right var(--dur-short) var(--ease-in-out);
+  --animate-slide-in-left: slide-in-left var(--dur-short) var(--ease-out-expo);
+  --animate-slide-out-left: slide-out-left var(--dur-short) var(--ease-in-out);
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+  }
+  @keyframes fade-out {
+    to {
+      opacity: 0;
+    }
+  }
+  /* `transform` composes with Tailwind's `translate` centring utilities. */
+  @keyframes rise-in {
+    from {
+      opacity: 0;
+      transform: translateY(var(--motion-rise));
+    }
+  }
+  @keyframes rise-out {
+    to {
+      opacity: 0;
+      transform: translateY(var(--motion-rise));
+    }
+  }
+  @keyframes slide-in-right {
+    from {
+      transform: translateX(100%);
+    }
+  }
+  @keyframes slide-out-right {
+    to {
+      transform: translateX(100%);
+    }
+  }
+  @keyframes slide-in-left {
+    from {
+      transform: translateX(-100%);
+    }
+  }
+  @keyframes slide-out-left {
+    to {
+      transform: translateX(-100%);
+    }
+  }
 }
 
 /* =============================================================================

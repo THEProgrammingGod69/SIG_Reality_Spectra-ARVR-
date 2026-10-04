@@ -430,3 +430,21 @@ Recorded in [`DECISIONS.md`](./DECISIONS.md) D-032:
 - Public reads go through `publicRead()` and show `<LoadFailed>` on an outage.
 - Content is placeholder (`[Demo]` members, the form link) until the club
   supplies the team, the roles PDF and the Turnstile keys.
+
+## 15. Revision 8 — Stage 9, polish and hardening
+
+Recorded in [`DECISIONS.md`](./DECISIONS.md) D-033:
+
+- **Security headers** on every response (`src/lib/security-headers.ts` via
+  `headers()` in next.config.ts): CSP limited to the site, Turnstile, the
+  analytics beacon, R2 uploads and a Maps embed; HSTS, no framing, `nosniff`,
+  referrer and permissions policies; `X-Robots-Tag: noindex` on /admin and /api.
+- **Analytics**: Cloudflare Web Analytics, cookieless, public site only,
+  switched on by `NEXT_PUBLIC_CF_WEB_ANALYTICS_TOKEN`.
+- **Share images**: `/og/[page]`, one per public page, prerendered at build.
+  /events also carries schema.org Event data for its current events.
+- **Performance**: no schema module (and so no zod) in public client code; the
+  page fade is CSS; image `sizes` match the grids; software WebGL gets the
+  static hero.
+- **Accessibility**: axe-core (WCAG 2.2 AA) on every page and key state, in
+  the e2e suite.
