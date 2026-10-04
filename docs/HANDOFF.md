@@ -11,20 +11,21 @@ old conversation. Read in this order: this file → `CLAUDE.md` → `docs/DECISI
 | Repo          | github.com/THEProgrammingGod69/SIG_Reality_Spectra-ARVR- (private), `main`     |
 | Local folder  | `D:\Academic Nottes VIT\SIG\SIG_Draft_Code`                                    |
 | Hosting       | **Netlify** (D-025)                                                            |
-| Last commit   | `a76a50b` — Stage 9 (tag `stage-9`, pushed)                                    |
-| Rollback tags | `stage-1` – `stage-9`, `architecture-v2`, `architecture-v3`                    |
-| Done          | Stages 1–9, all committed, tagged and pushed                                   |
-| Next          | Stage 10 (the last), on Arnav's go                                             |
-| Gates         | `pnpm check` + `pnpm test:e2e` green: 275 unit, 101 e2e (dev and `CI=1` build) |
+| Last commit   | `b3df807` — quality pass after Stage 10a (tag `stage-10a`, pushed)                                    |
+| Rollback tags | `stage-1` – `stage-9`, `stage-10a`, `architecture-v2`, `architecture-v3`                    |
+| Done          | Stages 1–9 and 10a, committed, tagged and pushed; quality pass (D-035)                                   |
+| Next          | Stage 10b: go-live with the club's accounts — `docs/GO_LIVE.md`                                             |
+| Gates         | `pnpm check` + `pnpm test:e2e` green: 293 unit, 166 e2e on Chromium + mobile WebKit (dev and `CI=1` build) |
 | Credentials   | **Placeholders** (D-030): swap list at the top of `docs/OPEN_ITEMS.md`         |
 
 ## Start of the next chat
 
-1. Read this file, then `CLAUDE.md`, `docs/DECISIONS.md` (D-001 – D-033),
+1. Read this file, then `CLAUDE.md`, `docs/DECISIONS.md` (D-001 – D-035),
    `docs/ARCHITECTURE.md`, `docs/OPEN_ITEMS.md`, and the READMEs in
    `src/lib/data`, `src/lib/schemas`, `src/lib/auth`, `src/components/admin`.
 2. Run `git status` (only the untracked `.claude/` launch config is expected).
-3. Report the inputs still missing for Stage 10, then wait for Arnav's go.
+3. Report which club inputs have arrived (the checklist below), then wait for
+   Arnav's go to run `docs/GO_LIVE.md`.
 
 Working locally: `.env.local` (gitignored) has a generated `AUTH_SECRET`,
 `ADMIN_EMAILS="dryerisdry@gmail.com"` and `DATA_BACKEND="local"`. `pnpm dev` →
@@ -99,26 +100,24 @@ stage-N`, push branch and tag, then a small "docs: handoff" commit.
 
 ---
 
-## Stage 10 brief — testing, deployment, backup + orphan sweep, handover
+## Stage 10a and the quality pass — what was built (D-034, D-035)
 
-1. **`/api/cron/nightly`** (CRON_SECRET bearer): JSON backup of every record to
-   R2 `{ns}/backups/{yyyy-mm-dd}.json` (keep 30), and the **orphan sweep**:
-   delete files older than a day that no record references
-   (`media.listKeys()` vs every record's files). Plus a **Netlify scheduled
-   function** that calls it, and a documented restore script in `scripts/`.
-2. Mobile WebKit Playwright project; e2e against a deploy preview.
-3. **Go-live with real credentials** — work through the swap list at the top
-   of `docs/OPEN_ITEMS.md`: Upstash + R2 (`docs/SETUP_STORAGE.md`, then
-   `pnpm test:live`), Google OAuth + club `ADMIN_EMAILS` (`docs/SETUP_AUTH.md`),
-   Turnstile, `CRON_SECRET`, remove `DATA_BACKEND=local`, contact details
-   (`pnpm check:launch` must pass), domain + DNS, Netlify env per context
-   (`DATA_NAMESPACE` prod/preview). Confirm OPEN_ITEMS #26 (admin save visible
-   at next reload on Netlify).
-4. Delete demo data from the production namespace (it is never seeded there,
-   but verify), remove remaining temporary scaffolding listed in CLAUDE.md §10.
-5. **Handover docs** for a coordinator who has never seen the code: "add an
-   event", "add photos", "change admins", "open recruitment", backups/restore,
-   yearly handover checklist.
+- **Nightly job:** `POST /api/cron/nightly` (Bearer `CRON_SECRET`) from
+  `netlify/functions/nightly.mts` at 21:00 UTC: backup of every record to
+  `{ns}/backups/{date}.json` (30 kept), then a sweep of unused uploads (24 h
+  grace, key-based matching, refuses to delete more than half).
+  `src/lib/data/maintenance.ts`; `pnpm data backups | backup | sweep
+  [--dry-run] | restore <date> [--yes] [--production]`.
+- **Tests:** mobile WebKit (iPhone 14) on the public specs; `pnpm test:deployed`
+  against `PLAYWRIGHT_BASE_URL`. Fixed: the contact form wiped text typed
+  before hydration (no default values on public forms).
+- **Docs:** `docs/handbook/` (coordinators), `docs/GO_LIVE.md` (Stage 10b).
+- **Quality pass:** Next.js 16.3.5 → 16.3.8 (critical advisory in `next/og`);
+  the hero detects software GPUs by renderer name too (Home mobile Lighthouse
+  65 → 92); gallery batches of 30. Lighthouse desktop 99–100, mobile 90–93,
+  A11y/Best Practices/SEO 100; 86 internal URLs all 200.
+- **Club inputs checklist** (downloadable, for Arnav to fill and share):
+  https://claude.ai/artifact/Qbd2QqiCEf3o9mCozJUqb7
 
 ## Stage 6 — what was built
 
