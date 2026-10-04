@@ -45,6 +45,7 @@ the call and it was made on the reasoning shown).
 | D-033 | Stage 9: motion polish, performance, accessibility, security headers, analytics | lead       |
 | D-034 | Stage 10a: nightly backup and orphan sweep, restore, WebKit tests, handbook     | lead       |
 | D-035 | Final quality pass: Next.js security update, software-GPU detection, audits     | lead       |
+| D-036 | `DATA_NAMESPACE` follows the Netlify deploy context when unset                  | lead       |
 
 ---
 
@@ -849,3 +850,24 @@ a crawl of every link, and full-page screenshots at phone and desktop width.
   page, mobile 90–93, Accessibility / Best Practices / SEO 100 everywhere;
   86 internal URLs all answer 200, and the Instagram, WhatsApp and Google Form
   links are live; no page scrolls sideways at 390 px or 1440 px.
+
+---
+
+## D-036 — `DATA_NAMESPACE` follows the Netlify deploy context when unset
+
+**Context.** The first Netlify production deploy failed: the env guard (D-025)
+requires `DATA_NAMESPACE="prod"` in production, and an unset variable fell
+back to `dev`. The guard did its job, but the fix asked of whoever deploys
+was one more variable to set per context, with nothing gained by typing it.
+
+**Decision.** Left unset, the namespace is derived from Netlify's `CONTEXT`:
+`prod` for production, `preview` for deploy previews and branch deploys,
+`dev` off Netlify (local, tests). An explicit value is still checked exactly
+as before, so a wrongly scoped variable (`prod` on a preview, anything else
+in production) still fails the build. The safety property is unchanged:
+previews can never write live data and production never runs on a test copy.
+
+**Consequence.** A fresh Netlify site builds with no variables at all. Until
+Upstash, R2, Google sign-in and Turnstile are set it is an honest shell: the
+data sections show their "could not load" state, the contact form is
+replaced by the channels list, and `/admin` cannot be signed into.

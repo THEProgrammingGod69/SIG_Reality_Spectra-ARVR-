@@ -42,22 +42,23 @@ personal one ([handbook/yearly-handover.md](./handbook/yearly-handover.md)).
 
 Site configuration → Environment variables. Set **per deploy context**:
 
-| Variable                                                                                       | Production         | Deploy previews / branch deploys |
-| ---------------------------------------------------------------------------------------------- | ------------------ | -------------------------------- |
-| `NEXT_PUBLIC_SITE_URL`                                                                         | `https://<domain>` | leave unset (the default)        |
-| `DATA_NAMESPACE`                                                                               | `prod`             | `preview`                        |
-| `UPSTASH_REDIS_REST_URL`, `_TOKEN`                                                             | club database      | same database                    |
-| `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET`, `R2_PUBLIC_BASE_URL` | club bucket        | same bucket                      |
-| `AUTH_SECRET`                                                                                  | its own secret     | a different secret               |
-| `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`                                                         | the OAuth client   | the OAuth client                 |
-| `ADMIN_EMAILS`                                                                                 | the club admins    | the club admins                  |
-| `NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY`                                       | the widget         | the widget                       |
-| `NEXT_PUBLIC_CF_WEB_ANALYTICS_TOKEN`                                                           | the token          | leave unset                      |
-| `CRON_SECRET`                                                                                  | its own secret     | leave unset                      |
+| Variable                                                                                       | Production           | Deploy previews / branch deploys |
+| ---------------------------------------------------------------------------------------------- | -------------------- | -------------------------------- |
+| `NEXT_PUBLIC_SITE_URL`                                                                         | `https://<domain>`   | leave unset (the default)        |
+| `DATA_NAMESPACE`                                                                               | leave unset (`prod`) | leave unset (`preview`)          |
+| `UPSTASH_REDIS_REST_URL`, `_TOKEN`                                                             | club database        | same database                    |
+| `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET`, `R2_PUBLIC_BASE_URL` | club bucket          | same bucket                      |
+| `AUTH_SECRET`                                                                                  | its own secret       | a different secret               |
+| `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`                                                         | the OAuth client     | the OAuth client                 |
+| `ADMIN_EMAILS`                                                                                 | the club admins      | the club admins                  |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY`                                       | the widget           | the widget                       |
+| `NEXT_PUBLIC_CF_WEB_ANALYTICS_TOKEN`                                                           | the token            | leave unset                      |
+| `CRON_SECRET`                                                                                  | its own secret       | leave unset                      |
 
 **Never set** `DATA_BACKEND` or `AUTH_DEV_SIGN_IN` on Netlify: the build fails
-if you do, by design. The build also fails if production does not use
-`DATA_NAMESPACE=prod`, or a preview does.
+if you do, by design. `DATA_NAMESPACE` follows the deploy context when unset
+(D-036); if it is set, the build fails unless production uses `prod` and
+previews do not.
 
 ## 5. Content in the repository
 

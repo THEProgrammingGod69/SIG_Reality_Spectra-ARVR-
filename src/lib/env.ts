@@ -63,13 +63,15 @@ export const serverEnvSchema = z
      * every Redis key (`sig:{namespace}:…`) and every R2 object (`{namespace}/…`),
      * so production, deploy previews and tests can share one database and one
      * bucket without ever touching each other's records. Production is `prod`;
-     * see the Netlify guard below.
+     * see the Netlify guard below. Left unset, it follows the deploy context:
+     * `prod` for Netlify production, `preview` for any other Netlify deploy,
+     * `dev` everywhere else (D-036).
      */
     DATA_NAMESPACE: z
       .string()
       .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Lowercase words joined by hyphens, e.g. prod')
       .max(40)
-      .default('dev'),
+      .optional(),
     /**
      * Cloudflare R2 (S3-compatible object storage): event posters and photos,
      * gallery and team photos, the recruitment PDF and nightly backups. The API
@@ -148,6 +150,9 @@ export const serverEnvSchema = z
         message: 'Local data lives on one computer; a Netlify deploy must use "upstash"',
       });
     }
+    // An unset namespace is derived from CONTEXT below, so only an explicit
+    // value can be wrong.
+    if (value.DATA_NAMESPACE === undefined) return;
     const isLive = value.CONTEXT === 'production';
     if (isLive !== (value.DATA_NAMESPACE === 'prod')) {
       ctx.addIssue({
@@ -158,7 +163,17 @@ export const serverEnvSchema = z
           : `Only production may use DATA_NAMESPACE="prod" (this is a ${value.CONTEXT} deploy)`,
       });
     }
-  });
+  })
+  .transform(({ DATA_NAMESPACE, ...value }) => ({
+    ...value,
+    DATA_NAMESPACE: DATA_NAMESPACE ?? defaultNamespace(value.CONTEXT),
+  }));
+
+/** The namespace for a deploy that does not set one: see DATA_NAMESPACE above. */
+function defaultNamespace(context: string | undefined): string {
+  if (context === undefined) return 'dev';
+  return context === 'production' ? 'prod' : 'preview';
+}
 
 export type ServerEnv = z.infer<typeof serverEnvSchema>;
 

@@ -63,6 +63,14 @@ describe('serverEnvSchema', () => {
       expect(serverEnvSchema.safeParse({ AUTH_DEV_SIGN_IN: 'true' }).success).toBe(true);
     });
 
+    it('derives the namespace from the deploy context when it is not set', () => {
+      expect(serverEnvSchema.parse({ CONTEXT: 'production' }).DATA_NAMESPACE).toBe('prod');
+      for (const CONTEXT of ['deploy-preview', 'branch-deploy', 'dev']) {
+        expect(serverEnvSchema.parse({ CONTEXT }).DATA_NAMESPACE).toBe('preview');
+      }
+      expect(serverEnvSchema.parse({}).DATA_NAMESPACE).toBe('dev');
+    });
+
     it('does not apply the guard off Netlify (local builds, tests)', () => {
       expect(serverEnvSchema.safeParse({ DATA_NAMESPACE: 'prod' }).success).toBe(true);
     });

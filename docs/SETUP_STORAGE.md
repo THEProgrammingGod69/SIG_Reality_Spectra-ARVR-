@@ -115,19 +115,19 @@ Netlify → the site → **Site configuration** → **Environment variables** �
 _Add a variable_ for each of these. Tick _Contains secret values_ for the
 token and the two R2 keys.
 
-| Variable                   | Value                                                                                                                                                       |
-| -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `UPSTASH_REDIS_REST_URL`   | from step 1                                                                                                                                                 |
-| `UPSTASH_REDIS_REST_TOKEN` | from step 1                                                                                                                                                 |
-| `R2_ACCOUNT_ID`            | from step 2                                                                                                                                                 |
-| `R2_ACCESS_KEY_ID`         | from step 2                                                                                                                                                 |
-| `R2_SECRET_ACCESS_KEY`     | from step 2                                                                                                                                                 |
-| `R2_BUCKET`                | from step 2                                                                                                                                                 |
-| `R2_PUBLIC_BASE_URL`       | from step 2                                                                                                                                                 |
-| `DATA_NAMESPACE`           | **different per deploy context** — choose _Different value for each deploy context_: Production `prod`, Deploy Previews `preview`, Branch deploys `preview` |
+| Variable                   | Value                                                                                                                          |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `UPSTASH_REDIS_REST_URL`   | from step 1                                                                                                                    |
+| `UPSTASH_REDIS_REST_TOKEN` | from step 1                                                                                                                    |
+| `R2_ACCOUNT_ID`            | from step 2                                                                                                                    |
+| `R2_ACCESS_KEY_ID`         | from step 2                                                                                                                    |
+| `R2_SECRET_ACCESS_KEY`     | from step 2                                                                                                                    |
+| `R2_BUCKET`                | from step 2                                                                                                                    |
+| `R2_PUBLIC_BASE_URL`       | from step 2                                                                                                                    |
+| `DATA_NAMESPACE`           | **leave unset**: it follows the deploy context — `prod` in production, `preview` on deploy previews and branch deploys (D-036) |
 
-The build refuses to deploy if production does not use `prod`, or if a preview
-does (D-025), so a mistake here fails loudly instead of mixing test edits into
+If you do set it, the build refuses to deploy if production does not use
+`prod`, or if a preview does (D-025), so a mistake here fails loudly instead of mixing test edits into
 the live site.
 
 Redeploy after adding the variables. A new production store starts with
