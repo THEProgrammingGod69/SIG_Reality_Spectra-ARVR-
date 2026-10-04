@@ -12,6 +12,8 @@ const pillRoutes = primaryNavRoutes.filter((route) => route.href !== '/');
 
 test.describe('desktop header', () => {
   test.use({ viewport: { width: 1280, height: 800 } });
+  // A desktop layout, mouse wheel and Tab-to-links: the Chromium project covers it.
+  test.skip(({ isMobile }) => isMobile, 'Desktop only');
 
   test('shows the primary links, marks the current page and offers the CTA', async ({ page }) => {
     await page.goto('/events');
@@ -109,7 +111,8 @@ test.describe('mobile menu', () => {
       .getByRole('link', { name: 'Gallery', exact: true })
       .click();
 
-    await expect(page).toHaveURL(/\/gallery$/);
+    // On the dev server the first visit compiles the page: allow for it.
+    await expect(page).toHaveURL(/\/gallery$/, { timeout: 15_000 });
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
     await expect(page.getByRole('navigation', { name: 'Site menu' })).toBeHidden();
   });

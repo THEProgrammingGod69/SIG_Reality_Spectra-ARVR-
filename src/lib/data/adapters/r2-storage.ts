@@ -49,7 +49,13 @@ export function createR2Storage({
       return {
         size: Number(response.headers.get('content-length') ?? 0),
         contentType: response.headers.get('content-type'),
+        lastModified: lastModified(response.headers.get('last-modified')),
       };
+    },
+
+    async get(key) {
+      const response = await send(objectUrl(key), { method: 'GET' }, [404]);
+      return response.status === 404 ? null : new Uint8Array(await response.arrayBuffer());
     },
 
     async put(key, body, contentType) {
@@ -88,6 +94,11 @@ export function createR2Storage({
       return keys;
     },
   };
+}
+
+function lastModified(header: string | null): Date | null {
+  const date = header ? new Date(header) : null;
+  return date && !Number.isNaN(date.getTime()) ? date : null;
 }
 
 function decodeXml(value: string): string {

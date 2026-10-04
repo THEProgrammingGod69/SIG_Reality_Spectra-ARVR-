@@ -1,4 +1,4 @@
-import { expect, type Page } from '@playwright/test';
+import { expect, type Page, test } from '@playwright/test';
 
 /**
  * Shared by the admin specs. They sign in with the development sign-in as the
@@ -11,7 +11,12 @@ export const hasRecords =
   process.env.DATA_BACKEND === 'local' || Boolean(process.env.UPSTASH_REDIS_REST_URL);
 export const hasFiles = process.env.DATA_BACKEND === 'local' || Boolean(process.env.R2_BUCKET);
 
+/** A deployed site under test (`pnpm test:deployed`), not a local server. */
+export const deployed = Boolean(process.env.PLAYWRIGHT_BASE_URL);
+
 export async function signIn(page: Page, path = '/admin', email = ADMIN) {
+  // Deployed sites have only Google sign-in (D-030); admin flows are tested locally.
+  test.skip(deployed, 'The development sign-in is off on deployed sites');
   await page.goto(path);
   await expect(page).toHaveURL(/\/admin\/login/);
   await page.getByLabel('Admin email').fill(email);

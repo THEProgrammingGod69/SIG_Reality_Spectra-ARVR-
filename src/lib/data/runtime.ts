@@ -11,9 +11,11 @@ import { createFileStorage, type FileStorage } from './adapters/file-storage';
 import { createFileStore } from './adapters/file-store';
 import { createR2Storage } from './adapters/r2-storage';
 import { createRedisStore } from './adapters/redis-store';
+import type { ObjectStorage } from './adapters/types';
 import type { RepositoryDeps } from './entity';
 import { createEventsRepository } from './events';
 import { createGalleryRepository } from './gallery';
+import { createMaintenance, type Maintenance } from './maintenance';
 import { createMedia, type Media, type MediaStore } from './media';
 import { createRecruitmentRepository } from './recruitment';
 import { createSponsorshipsRepository } from './sponsorships';
@@ -61,20 +63,26 @@ export function dataAvailability() {
 export function createDataServices({ invalidate }: { invalidate: Invalidate }) {
   const namespace = env.DATA_NAMESPACE;
 
+  let storage: ObjectStorage | undefined;
+  const getStorage = () =>
+    (storage ??= isLocal
+      ? localFileStorage()
+      : createR2Storage({
+          accountId: requireEnv('R2_ACCOUNT_ID', 'uploaded files'),
+          accessKeyId: requireEnv('R2_ACCESS_KEY_ID', 'uploaded files'),
+          secretAccessKey: requireEnv('R2_SECRET_ACCESS_KEY', 'uploaded files'),
+          bucket: requireEnv('R2_BUCKET', 'uploaded files'),
+        }));
+
   let media: Media | undefined;
   const getMedia = () =>
-    (media ??= isLocal
-      ? createMedia({ namespace, publicBaseUrl: LOCAL_MEDIA_PATH, storage: localFileStorage() })
-      : createMedia({
-          namespace,
-          publicBaseUrl: requireEnv('R2_PUBLIC_BASE_URL', 'uploaded files'),
-          storage: createR2Storage({
-            accountId: requireEnv('R2_ACCOUNT_ID', 'uploaded files'),
-            accessKeyId: requireEnv('R2_ACCESS_KEY_ID', 'uploaded files'),
-            secretAccessKey: requireEnv('R2_SECRET_ACCESS_KEY', 'uploaded files'),
-            bucket: requireEnv('R2_BUCKET', 'uploaded files'),
-          }),
-        }));
+    (media ??= createMedia({
+      namespace,
+      publicBaseUrl: isLocal
+        ? LOCAL_MEDIA_PATH
+        : requireEnv('R2_PUBLIC_BASE_URL', 'uploaded files'),
+      storage: getStorage(),
+    }));
   const lazyMedia: MediaStore = {
     verify: (ref) => getMedia().verify(ref),
     remove: (urls) => getMedia().remove(urls),
@@ -93,16 +101,29 @@ export function createDataServices({ invalidate }: { invalidate: Invalidate }) {
     now: () => new Date(),
   };
 
-  return {
-    namespace,
+  const repositories = {
     events: createEventsRepository(deps),
     gallery: createGalleryRepository(deps),
     team: createTeamRepository({ ...deps, domainIds: domains.map((domain) => domain.id) }),
     recruitment: createRecruitmentRepository(deps),
     sponsorships: createSponsorshipsRepository(deps),
-    /** Upload tickets and the orphan sweep's file listing. */
+  };
+
+  let maintenance: Maintenance | undefined;
+  return {
+    namespace,
+    ...repositories,
+    /** Upload tickets and server-side file writes. */
     get media(): Media {
       return getMedia();
+    },
+    /** The nightly backup and orphan sweep, and restore (D-034). */
+    get maintenance(): Maintenance {
+      return (maintenance ??= createMaintenance({
+        storage: getStorage(),
+        namespace,
+        repositories: Object.values(repositories),
+      }));
     },
   };
 }

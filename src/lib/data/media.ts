@@ -25,7 +25,7 @@ import { objectKey } from './keys';
  *    cap the size itself, so an oversized or mistyped upload is deleted here.
  * 4. `remove` — files a record stops using are deleted after the record is
  *    saved. Uploads that are never attached are left to the nightly orphan
- *    sweep (Stage 10).
+ *    sweep (`maintenance.ts`).
  */
 
 /** How long a presigned upload URL stays valid. */
@@ -150,7 +150,7 @@ export function createMedia({
       });
     },
 
-    /** Every stored key in this namespace (the orphan sweep and the live tests). */
+    /** Every stored key in this namespace (the tests check nothing is left behind). */
     async listKeys(): Promise<string[]> {
       return storage.list(ownPrefix);
     },

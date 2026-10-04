@@ -61,7 +61,7 @@ const INTEGRATIONS = [
   {
     id: 'cron',
     label: 'Nightly job secret',
-    purpose: 'Authorises the nightly backup and file clean-up (Stage 10).',
+    purpose: 'Authorises the nightly backup and file clean-up (D-034, docs/handbook/backups.md).',
     variables: ['CRON_SECRET'],
   },
 ] as const satisfies readonly {

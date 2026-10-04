@@ -35,32 +35,39 @@ that introduces it, and the app only fails when a feature that needs one actuall
 runs. See the comments in `.env.example`; the data accounts (Upstash Redis,
 Cloudflare R2) are set up with [`docs/SETUP_STORAGE.md`](./docs/SETUP_STORAGE.md).
 
-To run the end-to-end tests once, install the browser first:
+To run the end-to-end tests once, install the browsers first (desktop Chromium
+and the mobile WebKit that stands in for iPhone Safari):
 
 ```bash
-pnpm exec playwright install chromium
+pnpm exec playwright install chromium webkit
 ```
+
+Without the data accounts, set `DATA_BACKEND="local"` in `.env.local` to keep
+records and uploads in `.data/`, and `pnpm seed --demo` to fill it with sample
+content ([`docs/SETUP_STORAGE.md`](./docs/SETUP_STORAGE.md)).
 
 ---
 
 ## Scripts
 
-| Command             | What it does                                   |
-| ------------------- | ---------------------------------------------- |
-| `pnpm dev`          | Dev server (Turbopack)                         |
-| `pnpm build`        | Production build                               |
-| `pnpm start`        | Serve the production build                     |
-| `pnpm lint`         | ESLint                                         |
-| `pnpm lint:fix`     | ESLint with `--fix`                            |
-| `pnpm typecheck`    | `next typegen` then `tsc --noEmit`             |
-| `pnpm format`       | Prettier, write                                |
-| `pnpm format:check` | Prettier, check only                           |
-| `pnpm test`         | Vitest unit tests                              |
-| `pnpm test:live`    | Data layer tests against the real Redis and R2 |
-| `pnpm test:e2e`     | Playwright end-to-end tests                    |
-| `pnpm check`        | lint + typecheck + test + build, in that order |
-| `pnpm check:launch` | Fails while a contact detail is a placeholder  |
-| `pnpm seed`         | Fill the data store (`--demo`: sample records) |
+| Command              | What it does                                                     |
+| -------------------- | ---------------------------------------------------------------- |
+| `pnpm dev`           | Dev server (Turbopack)                                           |
+| `pnpm build`         | Production build                                                 |
+| `pnpm start`         | Serve the production build                                       |
+| `pnpm lint`          | ESLint                                                           |
+| `pnpm lint:fix`      | ESLint with `--fix`                                              |
+| `pnpm typecheck`     | `next typegen` then `tsc --noEmit`                               |
+| `pnpm format`        | Prettier, write                                                  |
+| `pnpm format:check`  | Prettier, check only                                             |
+| `pnpm test`          | Vitest unit tests                                                |
+| `pnpm test:live`     | Data layer tests against the real Redis and R2                   |
+| `pnpm test:e2e`      | Playwright end-to-end tests (Chromium + mobile WebKit)           |
+| `pnpm test:deployed` | The public tests against `PLAYWRIGHT_BASE_URL` (a deployed site) |
+| `pnpm check`         | lint + typecheck + test + build, in that order                   |
+| `pnpm check:launch`  | Fails while a contact detail is a placeholder                    |
+| `pnpm seed --demo`   | Labelled sample content (never in production)                    |
+| `pnpm data …`        | Backups, the orphan sweep, restore (`docs/handbook/backups.md`)  |
 
 ---
 
@@ -71,11 +78,13 @@ src/app/(site)/     public pages, one folder per sitemap route
 src/app/admin/      admin panel (noindex, never linked from the public site)
 src/components/     ui / motion / three / sections / admin
 src/lib/            data repository, Zod schemas, auth, env, site config
-src/content/        site info, domains, contact details (Stage 4)
+src/content/        site info, domains, contact details
 tests/unit/         Vitest
 tests/e2e/          Playwright
+scripts/            seed (demo content) and data (backup, sweep, restore)
+netlify/functions/  the nightly scheduled job
 references/         design and animation inputs — never shipped
-docs/               handover documentation
+docs/               architecture, decisions, setup guides; handbook/ for coordinators
 ```
 
 Every folder has a `README.md` explaining what belongs in it.
@@ -109,20 +118,23 @@ their list pages.
 The site is built in ten stages, one per session, each tagged in Git
 (`stage-1`, `stage-2`, …) so any stage can be rolled back cleanly.
 
-| Stage | Scope                                                                        | Status      |
-| ----- | ---------------------------------------------------------------------------- | ----------- |
-| 1     | Foundation, architecture, project rules                                      | **Done**    |
-| 2     | Animation system + AR/VR landing hero                                        | **Done**    |
-| 3     | Design system + UI shell                                                     | **Done**    |
-| 4     | Static content layer + page shells (Home, About, Recruitment, Contact) + SEO | **Done**    |
-| 5     | Data layer: schemas, repository, browser uploads, cache tags                 | **Done**    |
-| 6     | Admin authentication + panel shell + dashboard                               | **Done**    |
-| 7     | Events and gallery — admin ↔ public                                          | Not started |
-| 8     | Team, recruitment and sponsorship requests — admin ↔ public                  | Not started |
-| 9     | Animation polish, performance, accessibility, security headers               | Not started |
-| 10    | Testing, deployment, nightly backup + orphan sweep, handover                 | Not started |
+| Stage | Scope                                                                        | Status       |
+| ----- | ---------------------------------------------------------------------------- | ------------ |
+| 1     | Foundation, architecture, project rules                                      | **Done**     |
+| 2     | Animation system + AR/VR landing hero                                        | **Done**     |
+| 3     | Design system + UI shell                                                     | **Done**     |
+| 4     | Static content layer + page shells (Home, About, Recruitment, Contact) + SEO | **Done**     |
+| 5     | Data layer: schemas, repository, browser uploads, cache tags                 | **Done**     |
+| 6     | Admin authentication + panel shell + dashboard                               | **Done**     |
+| 7     | Events and gallery — admin ↔ public                                          | **Done**     |
+| 8     | Team, recruitment and sponsorship requests — admin ↔ public                  | **Done**     |
+| 9     | Animation polish, performance, accessibility, security headers               | **Done**     |
+| 10    | Testing, deployment, nightly backup + orphan sweep, handover                 | **10a done** |
 
-Pages whose data arrives in a later stage show an empty state until then. Inputs still needed from the club are tracked in
+Stage 10b is the go-live on the club's own accounts:
+[`docs/GO_LIVE.md`](./docs/GO_LIVE.md). Coordinators keep the site up to date
+with the [admin handbook](./docs/handbook/README.md). Inputs still needed from
+the club are tracked in
 [`docs/OPEN_ITEMS.md`](./docs/OPEN_ITEMS.md), and the reasoning behind design and
 product choices in [`docs/DECISIONS.md`](./docs/DECISIONS.md).
 
@@ -132,5 +144,6 @@ product choices in [`docs/DECISIONS.md`](./docs/DECISIONS.md).
 
 Next.js 16 (App Router) · TypeScript strict · Tailwind CSS v4 · React Three Fiber
 · GSAP + ScrollTrigger · Motion · Lenis · Upstash Redis · Cloudflare R2 · Zod ·
-Auth.js · react-hook-form · Cloudflare Turnstile · Playwright · Vitest ·
+Auth.js · react-hook-form · Cloudflare Turnstile · Cloudflare Web Analytics ·
+Playwright · axe-core · Vitest ·
 deployed on Netlify.

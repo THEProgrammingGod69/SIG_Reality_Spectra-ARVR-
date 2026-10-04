@@ -24,7 +24,7 @@ then confirm the dashboard's **Setup** card shows everything configured.
 | R2 variables                | empty — uploads answer 503                                   | Club R2 bucket and token (#10)                         | `SETUP_STORAGE.md`                |
 | Turnstile keys              | empty — check off locally; the form is hidden on Netlify     | Club Cloudflare Turnstile site (#22)                   | D-032                             |
 | Analytics token             | empty — no analytics script loads                            | Cloudflare Web Analytics site token (club account)     | `.env.example`, D-033             |
-| `CRON_SECRET`               | empty                                                        | A generated secret (Stage 10)                          | Stage 10                          |
+| `CRON_SECRET`               | empty                                                        | A generated secret (Production context only)           | `GO_LIVE.md`, D-034               |
 | Contact details             | "Coming soon" in `src/content/contact.json`                  | Club email, phone, address, map link (#7)              | `pnpm check:launch` gate          |
 | `DATA_BACKEND`              | `local` in your `.env.local` (records + uploads in `.data/`) | Remove once Upstash + R2 are set (D-031)               | `SETUP_STORAGE.md`                |
 | Events and photos           | `[Demo]` events and club photos from `pnpm seed --demo`      | Real events (#15) and photos (#18), added in the panel | `/admin/events`, `/admin/gallery` |
@@ -88,7 +88,7 @@ later stage needs them. Step-by-step setup: [`SETUP_STORAGE.md`](./SETUP_STORAGE
 | 21  | **Is recruitment open right now?**                                                      | Yes. It is now set only in `/admin/recruitment` (D-032): open it there with the form link when the live data store exists                |
 | 22  | Cloudflare Turnstile site key and secret                                                | Open — the check is off locally; a Netlify deploy without both keys hides the form and lists the channels (D-032)                        |
 
-## Blocking Stage 10 — go live
+## Go-live (Stage 10b) — step by step in [`GO_LIVE.md`](./GO_LIVE.md)
 
 | #   | Item                                                                                                           | Status |
 | --- | -------------------------------------------------------------------------------------------------------------- | ------ |

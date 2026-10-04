@@ -30,6 +30,8 @@ export function createRecruitmentRepository(deps: RepositoryDeps) {
   });
 
   return {
+    maintenance: entity.maintenance,
+
     /** The stored settings, or null before an admin has ever saved them. */
     get(): Promise<RecruitmentSettings | null> {
       return entity.get(RECRUITMENT_ID);

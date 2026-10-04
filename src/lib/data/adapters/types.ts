@@ -100,14 +100,21 @@ export function assertDistinctRecords(ops: readonly WriteOp[]): void {
 /* Files                                                                      */
 /* -------------------------------------------------------------------------- */
 
-export type ObjectInfo = { size: number; contentType: string | null };
+export type ObjectInfo = {
+  size: number;
+  contentType: string | null;
+  /** When the object was stored; null if the storage cannot say. The orphan sweep reads it. */
+  lastModified: Date | null;
+};
 
 export interface ObjectStorage {
   /** A URL the browser can PUT one file to, valid for `expiresInSeconds`. */
   presignPut(key: string, expiresInSeconds: number): Promise<string>;
   /** Size and type of a stored object, or null if there is none. */
   head(key: string): Promise<ObjectInfo | null>;
-  /** Server-side writes: demo images from the seed script, nightly backups (Stage 10). */
+  /** An object's bytes, or null if there is none (reading a backup back to restore it). */
+  get(key: string): Promise<Uint8Array | null>;
+  /** Server-side writes: demo images from the seed script, nightly backups. */
   put(key: string, body: string | Uint8Array, contentType: string): Promise<void>;
   /** Deleting a missing object is not an error. */
   delete(key: string): Promise<void>;

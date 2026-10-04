@@ -33,8 +33,11 @@ test('every response carries the security headers', async ({ request }) => {
   expect(headers['permissions-policy']).toContain('camera=()');
   expect(headers['cross-origin-opener-policy']).toBe('same-origin');
   expect(headers['x-powered-by']).toBeUndefined();
-  // Public pages may be indexed.
-  expect(headers['x-robots-tag']).toBeUndefined();
+  // Public pages may be indexed — except on Netlify's own *.netlify.app
+  // addresses, where Netlify itself marks deploy previews noindex.
+  if (!new URL(response.url()).hostname.endsWith('.netlify.app')) {
+    expect(headers['x-robots-tag']).toBeUndefined();
+  }
 });
 
 test('the admin panel and the API are never indexed, whatever they answer', async ({ request }) => {

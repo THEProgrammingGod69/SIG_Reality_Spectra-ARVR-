@@ -121,10 +121,10 @@ export const serverEnvSchema = z
     // no email integration; see docs/DECISIONS.md (D-008).
     TURNSTILE_SECRET_KEY: z.string().min(1).optional(),
 
-    // ---- Stage 10: scheduled jobs --------------------------------------------
+    // ---- Stage 10: the nightly job (D-034) -------------------------------------
     /**
      * Shared secret the Netlify scheduled function sends as a Bearer token. The
-     * nightly job (Redis backup to R2 + orphaned-upload sweep) rejects any
+     * nightly job (backup of every record + sweep of unused uploads) rejects any
      * request without it.
      */
     CRON_SECRET: z.string().min(16).optional(),

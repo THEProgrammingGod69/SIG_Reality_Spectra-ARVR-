@@ -83,3 +83,18 @@ export function safeCallbackPath(value: string | string[] | null | undefined): s
   if (path.includes('//') || path.includes('\\')) return DASHBOARD_PATH;
   return path;
 }
+
+/**
+ * Whether an `Authorization` header carries exactly `Bearer <secret>`: how the
+ * nightly job proves it is the scheduler (D-034). Compared in constant time,
+ * so response timing reveals nothing about the secret.
+ */
+export function isBearer(header: string | null, secret: string): boolean {
+  const expected = `Bearer ${secret}`;
+  if (header === null || header.length !== expected.length) return false;
+  let difference = 0;
+  for (let index = 0; index < expected.length; index += 1) {
+    difference |= header.charCodeAt(index) ^ expected.charCodeAt(index);
+  }
+  return difference === 0;
+}

@@ -5,6 +5,7 @@ import { createMemoryStore } from '@/lib/data/adapters/memory-store';
 import type { RepositoryDeps } from '@/lib/data/entity';
 import { createEventsRepository } from '@/lib/data/events';
 import { createGalleryRepository } from '@/lib/data/gallery';
+import { createMaintenance } from '@/lib/data/maintenance';
 import { createMedia } from '@/lib/data/media';
 import { createRecruitmentRepository } from '@/lib/data/recruitment';
 import { createSponsorshipsRepository } from '@/lib/data/sponsorships';
@@ -24,9 +25,10 @@ export const ADMIN = 'admin@vit.edu';
  */
 export function createHarness(start = '2026-10-01T10:00:00.000Z') {
   const store = createMemoryStore();
-  const storage = createMemoryStorage();
   const clock = { now: new Date(start) };
   const now = () => new Date(clock.now);
+  // Files are stamped by the same clock, so tests can age them for the sweep.
+  const storage = createMemoryStorage({ now });
   const media = createMedia({ storage, namespace: NAMESPACE, publicBaseUrl: MEDIA_ORIGIN, now });
   const invalidated: CacheTag[][] = [];
   const invalidate = vi.fn((tags: readonly CacheTag[]) => {
@@ -63,6 +65,14 @@ export function createHarness(start = '2026-10-01T10:00:00.000Z') {
     };
   }
 
+  const repositories = {
+    events: createEventsRepository(deps),
+    gallery: createGalleryRepository(deps),
+    team: createTeamRepository({ ...deps, domainIds: DOMAIN_IDS }),
+    recruitment: createRecruitmentRepository(deps),
+    sponsorships: createSponsorshipsRepository(deps),
+  };
+
   return {
     store,
     storage,
@@ -76,11 +86,13 @@ export function createHarness(start = '2026-10-01T10:00:00.000Z') {
     tick(ms: number) {
       clock.now = new Date(clock.now.getTime() + ms);
     },
-    events: createEventsRepository(deps),
-    gallery: createGalleryRepository(deps),
-    team: createTeamRepository({ ...deps, domainIds: DOMAIN_IDS }),
-    recruitment: createRecruitmentRepository(deps),
-    sponsorships: createSponsorshipsRepository(deps),
+    ...repositories,
+    maintenance: createMaintenance({
+      storage,
+      namespace: NAMESPACE,
+      repositories: Object.values(repositories),
+      now,
+    }),
   };
 }
 

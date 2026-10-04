@@ -58,15 +58,10 @@ export function SponsorshipForm({
   /** Null where Turnstile is off (a developer's computer, the tests). */
   turnstileSiteKey: string | null;
 }) {
-  const empty: Values = {
-    name: '',
-    organisation: '',
-    email: '',
-    phone: null,
-    type: types[0]!.id,
-    message: '',
-  };
-  const form = useForm<Values, unknown, Sent>({ resolver, defaultValues: empty });
+  // No default values: each field starts from what its input already holds.
+  // With defaults, react-hook-form writes them into the inputs as it attaches
+  // after hydration, wiping anything a visitor on a slow phone typed first.
+  const form = useForm<Values, unknown, Sent>({ resolver });
   const { register, handleSubmit, formState, setError, reset } = form;
   const { errors, isSubmitting } = formState;
   const [token, setToken] = useState<string | null>(null);
@@ -95,7 +90,7 @@ export function SponsorshipForm({
       setFailure(result.message);
       return;
     }
-    reset(empty);
+    reset();
     setSent(true);
   });
 

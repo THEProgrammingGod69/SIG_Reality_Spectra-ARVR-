@@ -39,7 +39,7 @@ export function createFileStorage({
     try {
       const info = await stat(pathOf(key));
       const contentType = await readFile(`${pathOf(key)}.type`, 'utf8').catch(() => null);
-      return { size: info.size, contentType };
+      return { size: info.size, contentType, lastModified: info.mtime };
     } catch {
       return null;
     }
@@ -62,6 +62,12 @@ export function createFileStorage({
       return `${routePath}/${key}?${query.toString()}`;
     },
     head,
+    async get(key) {
+      return readFile(pathOf(key)).then(
+        (body) => new Uint8Array(body),
+        () => null,
+      );
+    },
     put,
     async delete(key) {
       await rm(pathOf(key), { force: true });
@@ -95,12 +101,9 @@ export function createFileStorage({
     },
     /** A stored file and its type, for the serving route. */
     async read(key: string): Promise<{ body: Uint8Array; contentType: string } | null> {
-      const info = await head(key);
-      if (!info) return null;
-      return {
-        body: await readFile(pathOf(key)),
-        contentType: info.contentType ?? 'application/octet-stream',
-      };
+      const [info, body] = await Promise.all([head(key), storage.get(key)]);
+      if (!info || !body) return null;
+      return { body, contentType: info.contentType ?? 'application/octet-stream' };
     },
   });
 }

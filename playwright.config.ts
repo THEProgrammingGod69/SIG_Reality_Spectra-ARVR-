@@ -16,6 +16,8 @@ const isCI = Boolean(process.env.CI);
 if (existsSync('.env.local')) process.loadEnvFile('.env.local');
 process.env.AUTH_SECRET ||= 'e2e-only-secret-never-used-outside-the-test-run';
 process.env.ADMIN_EMAILS ||= 'e2e-admin@example.org';
+// The nightly job's route needs a secret to be callable at all (D-034).
+process.env.CRON_SECRET ||= 'e2e-only-cron-secret-never-used-outside-tests';
 // Without Upstash, records and uploads go to the local data mode (D-031).
 process.env.DATA_BACKEND ||= process.env.UPSTASH_REDIS_REST_URL ? 'upstash' : 'local';
 if (isCI) process.env.AUTH_DEV_SIGN_IN = 'true';
@@ -40,16 +42,27 @@ export default defineConfig({
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
     },
-    // Stage 10 adds a mobile WebKit project once there is real UI to check.
+    // What a visitor on an iPhone gets (Safari's engine), D-034: the public
+    // pages and their flows. The admin panel is used on laptops; it stays on
+    // Chromium.
+    {
+      name: 'mobile-webkit',
+      use: { ...devices['iPhone 14'] },
+      testMatch: /(routes|content|hero|shell|sponsorships|a11y).spec.ts$/,
+    },
   ],
 
-  webServer: {
-    // CI tests the production build; locally the dev server is reused if running.
-    command: isCI ? 'pnpm build && pnpm start' : 'pnpm dev',
-    url: baseURL,
-    reuseExistingServer: !isCI,
-    timeout: 180_000,
-    stdout: 'ignore',
-    stderr: 'pipe',
-  },
+  // Against a deployed site (`pnpm test:deployed`, PLAYWRIGHT_BASE_URL) no
+  // server is started. Otherwise CI tests the production build, and locally
+  // the dev server is reused if it is running.
+  webServer: process.env.PLAYWRIGHT_BASE_URL
+    ? undefined
+    : {
+        command: isCI ? 'pnpm build && pnpm start' : 'pnpm dev',
+        url: baseURL,
+        reuseExistingServer: !isCI,
+        timeout: 180_000,
+        stdout: 'ignore',
+        stderr: 'pipe',
+      },
 });

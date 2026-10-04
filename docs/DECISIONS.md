@@ -43,6 +43,7 @@ the call and it was made on the reasoning shown).
 | D-031 | Stage 7: local data mode, any-ratio images, placeholders until real content     | team, lead |
 | D-032 | Stage 8: contact-form spam checks, recruitment moves to the admin panel         | lead       |
 | D-033 | Stage 9: motion polish, performance, accessibility, security headers, analytics | lead       |
+| D-034 | Stage 10a: nightly backup and orphan sweep, restore, WebKit tests, handbook     | lead       |
 
 ---
 
@@ -770,3 +771,53 @@ with a placeholder token, and `@axe-core/playwright` as a dev dependency.
   test keeps equal to globals.css (the browser theme colour moved there too).
   /events adds schema.org Event data for its current events; JSON-LD renders
   through one `<JsonLd>` component.
+
+## D-034 — Stage 10a: nightly backup and orphan sweep, restore, WebKit tests, handbook
+
+**Context.** Stage 10 is split (Arnav's call): **10a** builds everything that
+does not need the club's accounts; **10b** is the go-live in one sitting when
+they arrive, following [`GO_LIVE.md`](./GO_LIVE.md).
+
+**Lead calls.**
+
+- **The nightly job** is `POST /api/cron/nightly`, accepted only with
+  `Authorization: Bearer $CRON_SECRET` (constant-time check, `isBearer()`),
+  called by a Netlify scheduled function (`netlify/functions/nightly.mts`) at
+  21:00 UTC — 02:30 in India. POST, so no crawler or prefetch can trigger it.
+  Netlify runs schedules only on the published production deploy.
+- **Backup first, sweep second.** A failed backup stops the job, so files are
+  only ever deleted on a night whose records are safely backed up. A backup is
+  every record of every collection, as stored — valid or not — in one JSON file
+  in the file storage, `{ns}/backups/{yyyy-mm-dd}.json` dated in club time; the
+  newest 30 are kept. Photos are not copied: R2 keeps them, and a deleted
+  record's files survive the 24-hour grace below, which is the window to
+  restore an event with its photos.
+- **The orphan sweep** deletes files no record mentions once they are older
+  than 24 hours (so an admin's unsaved upload is safe). It matches files by
+  storage key from the namespace on, not by full URL, so moving the media to a
+  new domain can never make every file look unused; a file whose age is unknown
+  is kept; backups are never swept; and a sweep that would delete more than half
+  of the files (and at least 10) is refused as a sign of misconfiguration.
+- **Restore** puts a backup's records back exactly as they were (their own
+  dates, versions and authors, no new file checks), in batches of 25 atomic
+  writes; records missing from the backup are left alone. It runs from a
+  computer: `pnpm data restore <date>` reports first and changes nothing without
+  `--yes`, and the production namespace also needs `--production`.
+  `pnpm data backups | backup | sweep [--dry-run]` round out the tools.
+- **Ports.** `ObjectStorage` gains `get(key)` (reading a backup back) and
+  `lastModified` in `head()` (the sweep's age check), on R2, local files and
+  memory. The generic entity gains `maintenance.exportAll()` and
+  `maintenance.restore()`, so every repository has them with no per-entity
+  code; `createMaintenance()` (src/lib/data/maintenance.ts) works over them.
+- **Mobile WebKit** (iPhone 14 profile) runs the public specs beside Chromium;
+  the admin panel, used on laptops, stays on Chromium. It found a real bug:
+  the contact form's default values were written into its inputs when
+  react-hook-form attached after hydration, wiping anything a visitor on a slow
+  phone had already typed. The public form now has no default values, so each
+  field starts from what its input holds.
+- **Testing a deployed site**: `PLAYWRIGHT_BASE_URL=… pnpm test:deployed` runs
+  the public specs against a deploy preview or production without starting a
+  server; tests that need the development sign-in skip themselves there.
+- **Handover** is a plain-language handbook (`docs/handbook/`) for coordinators
+  — events, gallery, team, recruitment, sponsorships — plus admins, backups and
+  the yearly handover checklist for whoever looks after the site.

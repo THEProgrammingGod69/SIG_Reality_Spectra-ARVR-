@@ -190,7 +190,7 @@ src/
     api/admin/upload presigned-upload route (Stage 5)
     api/auth/        Auth.js endpoints (Stage 6)
     api/local-media/ local data mode only: receives and serves uploads (Stage 7)
-    api/cron/nightly backup + orphan sweep, CRON_SECRET  (Stage 10)
+    api/cron/nightly backup + orphan sweep, Bearer CRON_SECRET (Stage 10, D-034)
     og/[page]        each public page's share image, prerendered            (Stage 9)
     globals.css      design tokens live here, in @theme
     robots.ts
@@ -224,13 +224,14 @@ src/
   assets/            brand logo images (Stage 3); fonts/ = OG-image TTFs, server-only (Stage 9)
   content/           site, domains, contact — JSON, validated at build time
   proxy.ts           the /admin guard (Next 16's renamed middleware)       (Stage 6)
-scripts/             seed.mts — pnpm seed --demo                              (Stages 5–8)
+scripts/             seed.mts — pnpm seed --demo; data.mts — pnpm data (backup, sweep, restore)
+netlify/functions/   nightly.mts — the scheduled call to /api/cron/nightly   (Stage 10)
 .data/               local data mode records + uploads, gitignored (D-031)  (Stage 7)
 tests/
   unit/              Vitest — schemas, utilities, data layer on in-memory adapters
   e2e/               Playwright
 references/          design + animation inputs, never shipped
-docs/                handover documentation
+docs/                architecture, decisions, setup guides; handbook/ for coordinators; GO_LIVE.md
 ```
 
 Each folder has a `README.md` describing what belongs in it. Read it before
@@ -320,8 +321,10 @@ pnpm format        # Prettier write
 pnpm format:check  # Prettier check
 pnpm test          # Vitest (unit)
 pnpm test:live     # data layer against the real Upstash + R2 (needs .env.local)
-pnpm test:e2e      # Playwright (first run: pnpm exec playwright install chromium)
+pnpm test:e2e      # Playwright, Chromium + mobile WebKit (first run: pnpm exec playwright install chromium webkit)
+pnpm test:deployed # the public specs against PLAYWRIGHT_BASE_URL (a deploy preview or production)
 pnpm seed --demo   # labelled demo content in a dev namespace (never prod), D-031/D-032
+pnpm data backups  # also: backup · sweep [--dry-run] · restore <date> [--yes] (D-034)
 pnpm check         # lint + typecheck + test + build
 pnpm check:launch  # fails while any contact detail is still a placeholder (go-live gate)
 ```
@@ -350,18 +353,18 @@ in `src/lib/env.public.ts`.
 One stage per session. `/clear` between stages. Commit and tag each stage
 (`git tag stage-N`) so a bad stage can be rolled back cleanly.
 
-| Stage | Scope                                                                        | Status      |
-| ----- | ---------------------------------------------------------------------------- | ----------- |
-| 1     | Foundation, architecture, project rules                                      | **Done**    |
-| 2     | Animation system + AR/VR landing hero                                        | **Done**    |
-| 3     | Design system + UI shell                                                     | **Done**    |
-| 4     | Static content layer + page shells (Home, About, Recruitment, Contact) + SEO | **Done**    |
-| 5     | Data layer: schemas, repository, browser uploads, cache tags                 | **Done**    |
-| 6     | Admin authentication + panel shell + dashboard                               | **Done**    |
-| 7     | Events and gallery (event photos + standalone photos) — admin ↔ public       | **Done**    |
-| 8     | Team, recruitment and sponsorship requests — admin ↔ public                  | **Done**    |
-| 9     | Animation polish, performance, accessibility, security headers               | **Done**    |
-| 10    | Testing, deployment, nightly backup + orphan sweep, handover                 | Not started |
+| Stage | Scope                                                                        | Status                                         |
+| ----- | ---------------------------------------------------------------------------- | ---------------------------------------------- |
+| 1     | Foundation, architecture, project rules                                      | **Done**                                       |
+| 2     | Animation system + AR/VR landing hero                                        | **Done**                                       |
+| 3     | Design system + UI shell                                                     | **Done**                                       |
+| 4     | Static content layer + page shells (Home, About, Recruitment, Contact) + SEO | **Done**                                       |
+| 5     | Data layer: schemas, repository, browser uploads, cache tags                 | **Done**                                       |
+| 6     | Admin authentication + panel shell + dashboard                               | **Done**                                       |
+| 7     | Events and gallery (event photos + standalone photos) — admin ↔ public       | **Done**                                       |
+| 8     | Team, recruitment and sponsorship requests — admin ↔ public                  | **Done**                                       |
+| 9     | Animation polish, performance, accessibility, security headers               | **Done**                                       |
+| 10    | Testing, deployment, nightly backup + orphan sweep, handover                 | **10a done** · 10b go-live (`docs/GO_LIVE.md`) |
 
 The architecture was revised after Stage 1 (six-page sitemap, admin-managed
 team, gallery derived from events, recruitment PDF). The Stage 1 scaffold was
@@ -377,9 +380,8 @@ updated to match; `docs/ARCHITECTURE.md` is the current design.
 - "Coming soon" contact placeholders — filled in `src/content/contact.json`;
   `pnpm check:launch` fails until they are (Stage 10 gate).
 
-**Deliberately not built yet, so a later stage owns it cleanly:**
-
-- `api/cron/nightly` and its Netlify scheduled function — Stage 10.
+**Stage 10b (go-live)** swaps every placeholder above for the club's accounts,
+in one sitting: `docs/GO_LIVE.md`. Coordinators use `docs/handbook/`.
 
 ---
 
@@ -431,6 +433,8 @@ contributor must know before writing UI:
 | Hero tiers         | Software-rendered WebGL (no GPU) gets the static still, like reduced motion (D-033)                                                                             |
 | Security headers   | CSP + HSTS + framing/sniffing/referrer/permissions policies from `src/lib/security-headers.ts`; zero CSP violations is an e2e test (D-033)                      |
 | Share images       | One per page at `/og/[page]`, prerendered; colours from `token-values.ts`, checked against globals.css (D-033)                                                  |
+| Nightly job        | Backup (30 kept) then orphan sweep (24 h grace, refuses mass deletes); restore with `pnpm data`; Bearer `CRON_SECRET` (D-034)                                   |
+| Public forms       | No react-hook-form default values on public forms: typing before hydration must survive (D-034)                                                                 |
 | Admin form kit     | `FormField`/`CheckboxField`, `ImageField`/`PdfField`, `SaveBar`, `ConfirmDelete`, `useRecordVersion` — reuse, never copy (D-032)                                |
 | Public reads       | Through `publicRead()` inside `<Suspense>`; a failure shows `<LoadFailed>`, never an error page (D-032)                                                         |
 

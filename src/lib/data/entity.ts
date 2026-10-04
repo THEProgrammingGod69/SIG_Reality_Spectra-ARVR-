@@ -225,8 +225,67 @@ export function createEntity<Fields, FieldsIn, Rec extends Fields & SystemFields
       ]);
       await media.remove(files(current).map((file) => file.url));
     },
+
+    /** What the nightly job and the restore script use (Stage 10, D-034). */
+    maintenance: {
+      collection: config.collection,
+
+      /**
+       * Every stored record as parsed JSON, valid or not: a backup keeps
+       * everything, and the orphan sweep must not free a file that a record
+       * which fails validation still names.
+       */
+      async exportAll(): Promise<unknown[]> {
+        const raw = await store.list(config.collection);
+        return raw.flatMap(({ id, data }) => {
+          if (data === null) return [];
+          try {
+            return [JSON.parse(data) as unknown];
+          } catch {
+            console.error(`[data] ${config.collection} "${id}" is not valid JSON; not exported.`);
+            return [];
+          }
+        });
+      },
+
+      /**
+       * Put records from a backup back exactly as they were: their own dates,
+       * versions and authors, no new file checks (each file was checked when
+       * it was first attached). A record that fails validation is counted and
+       * skipped; records missing from the backup are left alone.
+       */
+      async restore(records: readonly unknown[]): Promise<{ restored: number; invalid: number }> {
+        const valid = records.flatMap((value) => {
+          const parsed = config.record.safeParse(value);
+          return parsed.success ? [parsed.data] : [];
+        });
+        const ops = await Promise.all(
+          valid.map(async (record): Promise<WriteOp> => {
+            const id = config.id(record);
+            const op = {
+              collection: config.collection,
+              id,
+              data: JSON.stringify(record),
+              version: record.updatedAt,
+              score: config.score(record),
+            };
+            return (await store.get(config.collection, id)) === null
+              ? { kind: 'create', ...op }
+              : { kind: 'replace', ...op, expectedVersion: null };
+          }),
+        );
+        // In batches, so one request to the store never grows without bound.
+        for (let start = 0; start < ops.length; start += RESTORE_BATCH) {
+          await write(ops.slice(start, start + RESTORE_BATCH));
+        }
+        return { restored: valid.length, invalid: records.length - valid.length };
+      },
+    },
   };
 }
+
+/** Records written per atomic write when restoring a backup. */
+const RESTORE_BATCH = 25;
 
 /**
  * The new `updatedAt`: now, but always later than the previous one, so two

@@ -448,3 +448,18 @@ Recorded in [`DECISIONS.md`](./DECISIONS.md) D-033:
   static hero.
 - **Accessibility**: axe-core (WCAG 2.2 AA) on every page and key state, in
   the e2e suite.
+
+## 16. Revision 9 — Stage 10a, operations and handover
+
+Recorded in [`DECISIONS.md`](./DECISIONS.md) D-034:
+
+- **Nightly job**: a Netlify scheduled function calls `POST /api/cron/nightly`
+  (Bearer `CRON_SECRET`) at 02:30 India time. It backs up every record to
+  `{ns}/backups/{date}.json` (30 kept), then deletes uploads no record mentions
+  once they are a day old, refusing anything that looks like a mass deletion.
+- **Restore** and manual runs: `pnpm data` (backups, backup, sweep, restore),
+  through `src/lib/data/maintenance.ts` on the same ports as the app.
+- **Testing**: mobile WebKit beside Chromium; `pnpm test:deployed` for a
+  deploy preview or production.
+- **Handover**: `docs/handbook/` for coordinators; `docs/GO_LIVE.md` for
+  Stage 10b.

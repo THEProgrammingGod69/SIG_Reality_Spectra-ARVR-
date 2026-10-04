@@ -8,4 +8,4 @@ server-only modules as the app.
 | ---------- | ------------------ | --------------------------------------------------------------------------------------------------- |
 | `seed.mts` | `pnpm seed --demo` | Adds labelled `[Demo]` content and opens recruitment if never saved; never in `prod` (D-031, D-032) |
 
-Stage 10 adds the backup restore script here.
+| `data.mts` | `pnpm data …` | `backups`, `backup`, `sweep [--dry-run]`, `restore <date> [--yes] [--production]` (D-034, `docs/handbook/backups.md`) |

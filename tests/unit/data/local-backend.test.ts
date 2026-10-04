@@ -104,8 +104,14 @@ describe('local file storage', () => {
     expect(ticket.path).toBe(`${LOCAL_MEDIA_PATH}/${key}`);
 
     expect(await storage.receive(key, ticket, bytes, 'image/webp')).toBe(true);
-    expect(await storage.head(key)).toEqual({ size: 4, contentType: 'image/webp' });
+    expect(await storage.head(key)).toEqual({
+      size: 4,
+      contentType: 'image/webp',
+      lastModified: expect.any(Date),
+    });
     expect((await storage.read(key))?.contentType).toBe('image/webp');
+    expect(await storage.get(key)).toEqual(bytes);
+    expect(await storage.get('dev/gallery/abc/missing.webp')).toBeNull();
     expect(await storage.list('dev/')).toEqual([key]);
 
     await storage.delete(key);

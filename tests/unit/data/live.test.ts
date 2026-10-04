@@ -7,6 +7,7 @@ import { createRedisStore } from '@/lib/data/adapters/redis-store';
 import type { RepositoryDeps } from '@/lib/data/entity';
 import { createEventsRepository } from '@/lib/data/events';
 import { createGalleryRepository } from '@/lib/data/gallery';
+import { createMaintenance } from '@/lib/data/maintenance';
 import { createMedia } from '@/lib/data/media';
 import { createTeamRepository } from '@/lib/data/team';
 
@@ -157,6 +158,32 @@ function lifecycleSuite() {
 
       expect(await store.scanKeys()).toEqual([]);
       expect(await media.listKeys()).toEqual([]);
+    });
+
+    it('backs up to R2, reads the backup back, and sweeps only old orphans (D-034)', async () => {
+      const maintenance = createMaintenance({ storage, namespace, repositories: [gallery, team] });
+      const photoId = crypto.randomUUID();
+      const photo = await gallery.create(
+        { id: photoId, image: await upload('gallery-photo', photoId), category: 'other' },
+        admin,
+      );
+      // An upload never attached to a record: an orphan, but too recent to delete.
+      const orphan = await upload('gallery-photo', crypto.randomUUID());
+
+      const { date } = await maintenance.backup();
+      const backup = await maintenance.readBackup(date);
+      expect(backup?.collections.gallery).toEqual([JSON.parse(JSON.stringify(photo))]);
+      expect(
+        (await storage.head(orphan.url.slice(value('R2_PUBLIC_BASE_URL').length + 1)))
+          ?.lastModified,
+      ).toBeInstanceOf(Date);
+
+      const report = await maintenance.sweep();
+      expect(report.deleted).toEqual([]);
+      expect(report.recent).toHaveLength(1);
+
+      await gallery.remove(photoId, photo.updatedAt);
+      await Promise.all((await storage.list(namespace)).map((key) => storage.delete(key)));
     });
   });
 }

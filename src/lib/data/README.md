@@ -18,6 +18,7 @@ Design: D-025 (Netlify, Upstash, R2) and D-029 (this layer).
 | `team.ts`                  | Team members, `append` (end of the tier), `reorder`, `groupTeam` (core, then secretaries by domain)                                            |
 | `recruitment.ts`           | The one settings record: `get`, `getStatus` (closed by default), `save`                                                                        |
 | `sponsorships.ts`          | Requests from /contact: `submit` (rate-limited per sender), `list` (newest first, paged), `setStatus`, `remove`                                |
+| `maintenance.ts`           | The nightly job: backup (30 kept), orphan sweep (24 h grace, safety valve), restore (D-034)                                                    |
 | `media.ts`                 | Upload tickets, attach checks, deletes                                                                                                         |
 | `keys.ts`                  | Every Redis key and storage key, from `DATA_NAMESPACE`                                                                                         |
 | `tags.ts`                  | Cache tag names shared by reads and writes                                                                                                     |
@@ -90,7 +91,7 @@ requests by creation time, team members by tier then order.
 | `{ns}/gallery/{photoId}/{rand}.webp`       | standalone gallery photo   |
 | `{ns}/team/{memberId}/{rand}.webp`         | team member photo          |
 | `{ns}/recruitment/{rand}.pdf`              | roles and responsibilities |
-| `{ns}/backups/{yyyy-mm-dd}.json`           | nightly backup (Stage 10)  |
+| `{ns}/backups/{yyyy-mm-dd}.json`           | nightly backup (D-034)     |
 
 Images may also be `.jpg`, `.png` or `.avif` when the browser could not
 convert them; limits are in `src/lib/schemas/upload.ts` (images 5 MB, PDF
@@ -114,7 +115,7 @@ size-capped, and an event can take dozens of photos at once.
 
 Files a record stops using (a replaced poster, a removed photo, a deleted
 record) are deleted after the record is saved. A failed delete is logged and
-left to the nightly orphan sweep (Stage 10), which also removes uploads that
+left to the nightly orphan sweep (`maintenance.ts`, D-034), which also removes uploads that
 were never attached.
 
 ## Rules

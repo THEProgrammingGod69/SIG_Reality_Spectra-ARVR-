@@ -42,6 +42,7 @@ export function createSponsorshipsRepository(deps: RepositoryDeps) {
 
   return {
     get: entity.get,
+    maintenance: entity.maintenance,
     count: entity.count,
     remove: entity.remove,
 

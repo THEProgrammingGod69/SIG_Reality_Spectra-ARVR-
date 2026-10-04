@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   authSetup,
   cookieRemovalsOnly,
+  isBearer,
   isAllowedAdmin,
   isDevSignInEnabled,
   safeCallbackPath,
@@ -118,5 +119,15 @@ describe('cookieRemovalsOnly', () => {
     const expired = 'authjs.session-token.0=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT';
     expect(cookieRemovalsOnly([renewed, removed, expired])).toEqual([removed, expired]);
     expect(cookieRemovalsOnly([renewed])).toEqual([]);
+  });
+});
+
+describe('isBearer (the nightly job, D-034)', () => {
+  it('accepts exactly "Bearer <secret>"', () => {
+    const secret = 's'.repeat(32);
+    expect(isBearer(`Bearer ${secret}`, secret)).toBe(true);
+    for (const header of [null, '', secret, `Bearer ${secret}x`, `bearer ${secret}`, 'Bearer ']) {
+      expect(isBearer(header, secret)).toBe(false);
+    }
   });
 });
