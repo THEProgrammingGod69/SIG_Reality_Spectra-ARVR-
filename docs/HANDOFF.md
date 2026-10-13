@@ -6,17 +6,30 @@ old conversation. Read in this order: this file → `CLAUDE.md` → `docs/DECISI
 
 ## State (as of 2026-10-04)
 
-| Item          | Value                                                                          |
-| ------------- | ------------------------------------------------------------------------------ |
-| Repo          | github.com/THEProgrammingGod69/SIG_Reality_Spectra-ARVR- (private), `main`     |
-| Local folder  | `D:\Academic Nottes VIT\SIG\SIG_Draft_Code`                                    |
-| Hosting       | **Netlify** (D-025)                                                            |
-| Last commit   | `b3df807` — quality pass after Stage 10a (tag `stage-10a`, pushed)                                    |
-| Rollback tags | `stage-1` – `stage-9`, `stage-10a`, `architecture-v2`, `architecture-v3`                    |
-| Done          | Stages 1–9 and 10a, committed, tagged and pushed; quality pass (D-035)                                   |
-| Next          | Stage 10b: go-live with the club's accounts — `docs/GO_LIVE.md`                                             |
+| Item          | Value                                                                                                      |
+| ------------- | ---------------------------------------------------------------------------------------------------------- |
+| Repo          | github.com/THEProgrammingGod69/SIG_Reality_Spectra-ARVR- (private), `main`                                 |
+| Local folder  | `D:\Academic Nottes VIT\SIG\SIG_Draft_Code`                                                                |
+| Hosting       | **Netlify** (D-025)                                                                                        |
+| Last commit   | `b3df807` — quality pass after Stage 10a (tag `stage-10a`, pushed)                                         |
+| Rollback tags | `stage-1` – `stage-9`, `stage-10a`, `architecture-v2`, `architecture-v3`                                   |
+| Done          | Stages 1–9 and 10a, committed, tagged and pushed; quality pass (D-035)                                     |
+| Next          | Stage 10b: go-live with the club's accounts — `docs/GO_LIVE.md`                                            |
 | Gates         | `pnpm check` + `pnpm test:e2e` green: 293 unit, 166 e2e on Chromium + mobile WebKit (dev and `CI=1` build) |
-| Credentials   | **Placeholders** (D-030): swap list at the top of `docs/OPEN_ITEMS.md`         |
+| Credentials   | **Placeholders** (D-030): swap list at the top of `docs/OPEN_ITEMS.md`                                     |
+
+## Premium pass (D-037) — after Stage 10a
+
+A design and motion pass over every public page, on branch
+`ccr-fb1b4dcd-eu2382` (not yet merged to `main`). React Bits SplitText,
+ScrollReveal, SpotlightCard, ScrollVelocity and GlareHover were rebuilt on
+rule 4 (`src/components/motion`); `PageIntro` runs under the header over
+`LabBackdrop`; `SectionHeading` opens every section; Home gained the domain
+ticker and a closing call to action; Events, Gallery, Recruitment, Contact,
+the footer and the 404 were reworked. Read D-037 for the calls made, the
+review findings that were fixed (trigger ordering with the hero pin, reachable
+trigger points, contrast in every state, nothing looping past 5 s) and what
+was left alone on purpose. New e2e: `tests/e2e/motion.spec.ts`.
 
 ## Start of the next chat
 
@@ -107,7 +120,7 @@ stage-N`, push branch and tag, then a small "docs: handoff" commit.
   `{ns}/backups/{date}.json` (30 kept), then a sweep of unused uploads (24 h
   grace, key-based matching, refuses to delete more than half).
   `src/lib/data/maintenance.ts`; `pnpm data backups | backup | sweep
-  [--dry-run] | restore <date> [--yes] [--production]`.
+[--dry-run] | restore <date> [--yes] [--production]`.
 - **Tests:** mobile WebKit (iPhone 14) on the public specs; `pnpm test:deployed`
   against `PLAYWRIGHT_BASE_URL`. Fixed: the contact form wiped text typed
   before hydration (no default values on public forms).

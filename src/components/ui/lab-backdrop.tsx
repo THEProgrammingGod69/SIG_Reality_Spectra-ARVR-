@@ -11,12 +11,17 @@ const placements = {
     grid: 'mask-radial-at-top-right',
     // The intro's lower edge is where the page continues: fade into it.
     root: 'mask-b-from-55% mask-b-to-100%',
+    // On the ring (viewBox units), up and to the right: out in the corner.
+    satellite: { cx: 70.7, cy: -70.7, className: undefined },
   },
   center: {
     rings: 'top-1/2 left-1/2 size-[min(56rem,170vw)] -translate-x-1/2 -translate-y-1/2',
     glow: 'top-1/2 left-1/2 h-[28rem] w-[56rem] -translate-x-1/2 -translate-y-1/2',
     grid: 'mask-radial-at-center',
     root: 'mask-y-from-70% mask-y-to-100%',
+    // At the top of the ring, above centred text — and only from `md`: on a
+    // phone the ring is small enough that it would land on the heading.
+    satellite: { cx: 0, cy: -100, className: 'hidden md:block' },
   },
 } as const;
 
@@ -74,14 +79,21 @@ export function LabBackdrop({ align = 'end', className }: LabBackdropProps) {
             <circle r={100} strokeWidth={0.8} opacity={0.38} />
             <circle r={72} strokeWidth={0.4} opacity={0.14} />
           </g>
-          <circle cx={70.7} cy={-70.7} r={2.4} style={{ fill: 'var(--color-spectra-cyan)' }} />
-          <circle
-            cx={70.7}
-            cy={-70.7}
-            r={7}
-            opacity={0.25}
-            style={{ fill: 'var(--color-spectra-cyan)' }}
-          />
+          <g className={place.satellite.className}>
+            <circle
+              cx={place.satellite.cx}
+              cy={place.satellite.cy}
+              r={2.4}
+              style={{ fill: 'var(--color-spectra-cyan)' }}
+            />
+            <circle
+              cx={place.satellite.cx}
+              cy={place.satellite.cy}
+              r={7}
+              opacity={0.25}
+              style={{ fill: 'var(--color-spectra-cyan)' }}
+            />
+          </g>
         </svg>
       </div>
     </div>

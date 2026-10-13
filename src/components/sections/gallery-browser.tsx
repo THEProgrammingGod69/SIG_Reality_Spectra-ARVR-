@@ -15,6 +15,10 @@ import { PhotoGrid } from './photo-grid';
 // 30 fills whole rows at 1, 2, 3, 5 and 6 columns: phones, tablets and wide
 // desktops never end a batch on a half-empty row.
 const BATCH = 30;
+// The first batch is three short, because from `md` the lead photo is a
+// double tile taking four cells: 27 photos fill the same 30 cells, so the 3-,
+// 5- and 6-column grids still end on whole rows (D-037).
+const FIRST_BATCH = BATCH - 3;
 
 /**
  * /gallery: every photo, newest first, filterable by the shared categories.
@@ -38,7 +42,7 @@ export function GalleryBrowser({
   categories: readonly { id: Category; label: string }[];
 }) {
   const [category, setCategory] = useState<Category | null>(null);
-  const [shown, setShown] = useState(BATCH);
+  const [shown, setShown] = useState(FIRST_BATCH);
   const [enterFrom, setEnterFrom] = useState<number | null>(null);
 
   if (items.length === 0) {
@@ -59,7 +63,7 @@ export function GalleryBrowser({
   const choose = (next: Category | null) => {
     if (next === category) return;
     setCategory(next);
-    setShown(BATCH);
+    setShown(FIRST_BATCH);
     setEnterFrom(0);
   };
 

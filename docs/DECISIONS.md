@@ -966,7 +966,9 @@ action, one pattern for every section), `DomainTicker` and `HomeCta` on Home.
   (`grid-flow-dense`, still square, D-031). Tiles enter after a filter change or
   "Show more" only; the first load shows every tile at once (the first tile is
   still the preloaded largest paint). Captions rise on hover and keyboard focus
-  and are `aria-hidden` (the button is named by the photo's alt text).
+  and are `aria-hidden` (the button is named by the photo's alt text). The
+  lead tile takes four cells, so the first batch is 27 photos (D-035's 30
+  cells), keeping whole rows at 3, 5 and 6 columns; later batches stay 30.
 - **New tokens** in `globals.css`: `--text-display-3xl`, `--grid-cell`,
   `--spotlight-size`, `--grain-strength`, `--z-grain`, `--dur-settle`,
   `--motion-word-drop`, `--motion-word-tilt`, `--motion-dim`, the keyframe
