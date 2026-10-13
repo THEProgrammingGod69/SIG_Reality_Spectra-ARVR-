@@ -34,6 +34,12 @@
      Type scale. Display sizes are fluid (360px → 1440px) and carry their own
      line height, tracking and weight. Space Grotesk ships 500 and 700 only.
      --------------------------------------------------------------------------- */
+  /* The footer wordmark and the 404 numeral (D-037): sized so "Reality
+     Spectra" spans the content width from 360px to 1440px, never wider. */
+  --text-display-3xl: clamp(2.5rem, 0.25rem + 9.5vw, 9.5rem);
+  --text-display-3xl--line-height: 0.9;
+  --text-display-3xl--letter-spacing: -0.04em;
+  --text-display-3xl--font-weight: 700;
   --text-display-2xl: clamp(3rem, 1.75rem + 5vw, 6rem); /* the hero name */
   --text-display-2xl--line-height: 1;
   --text-display-2xl--letter-spacing: -0.03em;
@@ -72,6 +78,9 @@
   --spacing-header: 4.5rem; /* fixed site header height */
   --container-content: 75rem; /* 1200px content width */
   --container-prose: 42rem; /* comfortable reading measure (≤ 68ch) */
+  --grid-cell: 4rem; /* the lab-floor grid behind page intros (D-037) */
+  --spotlight-size: 26rem; /* the pointer light on cards (Spotlight, D-037) */
+  --grain-strength: 0.04; /* film grain opacity: felt, not seen (D-037) */
 
   /* Shape */
   --radius-control: 0.75rem; /* buttons, inputs */
@@ -99,6 +108,7 @@
   /* Layers: one scale, so nothing fights over z-index. Used as z-(--z-header).
      The mobile menu panel lives inside the header's layer, under its top row;
      Modal uses the native <dialog> top layer, which sits above every z-index. */
+  --z-grain: 30; /* the film grain, over the page and under the header (D-037) */
   --z-header: 40;
   --z-overlay: 50; /* admin sheets and dialogs */
   --z-skip: 60;
@@ -155,6 +165,12 @@
   --motion-rise: 1.5rem; /* how far an entering element travels */
   --dur-ambient: 6s; /* slow decorative loops (StarBorder, skeleton shimmer) */
   --dur-toast: 6s; /* how long an admin notification stays (not motion: kept under reduced motion) */
+  --dur-drift: 18s; /* the slow sway of background light (D-037) */
+  --dur-orbit: 90s; /* one full turn of the page-intro rings (D-037) */
+  --dur-marquee: 60s; /* one loop of the domain ticker on Home (D-037) */
+  --motion-word-drop: 110%; /* how far below its line mask a heading word starts */
+  --motion-word-tilt: 3deg; /* and its lean as it rises (SplitText, D-037) */
+  --motion-dim: 0.2; /* a ScrollWords word before the reader reaches it (D-037) */
 
   /* Ambient animations — transform and opacity only (rule 4). The global
      reduced-motion rule below stops them. */
@@ -248,6 +264,119 @@
       transform: translateX(-100%);
     }
   }
+
+  /* Premium pass (D-037) — transform and opacity only, every duration and
+     delay on a token, so reduced motion stops all of them (the global rule
+     below; delays are stagger multiples, and the stagger collapses too). */
+
+  /* Page titles: each word rises out of its own line mask (SplitHeading). */
+  --animate-word-rise: word-rise var(--dur-long) var(--ease-out-expo) both;
+  /* What follows a page title: the lead and actions arrive a beat later. */
+  --animate-intro-in: rise-in var(--dur-long) var(--ease-out-expo) both;
+  /* Items arriving in an open list (gallery tiles after a filter or "Show
+     more"): `both`, so a staggered item waits unseen, never flashes. */
+  --animate-enter: rise-in var(--dur-medium) var(--ease-out-expo) both;
+  /* The domain ticker on Home: a track holding two copies moves by one copy. */
+  --animate-marquee: marquee var(--dur-marquee) linear infinite;
+  /* The page-intro rings turn, far too slowly to read as motion at a glance. */
+  --animate-orbit: spin var(--dur-orbit) linear infinite;
+  /* A status light: a ring that grows from the dot and fades. */
+  --animate-ping-soft: ping-soft calc(var(--dur-long) * 2) var(--ease-out-expo) infinite;
+  /* The hero's scroll cue: a light runs down its track. */
+  --animate-scroll-cue: scroll-cue calc(var(--dur-long) * 2) var(--ease-in-out) infinite;
+  /* Background light sways and breathes. */
+  --animate-drift: drift var(--dur-drift) var(--ease-in-out) infinite alternate;
+
+  @keyframes word-rise {
+    from {
+      transform: translateY(var(--motion-word-drop)) rotate(var(--motion-word-tilt));
+    }
+  }
+  @keyframes marquee {
+    to {
+      transform: translateX(-50%);
+    }
+  }
+  @keyframes ping-soft {
+    from {
+      transform: scale(1);
+      opacity: 0.7;
+    }
+    to {
+      transform: scale(3);
+      opacity: 0;
+    }
+  }
+  @keyframes scroll-cue {
+    from {
+      transform: translateY(-100%);
+    }
+    to {
+      transform: translateY(250%);
+    }
+  }
+  @keyframes drift {
+    from {
+      transform: translate3d(-4%, 2%, 0) scale(1);
+    }
+    to {
+      transform: translate3d(4%, -3%, 0) scale(1.12);
+    }
+  }
+}
+
+/* =============================================================================
+   Premium pass utilities (D-037)
+   =============================================================================
+   Static treatments — nothing here animates. Colours and sizes are tokens. */
+
+/* A word's line mask for SplitHeading / WordsReveal: clips the word while it
+   rises, with room below the baseline so descenders (g, p, y) are not cut. */
+@utility word-mask {
+  display: inline-block;
+  overflow: clip;
+  padding-block-end: 0.14em;
+  margin-block-end: -0.14em;
+  vertical-align: top;
+}
+
+/* Spectrum-filled text for one highlighted word per heading (≤ 10% rule). */
+@utility text-spectra {
+  background-image: var(--gradient-spectra);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Hollow display type: a hairline outline in the strong border colour. */
+@utility text-outline {
+  color: transparent;
+  -webkit-text-stroke: 1px var(--color-border-strong);
+}
+
+/* The lab floor: hairline grid in the border colour, one cell per token. */
+@utility bg-lab-grid {
+  background-image:
+    linear-gradient(to right, var(--color-border) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--color-border) 1px, transparent 1px);
+  background-size: var(--grid-cell) var(--grid-cell);
+}
+
+/* Keeps only a 1px ring at the element's edge: the Spotlight's rim light. */
+@utility mask-rim {
+  padding: 1px;
+  -webkit-mask:
+    linear-gradient(var(--color-void) 0 0) content-box,
+    linear-gradient(var(--color-void) 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(var(--color-void) 0 0) content-box exclude,
+    linear-gradient(var(--color-void) 0 0);
+}
+
+/* Film grain: a 160px fractal-noise tile, drawn once and repeated. */
+@utility bg-grain {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
 /* =============================================================================

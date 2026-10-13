@@ -13,6 +13,7 @@ const twMerge = extendTailwindMerge({
   extend: {
     theme: {
       text: [
+        'display-3xl',
         'display-2xl',
         'display-xl',
         'display-lg',

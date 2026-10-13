@@ -23,7 +23,7 @@ export default function GalleryPage() {
         title={routeTitle(route)}
         lead={route.description}
       />
-      <Section className="pt-12">
+      <Section className="pt-16">
         <Suspense fallback={<Skeleton className="h-96 rounded-card" />}>
           <Gallery />
         </Suspense>

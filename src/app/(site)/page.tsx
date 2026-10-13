@@ -1,6 +1,8 @@
 import { AboutIntro } from '@/components/sections/about-intro';
 import { DomainOverview } from '@/components/sections/domain-overview';
+import { DomainTicker } from '@/components/sections/domain-ticker';
 import { Hero } from '@/components/sections/hero/hero';
+import { HomeCta } from '@/components/sections/home-cta';
 import { MissionVision } from '@/components/sections/mission-vision';
 import { JsonLd } from '@/components/site/json-ld';
 import { contactInfo, domainGroups, profileUrls, siteInfo } from '@/lib/content';
@@ -28,8 +30,10 @@ export default function HomePage() {
 
       <Hero tagline={siteInfo.tagline} />
       <AboutIntro motto={siteInfo.motto} about={siteInfo.about.short} />
+      <DomainTicker groups={domainGroups} />
       <MissionVision mission={siteInfo.mission} vision={siteInfo.vision} />
       <DomainOverview groups={domainGroups} />
+      <HomeCta motto={siteInfo.motto} />
     </>
   );
 }

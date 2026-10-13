@@ -3,20 +3,29 @@
 Reusable animation primitives. Built in **Stage 2**, extended in **Stage 3**; see
 them all at `/dev/motion` (development only).
 
-| File                    | What it is                                                          |
-| ----------------------- | ------------------------------------------------------------------- |
-| `use-reduced-motion.ts` | `useReducedMotion()` hook + `prefersReducedMotion()` live check     |
-| `smooth-scroll.tsx`     | `<SmoothScroll />` — Lenis on GSAP's ticker, ScrollTrigger synced   |
-| `reveal.tsx`            | `<Reveal>` — fade and rise once, when scrolled into view            |
-| `stagger.tsx`           | `<Stagger>` — the same for each direct child, `--stagger` apart     |
-| `focus-text.tsx`        | `<FocusText>` — our TrueFocus (D-009): words dim, corners translate |
-| `enter-on-scroll.ts`    | the shared entrance used by Reveal and Stagger                      |
-| `magnetic.tsx`          | `<Magnetic>` — our Magnet: pull toward a mouse pointer (Stage 3)    |
-| `tilt.tsx`              | `<Tilt>` — our TiltedCard: a 4° lean toward the mouse (Stage 9)     |
-| `use-motion-tokens.ts`  | `useMotionTokens()` — live tokens for render-time props (Stage 3)   |
-| `scroll-lock.ts`        | `lockScroll()` for overlays; also stops Lenis (Stage 3)             |
+| File                    | What it is                                                                  |
+| ----------------------- | --------------------------------------------------------------------------- |
+| `use-reduced-motion.ts` | `useReducedMotion()` hook + `prefersReducedMotion()` live check             |
+| `smooth-scroll.tsx`     | `<SmoothScroll />` — Lenis on GSAP's ticker, ScrollTrigger synced           |
+| `reveal.tsx`            | `<Reveal>` — fade and rise once, when scrolled into view                    |
+| `stagger.tsx`           | `<Stagger>` — the same for each direct child, `--stagger` apart             |
+| `focus-text.tsx`        | `<FocusText>` — our TrueFocus (D-009): words dim, corners translate         |
+| `enter-on-scroll.ts`    | the shared entrance used by Reveal and Stagger                              |
+| `magnetic.tsx`          | `<Magnetic>` — our Magnet: pull toward a mouse pointer (Stage 3)            |
+| `tilt.tsx`              | `<Tilt>` — our TiltedCard: a 4° lean toward the mouse (Stage 9)             |
+| `use-motion-tokens.ts`  | `useMotionTokens()` — live tokens for render-time props (Stage 3)           |
+| `scroll-lock.ts`        | `lockScroll()` for overlays; also stops Lenis (Stage 3)                     |
+| `split-text.tsx`        | `<SplitText>` — our SplitText: heading words rise out of line masks (D-037) |
+| `scroll-words.tsx`      | `<ScrollWords>` — our ScrollReveal: words brighten as you read (D-037)      |
+| `spotlight.tsx`         | `<Spotlight>` — our SpotlightCard: pointer light + rim (`Card spotlight`)   |
+| `marquee.tsx`           | `<Marquee>` — our ScrollVelocity/LogoLoop: CSS-only seamless ticker (D-037) |
+| `scroll-progress.tsx`   | `<ScrollProgress>` — the header's reading-progress hairline (D-037)         |
+| `timeline-rail.tsx`     | `<TimelineRail>` — the events rail that fills as you read (D-037)           |
 
-Tokens and GSAP setup live in `src/lib/motion/` (`tokens.ts`, `gsap.ts`).
+Tokens and GSAP setup live in `src/lib/motion/` (`tokens.ts`, `gsap.ts`), and
+`scroll-point.ts` turns "top 85%" into a trigger point the reader can always
+reach (clamped to the page's maximum scroll), so nothing near the end of a short
+page is left hidden (D-037).
 
 Rules:
 
@@ -26,7 +35,13 @@ Rules:
 - Reduced motion: the tokens collapse to 0, and every primitive also checks the
   preference and renders static. Lenis switches off.
 - Never hide content ahead of time. No JS, or content already on screen at load,
-  means no animation — not a flash.
+  means no animation — not a flash. The one exception is a page's title
+  (`SplitText play="load"`), which plays in CSS from the very first paint, so
+  there is nothing to flash.
+- CSS delays are multiples of `--stagger` (`calc(var(--stagger) * n)`), so they
+  collapse under reduced motion with everything else.
+- ScrollTrigger starts and ends come from `reachablePoint()`, not a bare
+  `'top 85%'` string.
 - Clean up only what you created: wrap tweens in `gsap.context(..., element)` and
   `revert()` it. Never `ScrollTrigger.getAll().forEach(kill)`.
 - Import `gsap` / `ScrollTrigger` from `@/lib/motion/gsap`, not the package, so

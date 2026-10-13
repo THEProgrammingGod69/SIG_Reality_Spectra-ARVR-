@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useSyncExternalStore } from 'react';
 
+import { ScrollProgress } from '@/components/motion/scroll-progress';
 import { ButtonLink } from '@/components/ui/button';
 import { Container } from '@/components/ui/container';
 import { BrandMark } from '@/components/ui/logo';
@@ -55,7 +56,10 @@ export function SiteHeader({ channels, recruitmentOpen }: SiteHeaderProps) {
           'absolute inset-0 border-b border-(--color-border) bg-(--color-glass) opacity-0 backdrop-blur-glass transition-opacity duration-(--dur-short) ease-out-expo',
           scrolled && 'opacity-100',
         )}
-      />
+      >
+        {/* How far down the page the reader is: a spectrum hairline on the glass's edge. */}
+        <ScrollProgress />
+      </div>
 
       <MobileMenuPanel
         menu={menu}

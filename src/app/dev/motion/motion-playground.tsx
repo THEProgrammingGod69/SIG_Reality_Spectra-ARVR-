@@ -4,12 +4,18 @@ import { useState, useSyncExternalStore } from 'react';
 
 import { FocusText } from '@/components/motion/focus-text';
 import { Magnetic } from '@/components/motion/magnetic';
+import { Marquee } from '@/components/motion/marquee';
 import { Reveal } from '@/components/motion/reveal';
+import { ScrollWords } from '@/components/motion/scroll-words';
+import { SplitText } from '@/components/motion/split-text';
 import { Stagger } from '@/components/motion/stagger';
+import { TimelineMarker, TimelineRail } from '@/components/motion/timeline-rail';
 import { useMotionTokens } from '@/components/motion/use-motion-tokens';
 import { useReducedMotion } from '@/components/motion/use-reduced-motion';
 import { useHeroTier } from '@/components/three/use-hero-tier';
 import { Button, ButtonLink } from '@/components/ui/button';
+import { Card, CardBody } from '@/components/ui/card';
+import { Heading } from '@/components/ui/heading';
 import { Text } from '@/components/ui/text';
 import { readHeroTierSignals, type HeroTier } from '@/lib/motion/hero-tier';
 import { DURATION_TOKENS } from '@/lib/motion/tokens';
@@ -34,6 +40,7 @@ export function MotionPlayground() {
 
   const [sweep, setSweep] = useState(0);
   const [playing, setPlaying] = useState(false);
+  const [rise, setRise] = useState(0);
 
   return (
     <div className="flex flex-col gap-8">
@@ -161,9 +168,74 @@ export function MotionPlayground() {
         </div>
       </DevPanel>
 
-      <div className="flex min-h-[80svh] items-center justify-center rounded-card border border-dashed border-(--color-border) text-(--color-muted)">
-        Scroll down: Reveal and Stagger play as they enter the viewport.
+      <DevPanel title="SplitText (D-037)">
+        <Text size="sm" tone="muted">
+          play=&quot;load&quot; — pure CSS, the page titles. Remount to replay.
+        </Text>
+        <Heading key={rise} level={2} size="xl" className="mt-2">
+          <SplitText text="Where ideas become experiences" highlight="experiences" play="load" />
+        </Heading>
+        <Button
+          variant="secondary"
+          size="sm"
+          className="mt-4"
+          onClick={() => setRise((n) => n + 1)}
+        >
+          Replay
+        </Button>
+      </DevPanel>
+
+      <div className="grid gap-6 md:grid-cols-2">
+        <DevPanel title="Spotlight (Card spotlight)">
+          <Card spotlight featured>
+            <CardBody className="p-8">
+              <Text>Move a mouse over this card: a light follows it and runs along the rim.</Text>
+            </CardBody>
+          </Card>
+        </DevPanel>
+        <DevPanel title="Primary glare">
+          <Text size="sm" tone="muted">
+            Hover: a band of light sweeps across once, behind the label.
+          </Text>
+          <Button className="mt-6">Primary button</Button>
+        </DevPanel>
       </div>
+
+      <DevPanel title="Marquee (D-037)">
+        <Marquee
+          items={['Explore', 'Build', 'Express'].map((word) => (
+            <span key={word} className="font-display text-display-lg text-outline">
+              {word}
+            </span>
+          ))}
+          separator={<span className="size-2 rotate-45 bg-(image:--gradient-spectra)" />}
+        />
+      </DevPanel>
+
+      <div className="flex min-h-[80svh] items-center justify-center rounded-card border border-dashed border-(--color-border) text-(--color-muted)">
+        Scroll down: Reveal, Stagger, ScrollWords and TimelineRail play as they enter the viewport.
+      </div>
+
+      <DevPanel title="ScrollWords (D-037)">
+        <ScrollWords
+          text="Each word brightens as the reader scrolls through it, tied to the scroll position rather than a clock, in opacity alone."
+          className="font-display text-display-md text-(--color-text)"
+        />
+      </DevPanel>
+
+      <DevPanel title="TimelineRail (D-037)">
+        <div className="relative">
+          <TimelineRail />
+          <ol className="flex flex-col gap-16 ps-8">
+            {['First', 'Second', 'Third'].map((label) => (
+              <li key={label} className="relative">
+                <TimelineMarker className="-start-[calc(2rem+0.3125rem)]" />
+                <Text>{label} entry — its marker lights as it crosses 60% of the viewport.</Text>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </DevPanel>
 
       <Reveal>
         <DevPanel title="Reveal">

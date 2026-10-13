@@ -4,6 +4,8 @@ import { Heading } from '@/components/ui/heading';
 import { Section } from '@/components/ui/section';
 import { Text } from '@/components/ui/text';
 
+import { SectionHeading } from './section-heading';
+
 type AboutStoryProps = {
   /** The long "about us", one string per paragraph. */
   paragraphs: readonly string[];
@@ -11,25 +13,30 @@ type AboutStoryProps = {
   facts: readonly { readonly label: string; readonly value: string }[];
 };
 
-/** About: the club's story, with an "at a glance" card beside it. */
+/**
+ * About: the club's story, with an "at a glance" card beside it. The first
+ * paragraph opens in the primary text colour as the story's lead, the rest
+ * follow in body colour (D-037).
+ */
 export function AboutStory({ paragraphs, facts }: AboutStoryProps) {
   return (
     <Section labelledBy="our-story">
       <div className="grid gap-12 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] lg:items-start">
-        <Reveal className="flex max-w-prose flex-col gap-6">
-          <Heading level={2} id="our-story">
-            Our story
-          </Heading>
-          {paragraphs.map((paragraph) => (
-            <Text key={paragraph.slice(0, 32)} size="lg">
-              {paragraph}
-            </Text>
-          ))}
-        </Reveal>
+        <div className="flex max-w-prose flex-col gap-6">
+          <SectionHeading id="our-story" eyebrow="The club" title="Our story" />
+          <Reveal className="flex flex-col gap-6">
+            {paragraphs.map((paragraph, index) => (
+              <Text key={paragraph.slice(0, 32)} size="lg" tone={index === 0 ? 'primary' : 'body'}>
+                {paragraph}
+              </Text>
+            ))}
+          </Reveal>
+        </div>
 
         <Card
           as="aside"
           featured
+          spotlight
           aria-labelledby="at-a-glance"
           // Sized to its content, not stretched to the story's height.
           className="h-auto lg:sticky lg:top-24"

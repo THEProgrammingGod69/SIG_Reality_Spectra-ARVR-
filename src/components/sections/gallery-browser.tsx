@@ -19,6 +19,11 @@ const BATCH = 30;
 /**
  * /gallery: every photo, newest first, filterable by the shared categories.
  * Filters list only categories that have photos; counts show what each holds.
+ *
+ * The newest photo leads as a double-size tile (D-037). A filter change brings
+ * its photos in one after another, and "Show more" does the same for the new
+ * batch only; the first load shows every tile at once, so the page's largest
+ * paint is never held back.
  */
 export function GalleryBrowser({
   items,
@@ -34,6 +39,7 @@ export function GalleryBrowser({
 }) {
   const [category, setCategory] = useState<Category | null>(null);
   const [shown, setShown] = useState(BATCH);
+  const [enterFrom, setEnterFrom] = useState<number | null>(null);
 
   if (items.length === 0) {
     return (
@@ -51,8 +57,10 @@ export function GalleryBrowser({
   const visible = category === null ? items : items.filter((item) => item.category === category);
 
   const choose = (next: Category | null) => {
+    if (next === category) return;
     setCategory(next);
     setShown(BATCH);
+    setEnterFrom(0);
   };
 
   return (
@@ -73,7 +81,11 @@ export function GalleryBrowser({
       </div>
 
       <PhotoGrid
+        // A new filter is a new set of tiles: remount, so each one enters.
+        key={category ?? 'all'}
         eager={4}
+        feature
+        enterFrom={enterFrom}
         photos={visible.slice(0, shown).map((item) => ({
           key: item.key,
           image: item.image,
@@ -85,7 +97,10 @@ export function GalleryBrowser({
         <Button
           variant="secondary"
           className="self-center"
-          onClick={() => setShown((current) => current + BATCH)}
+          onClick={() => {
+            setEnterFrom(shown);
+            setShown((current) => current + BATCH);
+          }}
         >
           Show more ({visible.length - shown} left)
         </Button>
@@ -94,6 +109,10 @@ export function GalleryBrowser({
   );
 }
 
+/**
+ * A category filter. The active one is outlined in the accent with a lit dot
+ * that scales in (`transform`); colours change instantly (D-022).
+ */
 function FilterButton({
   active,
   onClick,
@@ -109,12 +128,20 @@ function FilterButton({
       aria-pressed={active}
       onClick={onClick}
       className={cn(
-        'inline-flex h-9 cursor-pointer items-center gap-2 rounded-full border px-4 text-body-sm',
+        'group/filter inline-flex h-9 cursor-pointer items-center gap-2 rounded-full border px-4 text-body-sm transition-transform duration-(--dur-micro) ease-out-expo active:scale-[0.97]',
         active
-          ? 'border-(--color-accent) text-(--color-text)'
+          ? 'border-(--color-accent) bg-(--color-surface-raised) text-(--color-text)'
           : 'border-(--color-border-strong) text-(--color-text-body) hover:text-(--color-text)',
       )}
     >
+      <span
+        aria-hidden="true"
+        className={cn(
+          'size-1.5 rounded-full bg-(--color-accent) shadow-glow transition-[scale,opacity] duration-(--dur-short) ease-out-expo',
+          // Space is kept when unlit, so choosing a filter never shifts the row.
+          active ? 'scale-100 opacity-100' : 'scale-0 opacity-0',
+        )}
+      />
       {children}
     </button>
   );

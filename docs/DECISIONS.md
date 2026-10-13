@@ -46,6 +46,7 @@ the call and it was made on the reasoning shown).
 | D-034 | Stage 10a: nightly backup and orphan sweep, restore, WebKit tests, handbook     | lead       |
 | D-035 | Final quality pass: Next.js security update, software-GPU detection, audits     | lead       |
 | D-036 | `DATA_NAMESPACE` follows the Netlify deploy context when unset                  | lead       |
+| D-037 | Premium pass: React Bits effects rebuilt, the lab on every page                 | lead       |
 
 ---
 
@@ -871,3 +872,72 @@ previews can never write live data and production never runs on a test copy.
 Upstash, R2, Google sign-in and Turnstile are set it is an honest shell: the
 data sections show their "could not load" state, the contact form is
 replaced by the channels list, and `/admin` cannot be signed into.
+
+## D-037 — Premium pass: React Bits effects rebuilt, the lab on every page
+
+**Context.** After Stage 10a a premium pass was requested: more motion and
+a stronger sense of place on every page, with React Bits as the inspiration (its site, reactbits.dev, is not reachable from the build
+environment; the components were read from the project's public repository).
+The permanent rules were kept exactly: nothing here is an exception to rule 4
+(D-009) or to the React Bits review rules (CLAUDE.md §12).
+
+**What was rebuilt from React Bits, and how it differs.**
+
+| React Bits                | Ours                                     | What changed                                                                                                                                                         |
+| ------------------------- | ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| SplitText                 | `motion/split-text.tsx`                  | No GSAP SplitText plugin: words are real text in line masks, rising by `transform` only. `play="load"` is pure CSS (page titles); `play="scroll"` uses ScrollTrigger |
+| ScrollReveal              | `motion/scroll-words.tsx`                | `filter: blur()` dropped; `opacity` only; scrubbed by scroll; reverts only its own tween (ScrollReveal killed every ScrollTrigger)                                   |
+| SpotlightCard             | `motion/spotlight.tsx`, `Card spotlight` | Repainted a `radial-gradient` background per move; ours moves fixed-size lights with `transform`, fades with `opacity`; mouse only; adds a rim light on the edge     |
+| ScrollVelocity / LogoLoop | `motion/marquee.tsx`                     | No per-frame script: one `transform` keyframe on a doubled track; server component; pauses on hover; still under reduced motion                                      |
+| GlareHover                | `Button` primary glare                   | A skewed band moved with `transform` behind the label, instead of an animated `background-position`                                                                  |
+
+**New in-house pieces.** `ScrollProgress` (header hairline, `scaleX`),
+`TimelineRail` (the events rail fills with `scaleY`, markers light with
+opacity/scale), `LabBackdrop` (grid floor, violet light, orbit rings — the hero
+motif on every page intro, the Home call to action, the map placeholder and the
+404), `FilmGrain` (a static noise tile from `md` up), `Viewfinder` (corner
+brackets around QR codes), `SectionHeading` (eyebrow + rising title + lead +
+action, one pattern for every section), `DomainTicker` and `HomeCta` on Home.
+
+**Lead calls.**
+
+- **Page titles rise in CSS, not JavaScript.** `SplitText play="load"` and the
+  `animate-intro-in` lead are keyframes that run from the first paint and on
+  every client navigation (the template remounts the page). Words are clipped by
+  their mask rather than faded, and the lead fades from the first frame with no
+  delay, so the largest paint is not held back. The hero name is untouched: it
+  keeps D-010.
+- **Delays are stagger multiples.** Every CSS delay is
+  `calc(var(--stagger) * n)`, so it collapses with the stagger under reduced
+  motion, where the global rule also ends every animation at once.
+- **Trigger points the reader can reach** (`lib/motion/scroll-point.ts`). A
+  `'top 85%'` start near the end of a short page can lie past the furthest the
+  page scrolls; the footer wordmark on a phone never appeared. Every
+  ScrollTrigger start/end in the motion primitives is now a scroll position
+  clamped to the page's maximum scroll. This also fixes the same latent issue
+  for `<Reveal>` and `<Stagger>`.
+- **Inner page intros run under the header** (`data-full-bleed`, as the hero
+  does), so their backdrop reaches the top of the screen.
+- **Home** gains the domain ticker (decorative, `aria-hidden`: the overview
+  below lists every domain as linked text), and each domain name links to its
+  card on /recruitment (`:target` outlines it). The closing call to action
+  says nothing about whether recruitment is open, so it is never wrong.
+- **Events**: the soonest event spans the row from `lg` (poster beside its
+  details), so one event no longer sits alone in a third of the row.
+- **Gallery**: the newest photo leads as a double tile from `md`
+  (`grid-flow-dense`, still square, D-031). Tiles enter after a filter change or
+  "Show more" only; the first load shows every tile at once (the first tile is
+  still the preloaded largest paint). Captions rise on hover and keyboard focus
+  and are `aria-hidden` (the button is named by the photo's alt text).
+- **New tokens** in `globals.css`: `--text-display-3xl`, `--grid-cell`,
+  `--spotlight-size`, `--grain-strength`, `--z-grain`, `--dur-drift`,
+  `--dur-orbit`, `--dur-marquee`, `--motion-word-drop`, `--motion-word-tilt`,
+  `--motion-dim`, the keyframe tokens `animate-word-rise`, `-intro-in`,
+  `-enter`, `-marquee`, `-orbit`, `-ping-soft`, `-scroll-cue`, `-drift`, and the
+  static utilities `word-mask`, `text-spectra`, `text-outline`, `bg-lab-grid`,
+  `bg-grain`, `mask-rim`.
+
+**Not done, on purpose.** No new pages (the six-page sitemap is the
+contract), no stat counters (D-007), no text scramble/decrypt effects (they
+change text every frame), no custom cursor, no second WebGL context, and no
+new dependency.

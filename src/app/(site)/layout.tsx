@@ -1,4 +1,5 @@
 import { SmoothScroll } from '@/components/motion/smooth-scroll';
+import { FilmGrain } from '@/components/site/film-grain';
 import { SiteFooter } from '@/components/site/site-footer';
 import { SiteHeader } from '@/components/site/site-header';
 import { WebAnalytics } from '@/components/site/web-analytics';
@@ -48,6 +49,7 @@ export default async function SiteLayout({ children }: LayoutProps<'/'>) {
       </main>
 
       <SiteFooter />
+      <FilmGrain />
       <WebAnalytics />
     </>
   );

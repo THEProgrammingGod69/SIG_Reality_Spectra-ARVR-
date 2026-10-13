@@ -212,7 +212,7 @@ src/
     security-headers.ts  CSP and security headers for next.config.ts      (Stage 9)
     token-values.ts  token values for places that cannot read CSS (OG images, theme colour) (Stage 9)
     turnstile.ts     the contact form's spam check: mode + verification   (Stage 8)
-    motion/          motion tokens reader, GSAP setup, hero device tiers (Stage 2)
+    motion/          motion tokens reader, GSAP setup, hero device tiers, reachable scroll points (Stages 2, D-037)
     cn.ts            the one class-name helper (public UI and shadcn admin)
     contrast.ts      WCAG contrast maths for the token audit and /dev/ui
     env.ts           server env, validated with Zod (server-only)
@@ -437,6 +437,9 @@ contributor must know before writing UI:
 | Public forms       | No react-hook-form default values on public forms: typing before hydration must survive (D-034)                                                                 |
 | Admin form kit     | `FormField`/`CheckboxField`, `ImageField`/`PdfField`, `SaveBar`, `ConfirmDelete`, `useRecordVersion` — reuse, never copy (D-032)                                |
 | Public reads       | Through `publicRead()` inside `<Suspense>`; a failure shows `<LoadFailed>`, never an error page (D-032)                                                         |
+| Premium motion     | React Bits SplitText/ScrollReveal/SpotlightCard/ScrollVelocity/GlareHover rebuilt on rule 4; `SectionHeading` for every section; `Card spotlight` (D-037)       |
+| Page openings      | `PageIntro` runs under the header over `LabBackdrop`; its title rises in CSS (`SplitText play="load"`), delays are `--stagger` multiples (D-037)                |
+| Scroll triggers    | Starts/ends via `reachablePoint()` (clamped to max scroll), never a bare `'top 85%'` — nothing near a short page's end stays hidden (D-037)                     |
 
 ---
 

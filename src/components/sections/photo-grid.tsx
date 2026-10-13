@@ -1,6 +1,6 @@
 'use client';
 
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Expand } from 'lucide-react';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 
@@ -24,6 +24,17 @@ type PhotoGridProps = {
   eager?: number;
   /** Tile width floor; the grid fits as many as the row allows (rule 9). */
   tile?: 'sm' | 'md';
+  /**
+   * Lead with a double-size first tile from `md` up (D-037) — the gallery's
+   * opening photo. Square like the rest, so any photo still fits (D-031).
+   */
+  feature?: boolean;
+  /**
+   * Tiles from this index on rise into place, `--stagger` apart (D-037): 0
+   * after a filter change, the old count after "Show more". `null` (the
+   * default, and the first load) shows every tile at once.
+   */
+  enterFrom?: number | null;
   className?: string;
 };
 
@@ -35,29 +46,55 @@ const tiles = {
 /**
  * How wide each tile renders, so the browser fetches the right image: `md`
  * tiles (14rem minimum) are one full-width column on phones, two from 30rem,
- * and about 18rem on a full-width desktop row.
+ * and about 18rem on a full-width desktop row; a featured tile is two of them.
  */
 const TILE_SIZES = {
   sm: '8rem',
   md: '(min-width: 64rem) 18rem, (min-width: 30rem) 50vw, 100vw',
+  feature: '(min-width: 64rem) 36rem, (min-width: 48rem) 66vw, 100vw',
 } as const;
+
+/** Entrances past this many tiles share the last delay, so a long batch never drags. */
+const MAX_STAGGER_STEPS = 12;
 
 /**
  * Square tiles, cropped to the centre so photos of any shape line up; opening
- * one shows it whole, with the rest one keypress away.
+ * one shows it whole, with the rest one keypress away. Under the pointer (or
+ * keyboard focus) a tile eases closer and its caption rises in (D-037).
  */
-export function PhotoGrid({ photos, limit, eager = 0, tile = 'md', className }: PhotoGridProps) {
+export function PhotoGrid({
+  photos,
+  limit,
+  eager = 0,
+  tile = 'md',
+  feature = false,
+  enterFrom = null,
+  className,
+}: PhotoGridProps) {
   const [open, setOpen] = useState<number | null>(null);
   const shown = limit === undefined ? photos : photos.slice(0, limit);
   const hidden = photos.length - shown.length;
 
   return (
     <>
-      <ul className={cn('grid gap-2', tiles[tile], className)}>
+      <ul className={cn('grid gap-2', tiles[tile], feature && 'md:grid-flow-dense', className)}>
         {shown.map((photo, index) => {
           const more = hidden > 0 && index === shown.length - 1;
+          const featured = feature && index === 0;
+          const entering = enterFrom !== null && index >= enterFrom;
+          const caption = tile === 'md' && !more ? photo.caption : null;
           return (
-            <li key={photo.key}>
+            <li
+              key={photo.key}
+              className={cn(featured && 'md:col-span-2 md:row-span-2', entering && 'animate-enter')}
+              style={
+                entering
+                  ? {
+                      animationDelay: `calc(var(--stagger) * ${Math.min(index - enterFrom, MAX_STAGGER_STEPS)})`,
+                    }
+                  : undefined
+              }
+            >
               <button
                 type="button"
                 onClick={() => setOpen(index)}
@@ -67,14 +104,28 @@ export function PhotoGrid({ photos, limit, eager = 0, tile = 'md', className }: 
                   src={photo.image.url}
                   alt={photo.image.alt}
                   fill
-                  sizes={TILE_SIZES[tile]}
+                  sizes={featured ? TILE_SIZES.feature : TILE_SIZES[tile]}
                   // The first tile of a grid that opens the page is its largest
                   // paint: fetch it first. The rest of the first row loads at once.
                   {...(index === 0 && eager > 0
                     ? { preload: true }
                     : { loading: index < eager ? 'eager' : 'lazy' })}
-                  className="object-cover transition-transform duration-(--dur-medium) ease-out-expo group-hover:scale-105"
+                  className="object-cover transition-transform duration-(--dur-long) ease-out-expo group-hover:scale-105 group-focus-visible:scale-105"
                 />
+                {caption ? (
+                  // Decorative: the button is named by the photo's alt text.
+                  <span
+                    aria-hidden="true"
+                    className="pointer-events-none absolute inset-0 flex items-end bg-linear-to-t from-(--color-void)/80 via-(--color-void)/10 to-transparent p-4 opacity-0 transition-opacity duration-(--dur-short) ease-out-expo group-hover:opacity-100 group-focus-visible:opacity-100"
+                  >
+                    <span className="flex w-full translate-y-2 items-end justify-between gap-3 transition-transform duration-(--dur-medium) ease-out-expo group-hover:translate-y-0 group-focus-visible:translate-y-0">
+                      <span className="line-clamp-2 text-start text-body-sm text-(--color-text)">
+                        {caption}
+                      </span>
+                      <Icon icon={Expand} size="sm" className="shrink-0 text-(--color-text)" />
+                    </span>
+                  </span>
+                ) : null}
                 {more ? (
                   <span className="absolute inset-0 flex items-center justify-center bg-(--color-void)/60 font-display text-display-sm text-(--color-text)">
                     +{hidden + 1}
@@ -130,6 +181,8 @@ function PhotoViewer({
       <div className="flex flex-col gap-4">
         <div className="relative flex justify-center">
           <Image
+            // A new photo is a new element, so it fades in rather than popping.
+            key={photo.key}
             src={photo.image.url}
             alt={photo.image.alt}
             width={photo.image.width}
@@ -137,7 +190,7 @@ function PhotoViewer({
             sizes="(min-width: 64rem) 60rem, 100vw"
             // The photo someone just opened: never wait for it to be "near".
             loading="eager"
-            className="max-h-[70dvh] w-auto rounded-control object-contain"
+            className="max-h-[70dvh] w-auto animate-fade-in rounded-control object-contain"
           />
         </div>
         {many ? (
@@ -145,7 +198,7 @@ function PhotoViewer({
             <button
               type="button"
               onClick={() => step(-1)}
-              className="inline-flex size-10 cursor-pointer items-center justify-center rounded-full border border-(--color-border-strong) text-(--color-text)"
+              className="inline-flex size-10 cursor-pointer items-center justify-center rounded-full border border-(--color-border-strong) text-(--color-text) transition-transform duration-(--dur-micro) ease-out-expo active:scale-95"
             >
               <Icon icon={ChevronLeft} size="md" label="Previous photo" />
             </button>
@@ -155,7 +208,7 @@ function PhotoViewer({
             <button
               type="button"
               onClick={() => step(1)}
-              className="inline-flex size-10 cursor-pointer items-center justify-center rounded-full border border-(--color-border-strong) text-(--color-text)"
+              className="inline-flex size-10 cursor-pointer items-center justify-center rounded-full border border-(--color-border-strong) text-(--color-text) transition-transform duration-(--dur-micro) ease-out-expo active:scale-95"
             >
               <Icon icon={ChevronRight} size="md" label="Next photo" />
             </button>

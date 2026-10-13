@@ -54,6 +54,27 @@ export function Hero({ tagline }: { tagline: string }) {
           </div>
         </div>
       </Container>
+      <ScrollCue />
     </HeroStage>
+  );
+}
+
+/**
+ * "There is more below" (D-037): a light running down a short track at the
+ * hero's foot, on wide screens only, where the text is centred and the foot is
+ * free (on tall screens the buttons sit there). Decorative; it fades away with
+ * the hero's text on the scroll-out, and stands still under reduced motion.
+ */
+function ScrollCue() {
+  return (
+    <div
+      aria-hidden="true"
+      className="pointer-events-none absolute bottom-8 left-1/2 hidden -translate-x-1/2 flex-col items-center gap-3 [@media(min-aspect-ratio:23/20)]:flex"
+    >
+      <span className="font-mono text-label text-(--color-muted) uppercase">Scroll</span>
+      <span className="relative h-12 w-px overflow-hidden bg-(--color-border)">
+        <span className="absolute inset-x-0 top-0 h-1/2 animate-scroll-cue bg-linear-to-b from-transparent to-(--color-spectra-azure)" />
+      </span>
+    </div>
   );
 }

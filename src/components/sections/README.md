@@ -57,3 +57,16 @@ The name is real text at first paint (D-010). The intro is about 1.35 s,
 skippable (button or Esc), plays once per session (`sessionStorage`), and is
 skipped entirely if the canvas is not ready within 2.5 s. The scroll-out follows
 D-018.
+
+## Premium pass (D-037)
+
+| File                  | Used on               | What it renders                                                                    |
+| --------------------- | --------------------- | ---------------------------------------------------------------------------------- |
+| `section-heading.tsx` | every content section | `SectionHeading` (eyebrow, rising title, lead, action) and `EyebrowDash`           |
+| `domain-ticker.tsx`   | Home                  | The domains as two opposing marquees — decorative, the overview lists them as text |
+| `home-cta.tsx`        | Home                  | The closing call to action in the lab: find your domain, or work with the club     |
+
+`PageIntro` now runs under the header (`data-full-bleed`) over a `LabBackdrop`,
+with its title in `SplitText play="load"`. Cards that should feel lit pass
+`spotlight`. The events timeline wraps its list in `TimelineRail`; its heading
+and list keep one parent (the e2e suite finds entries from the heading).
