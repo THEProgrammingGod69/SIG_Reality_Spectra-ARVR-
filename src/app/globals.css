@@ -162,6 +162,7 @@
   --animate-star-top: star-top var(--dur-ambient) linear infinite alternate;
   --animate-shimmer: shimmer calc(var(--dur-long) * 1.5) linear infinite;
   --animate-spin-slow: spin var(--dur-long) linear infinite;
+  --animate-lattice-wave: lattice-wave var(--dur-ambient) ease-in-out infinite;
 
   @keyframes star-bottom {
     from {
@@ -191,6 +192,10 @@
       transform: translateX(100%);
     }
   }
+  @keyframes lattice-wave {
+    0%, 100% { opacity: 0.2; transform: scale(0.85); }
+    35%, 55% { opacity: 1; transform: scale(1); }
+  }
 
   /* Overlay entrances and exits (Stage 9) — transform and opacity only.
      Keyframe animations, not transitions, because Radix keeps a closing
@@ -199,6 +204,7 @@
   --animate-fade-in: fade-in var(--dur-short) var(--ease-out-expo);
   --animate-fade-out: fade-out var(--dur-micro) var(--ease-in-out);
   --animate-rise-in: rise-in var(--dur-short) var(--ease-out-expo);
+  --animate-project-enter: project-enter var(--dur-medium) var(--ease-out-expo) both;
   --animate-rise-out: rise-out var(--dur-micro) var(--ease-in-out);
   --animate-slide-in-right: slide-in-right var(--dur-short) var(--ease-out-expo);
   --animate-slide-out-right: slide-out-right var(--dur-short) var(--ease-in-out);
@@ -220,6 +226,20 @@
     from {
       opacity: 0;
       transform: translateY(var(--motion-rise));
+    }
+  }
+  @keyframes project-enter {
+    0% {
+      opacity: 0;
+      transform: translateY(var(--motion-rise)) scale(0.98);
+    }
+    72% {
+      opacity: 1;
+      transform: translateY(-0.25rem) scale(1);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0) scale(1);
     }
   }
   @keyframes rise-out {

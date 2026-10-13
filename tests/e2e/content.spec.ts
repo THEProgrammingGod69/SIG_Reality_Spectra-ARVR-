@@ -62,6 +62,69 @@ test.describe('home', () => {
     );
   });
 
+  test('shows three project flip cards and reveals project details on click', async ({ page }) => {
+    await page.goto('/');
+    const section = page.locator('section[aria-labelledby="projects-worked-on"]');
+    const cards = section.locator('[role="button"][aria-pressed]');
+
+    await expect(section.getByRole('heading', { level: 2, name: "Projects We've Worked On" })).toBeVisible();
+    await expect(section.getByText('Click a card to reveal the story behind the project.')).toBeVisible();
+    await expect(cards).toHaveCount(3);
+    await expect(section.locator('img')).toHaveCount(3);
+
+    const firstCard = cards.nth(0);
+    await expect(firstCard).toHaveAttribute('aria-pressed', 'false');
+    await firstCard.click();
+    await expect(firstCard).toHaveAttribute('aria-pressed', 'true');
+    await expect(firstCard).toContainText('React');
+
+    const secondCard = cards.nth(1);
+    await expect(secondCard).toHaveAttribute('aria-pressed', 'false');
+    await secondCard.click();
+    await expect(secondCard).toHaveAttribute('aria-pressed', 'true');
+    await expect(firstCard).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  test('holds the expanded upcoming event before the events preview', async ({ page }) => {
+    await page.goto('/');
+    const upcoming = page.locator('section[aria-labelledby="upcoming-event"]');
+    const preview = page.locator('section[aria-labelledby="events-preview"]');
+
+    await expect(upcoming.getByRole('status', { name: 'Preparing event' })).toBeVisible();
+    await expect(preview.getByRole('heading', { level: 2, name: "Events we've conducted" })).toBeVisible();
+    await expect(preview.getByRole('link', { name: 'View all events' })).toHaveAttribute('href', '/events');
+
+    const holdPosition = await upcoming.evaluate((element) => {
+      const section = element as HTMLElement;
+      const holdDistance = window.innerHeight * 0.35;
+      const start = section.getBoundingClientRect().top + window.scrollY;
+      const expansionRange = section.offsetHeight - window.innerHeight - holdDistance;
+      return start + expansionRange + holdDistance / 2;
+    });
+    await page.evaluate((y) => window.scrollTo(0, y), holdPosition);
+    await expect.poll(async () => upcoming.getAttribute('data-event-progress')).toBe('100');
+    await expect(upcoming.getByText('Something Exciting Is Coming')).toBeVisible();
+
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await expect.poll(async () => upcoming.getAttribute('data-event-progress')).toBe('1');
+  });
+
+  test('reveals and reverses the upcoming event from scroll progress', async ({ page }) => {
+    await page.goto('/');
+    const section = page.locator('section[aria-labelledby="upcoming-event"]');
+
+    await expect(section).toHaveAttribute('data-event-progress', '1');
+    await expect(section.getByRole('status', { name: 'Preparing event' })).toBeVisible();
+
+    await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+    await expect.poll(async () => section.getAttribute('data-event-progress')).toBe('100');
+    await expect(section.getByText('Something Exciting Is Coming')).toBeVisible();
+
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await expect.poll(async () => section.getAttribute('data-event-progress')).toBe('1');
+    await expect(section.getByRole('status', { name: 'Preparing event' })).toBeVisible();
+  });
+
   test('publishes the club as schema.org structured data', async ({ page }) => {
     await page.goto('/');
     const json = await page.locator('script[type="application/ld+json"]').textContent();

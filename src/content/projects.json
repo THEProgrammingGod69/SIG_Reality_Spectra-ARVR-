@@ -1,0 +1,26 @@
+[
+  {
+    "name": "Orbit Lab",
+    "image": "/projects/orbit-lab.svg",
+    "summary": "A concept interface for exploring a digital space in motion.",
+    "details": "A temporary showcase entry representing an immersive exploration experience shaped around motion, depth, and spatial interaction.",
+    "technologies": ["React", "Three.js", "WebGL"],
+    "imageAlt": "Abstract orbit rings surrounding a violet sphere"
+  },
+  {
+    "name": "XR Classroom",
+    "image": "/projects/xr-classroom.svg",
+    "summary": "A concept learning environment for hands-on extended reality.",
+    "details": "A temporary showcase entry for a collaborative XR learning space where students can inspect ideas from multiple perspectives.",
+    "technologies": ["Unity", "AR Foundation", "C#"],
+    "imageAlt": "Abstract classroom grid with a floating cyan window"
+  },
+  {
+    "name": "Virtual Studio",
+    "image": "/projects/virtual-studio.svg",
+    "summary": "A concept studio for creating and presenting spatial stories.",
+    "details": "A temporary showcase entry focused on turning creative direction into an interactive, navigable virtual presentation.",
+    "technologies": ["Blender", "React", "WebXR"],
+    "imageAlt": "Abstract virtual studio frame with magenta light"
+  }
+]
