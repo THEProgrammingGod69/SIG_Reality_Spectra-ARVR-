@@ -85,6 +85,22 @@ test.describe('home', () => {
     await expect(firstCard).toHaveAttribute('aria-pressed', 'false');
   });
 
+  test('reveals and reverses the upcoming event from scroll progress', async ({ page }) => {
+    await page.goto('/');
+    const section = page.locator('section[aria-labelledby="upcoming-event"]');
+
+    await expect(section).toHaveAttribute('data-event-progress', '1');
+    await expect(section.getByRole('status', { name: 'Preparing event' })).toBeVisible();
+
+    await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+    await expect.poll(async () => section.getAttribute('data-event-progress')).toBe('100');
+    await expect(section.getByText('Something Exciting Is Coming')).toBeVisible();
+
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await expect.poll(async () => section.getAttribute('data-event-progress')).toBe('1');
+    await expect(section.getByRole('status', { name: 'Preparing event' })).toBeVisible();
+  });
+
   test('publishes the club as schema.org structured data', async ({ page }) => {
     await page.goto('/');
     const json = await page.locator('script[type="application/ld+json"]').textContent();

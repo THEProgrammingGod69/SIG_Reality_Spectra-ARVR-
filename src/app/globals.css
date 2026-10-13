@@ -162,6 +162,7 @@
   --animate-star-top: star-top var(--dur-ambient) linear infinite alternate;
   --animate-shimmer: shimmer calc(var(--dur-long) * 1.5) linear infinite;
   --animate-spin-slow: spin var(--dur-long) linear infinite;
+  --animate-lattice-wave: lattice-wave var(--dur-ambient) ease-in-out infinite;
 
   @keyframes star-bottom {
     from {
@@ -190,6 +191,10 @@
     to {
       transform: translateX(100%);
     }
+  }
+  @keyframes lattice-wave {
+    0%, 100% { opacity: 0.2; transform: scale(0.85); }
+    35%, 55% { opacity: 1; transform: scale(1); }
   }
 
   /* Overlay entrances and exits (Stage 9) — transform and opacity only.
