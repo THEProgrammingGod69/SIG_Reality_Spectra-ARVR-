@@ -27,7 +27,7 @@ export default function HomePage() {
       />
 
       <Hero tagline={siteInfo.tagline} />
-      <AboutIntro motto={siteInfo.motto} about={siteInfo.about.short} />
+      <AboutIntro />
       <MissionVision mission={siteInfo.mission} vision={siteInfo.vision} />
       <DomainOverview groups={domainGroups} />
     </>
