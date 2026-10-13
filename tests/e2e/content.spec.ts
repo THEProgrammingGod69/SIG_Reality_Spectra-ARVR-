@@ -62,6 +62,29 @@ test.describe('home', () => {
     );
   });
 
+  test('shows three project flip cards and reveals project details on click', async ({ page }) => {
+    await page.goto('/');
+    const section = page.locator('section[aria-labelledby="projects-worked-on"]');
+    const cards = section.locator('[role="button"][aria-pressed]');
+
+    await expect(section.getByRole('heading', { level: 2, name: "Projects We've Worked On" })).toBeVisible();
+    await expect(section.getByText('Click a card to reveal the story behind the project.')).toBeVisible();
+    await expect(cards).toHaveCount(3);
+    await expect(section.locator('img')).toHaveCount(3);
+
+    const firstCard = cards.nth(0);
+    await expect(firstCard).toHaveAttribute('aria-pressed', 'false');
+    await firstCard.click();
+    await expect(firstCard).toHaveAttribute('aria-pressed', 'true');
+    await expect(firstCard).toContainText('React');
+
+    const secondCard = cards.nth(1);
+    await expect(secondCard).toHaveAttribute('aria-pressed', 'false');
+    await secondCard.click();
+    await expect(secondCard).toHaveAttribute('aria-pressed', 'true');
+    await expect(firstCard).toHaveAttribute('aria-pressed', 'false');
+  });
+
   test('publishes the club as schema.org structured data', async ({ page }) => {
     await page.goto('/');
     const json = await page.locator('script[type="application/ld+json"]').textContent();

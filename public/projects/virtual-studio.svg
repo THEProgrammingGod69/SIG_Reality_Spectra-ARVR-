@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000" role="img" aria-labelledby="title desc">
+  <title id="title">Virtual Studio</title>
+  <desc id="desc">Abstract studio frame with a magenta light plane.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#120810"/><stop offset="1" stop-color="#32132e"/></linearGradient>
+    <linearGradient id="beam" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fb00eb" stop-opacity=".85"/><stop offset="1" stop-color="#6ea6fe" stop-opacity=".18"/></linearGradient>
+  </defs>
+  <rect width="800" height="1000" fill="url(#bg)"/>
+  <path d="M120 760 400 210l280 550-280 150Z" fill="url(#beam)" fill-opacity=".72"/>
+  <path d="M120 760 400 210 680 760M120 760l280 150 280-150" fill="none" stroke="#f2f2f3" stroke-opacity=".42" stroke-width="4"/>
+  <path d="M220 780h360M280 820h240M340 860h120" stroke="#fb00eb" stroke-opacity=".55" stroke-width="3"/>
+  <circle cx="400" cy="210" r="26" fill="#f2f2f3" fill-opacity=".88"/>
+</svg>

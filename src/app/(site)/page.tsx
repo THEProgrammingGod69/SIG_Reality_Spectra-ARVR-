@@ -2,6 +2,7 @@ import { AboutIntro } from '@/components/sections/about-intro';
 import { DomainOverview } from '@/components/sections/domain-overview';
 import { Hero } from '@/components/sections/hero/hero';
 import { MissionVision } from '@/components/sections/mission-vision';
+import { ProjectsWorkedOn } from '@/components/sections/projects-worked-on';
 import { JsonLd } from '@/components/site/json-ld';
 import { contactInfo, domainGroups, profileUrls, siteInfo } from '@/lib/content';
 import { publicEnv } from '@/lib/env.public';
@@ -28,6 +29,7 @@ export default function HomePage() {
 
       <Hero tagline={siteInfo.tagline} />
       <AboutIntro />
+      <ProjectsWorkedOn />
       <MissionVision mission={siteInfo.mission} vision={siteInfo.vision} />
       <DomainOverview groups={domainGroups} />
     </>

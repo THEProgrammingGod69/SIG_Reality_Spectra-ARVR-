@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000" role="img" aria-labelledby="title desc">
+  <title id="title">XR Classroom</title>
+  <desc id="desc">Abstract classroom grid with a floating cyan window.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#071017"/><stop offset="1" stop-color="#102b36"/></linearGradient>
+    <linearGradient id="window" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#7cd5ff"/><stop offset="1" stop-color="#3470c1"/></linearGradient>
+  </defs>
+  <rect width="800" height="1000" fill="url(#bg)"/>
+  <g stroke="#7cd5ff" stroke-opacity=".26" stroke-width="2">
+    <path d="M80 760 400 560 720 760 400 930Z" fill="#7cd5ff" fill-opacity=".06"/>
+    <path d="M80 760 400 560 720 760M80 820 400 620 720 820M160 870 400 720 640 870"/>
+    <path d="M240 660v170M320 610v220M400 560v300M480 610v220M560 660v170"/>
+  </g>
+  <rect x="190" y="190" width="420" height="270" rx="20" fill="url(#window)" fill-opacity=".9" transform="rotate(-6 400 325)"/>
+  <circle cx="260" cy="250" r="10" fill="#f2f2f3" fill-opacity=".8"/>
+  <path d="M270 380h230" stroke="#f2f2f3" stroke-opacity=".7" stroke-width="10" stroke-linecap="round"/>
+</svg>

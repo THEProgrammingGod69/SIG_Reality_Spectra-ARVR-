@@ -10,6 +10,7 @@ import { Text } from '@/components/ui/text';
 export function WhoWeAreContent() {
   const contentRef = useRef<HTMLDivElement>(null);
   const [entered, setEntered] = useState(false);
+  const [animationKey, setAnimationKey] = useState(0);
 
   useEffect(() => {
     const content = contentRef.current;
@@ -19,7 +20,9 @@ export function WhoWeAreContent() {
       ([entry]) => {
         if (entry?.isIntersecting) {
           setEntered(true);
-          observer.disconnect();
+          setAnimationKey((key) => key + 1);
+        } else {
+          setEntered(false);
         }
       },
       { threshold: 0.2 },
@@ -31,7 +34,7 @@ export function WhoWeAreContent() {
   return (
     <div ref={contentRef} className="max-w-3xl">
       <Heading level={2} id="about-intro" className="text-display-lg uppercase">
-        <SplitFlapText text="WHO WE ARE" start={entered} />
+          <SplitFlapText key={animationKey} text="WHO WE ARE" start={entered} />
       </Heading>
       <MagicBento className="mt-10 max-w-2xl">
         <div className="flex flex-col gap-4 p-8 sm:p-10">
