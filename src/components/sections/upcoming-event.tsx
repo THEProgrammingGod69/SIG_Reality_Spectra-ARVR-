@@ -10,6 +10,7 @@ import { Heading } from '@/components/ui/heading';
 import { Text } from '@/components/ui/text';
 
 const clamp = (value: number) => Math.min(1, Math.max(0.01, value));
+const HOLD_VIEWPORTS = 0.35;
 
 export function UpcomingEvent() {
   const sectionRef = useRef<HTMLElement>(null);
@@ -23,7 +24,8 @@ export function UpcomingEvent() {
 
     const update = () => {
       rafRef.current = null;
-      const range = Math.max(section.offsetHeight - window.innerHeight, 1);
+      const holdDistance = window.innerHeight * HOLD_VIEWPORTS;
+      const range = Math.max(section.offsetHeight - window.innerHeight - holdDistance, 1);
       const start = section.getBoundingClientRect().top + window.scrollY;
       setProgress(clamp((window.scrollY - start) / range));
     };
@@ -49,7 +51,7 @@ export function UpcomingEvent() {
       ref={sectionRef}
       aria-labelledby="upcoming-event"
       data-event-progress={Math.round(progress * 100)}
-      className="relative min-h-[180svh] py-section"
+      className="relative min-h-[180svh] pt-0 pb-section"
     >
       <ScrollExpand progress={progress} reducedMotion={Boolean(reducedMotion)}>
         <Image

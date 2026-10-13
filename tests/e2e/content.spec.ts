@@ -85,6 +85,30 @@ test.describe('home', () => {
     await expect(firstCard).toHaveAttribute('aria-pressed', 'false');
   });
 
+  test('holds the expanded upcoming event before the events preview', async ({ page }) => {
+    await page.goto('/');
+    const upcoming = page.locator('section[aria-labelledby="upcoming-event"]');
+    const preview = page.locator('section[aria-labelledby="events-preview"]');
+
+    await expect(upcoming.getByRole('status', { name: 'Preparing event' })).toBeVisible();
+    await expect(preview.getByRole('heading', { level: 2, name: "Events we've conducted" })).toBeVisible();
+    await expect(preview.getByRole('link', { name: 'View all events' })).toHaveAttribute('href', '/events');
+
+    const holdPosition = await upcoming.evaluate((element) => {
+      const section = element as HTMLElement;
+      const holdDistance = window.innerHeight * 0.35;
+      const start = section.getBoundingClientRect().top + window.scrollY;
+      const expansionRange = section.offsetHeight - window.innerHeight - holdDistance;
+      return start + expansionRange + holdDistance / 2;
+    });
+    await page.evaluate((y) => window.scrollTo(0, y), holdPosition);
+    await expect.poll(async () => upcoming.getAttribute('data-event-progress')).toBe('100');
+    await expect(upcoming.getByText('Something Exciting Is Coming')).toBeVisible();
+
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await expect.poll(async () => upcoming.getAttribute('data-event-progress')).toBe('1');
+  });
+
   test('reveals and reverses the upcoming event from scroll progress', async ({ page }) => {
     await page.goto('/');
     const section = page.locator('section[aria-labelledby="upcoming-event"]');
