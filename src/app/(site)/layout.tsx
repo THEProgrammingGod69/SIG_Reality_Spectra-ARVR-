@@ -1,3 +1,4 @@
+import { ScrollRefresh } from '@/components/motion/scroll-refresh';
 import { SmoothScroll } from '@/components/motion/smooth-scroll';
 import { FilmGrain } from '@/components/site/film-grain';
 import { SiteFooter } from '@/components/site/site-footer';
@@ -49,6 +50,7 @@ export default async function SiteLayout({ children }: LayoutProps<'/'>) {
       </main>
 
       <SiteFooter />
+      <ScrollRefresh />
       <FilmGrain />
       <WebAnalytics />
     </>

@@ -1,4 +1,5 @@
 import { Stagger } from '@/components/motion/stagger';
+import { HashTarget } from '@/components/site/hash-target';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardBody } from '@/components/ui/card';
 import { Heading } from '@/components/ui/heading';
@@ -29,6 +30,7 @@ export function DomainList({ groups }: DomainListProps) {
         title="Our domains"
       />
 
+      <HashTarget />
       <div className="mt-14 flex flex-col gap-16">
         {groups.map((group) => (
           <section key={group.id} aria-labelledby={`domains-${group.id}`}>
@@ -56,8 +58,10 @@ export function DomainList({ groups }: DomainListProps) {
                   id={domain.id}
                   spotlight
                   // Arriving from a Home domain link: land clear of the header,
-                  // with the chosen domain outlined in the accent.
-                  className="scroll-mt-[calc(var(--spacing-header)+2rem)] target:border-(--color-accent)"
+                  // with the chosen domain outlined in the accent — `:target`
+                  // on a full load, `data-targeted` (HashTarget) after a
+                  // client navigation, which never sets `:target`.
+                  className="scroll-mt-[calc(var(--spacing-header)+2rem)] target:border-(--color-accent) data-targeted:border-(--color-accent)"
                 >
                   <CardBody className="gap-4 p-7">
                     <span

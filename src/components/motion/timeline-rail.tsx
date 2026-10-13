@@ -44,6 +44,11 @@ export function TimelineRail() {
     }
 
     const markers = Array.from(host.querySelectorAll<HTMLElement>('[data-timeline-marker]'));
+    // A marker already on screen was painted lit: it stays lit, never flashes
+    // dim. Only those still below the fold wait for the reader.
+    for (const marker of markers) {
+      if (marker.getBoundingClientRect().top < window.innerHeight) marker.dataset.lit = 'true';
+    }
     host.dataset.armed = 'true';
 
     const context = gsap.context(() => {

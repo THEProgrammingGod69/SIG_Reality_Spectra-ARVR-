@@ -137,4 +137,42 @@ test.describe('the end of the page', () => {
     // Its reveal wrapper plays once the reader reaches the bottom.
     await expect(wordmark.locator('..')).toHaveCSS('opacity', '1', { timeout: 5000 });
   });
+
+  test('…and after a client navigation to a shorter page (triggers re-measured)', async ({
+    page,
+  }) => {
+    // The footer lives in the layout: its trigger was measured on the first,
+    // longer page and must be re-measured for the next one.
+    await page.goto('/gallery');
+    await page.waitForLoadState('networkidle');
+    await page.getByRole('button', { name: 'Open menu' }).click();
+    await page
+      .getByRole('navigation', { name: 'Site menu' })
+      .getByRole('link', { name: 'About', exact: true })
+      .click();
+    await expect(page).toHaveURL(/\/about$/, { timeout: 15_000 });
+    await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+    await readToTheEnd(page);
+    const wordmark = page.locator('[data-site-footer] p.text-display-3xl');
+    await expect(wordmark.locator('..')).toHaveCSS('opacity', '1', { timeout: 5000 });
+  });
+});
+
+test.describe('arriving at a domain', () => {
+  test.use({ viewport: { width: 1280, height: 900 } });
+
+  test('a Home domain link outlines its card on /recruitment, client-side too', async ({
+    page,
+  }) => {
+    const domain = domains[2]!;
+    await page.goto('/');
+    await page
+      .locator('section[aria-labelledby="domains-overview"]')
+      .getByRole('link', { name: domain.name, exact: true })
+      .click();
+    await expect(page).toHaveURL(new RegExp(`/recruitment#${domain.id}$`), { timeout: 15_000 });
+    // `:target` is not set by a client navigation; HashTarget marks the card.
+    await expect(page.locator(`#${domain.id}`)).toHaveAttribute('data-targeted', 'true');
+    await expect(page.locator(`#${domain.id}`)).toBeInViewport();
+  });
 });

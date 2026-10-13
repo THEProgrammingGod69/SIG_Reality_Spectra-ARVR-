@@ -20,6 +20,12 @@ type MarqueeProps = {
   /** Drawn after every item, the last included, so the seam matches. */
   separator?: ReactNode;
   spacing?: keyof typeof spacings;
+  /**
+   * The fewest items one copy holds: a short list is repeated within each copy
+   * until it reaches this, so a copy outruns the band and the loop never shows
+   * an empty stretch.
+   */
+  minItems?: number;
   className?: string;
 };
 
@@ -33,6 +39,11 @@ type MarqueeProps = {
  * mouse, and under reduced motion it does not move at all (the global rule
  * ends every animation at once). The edges fade with a static mask.
  *
+ * A copy must be at least as wide as the band, or the loop runs dry before it
+ * restarts: short lists repeat within each copy (`minItems`), and each copy is
+ * at least a screen wide, its items spread evenly, as a last resort on very
+ * wide displays.
+ *
  * Decorative only: the whole band is `aria-hidden`, so use it for text that
  * the page also states properly elsewhere (the Home domain ticker repeats the
  * domain list beneath it). A server component: no JavaScript ships for it.
@@ -42,11 +53,15 @@ export function Marquee({
   reverse = false,
   separator,
   spacing = 'lg',
+  minItems = 6,
   className,
 }: MarqueeProps) {
+  const repeats = items.length > 0 ? Math.ceil(minItems / items.length) : 0;
+  const run = Array.from({ length: repeats }, () => items).flat();
+
   const copy = (key: string) => (
-    <div key={key} className="flex shrink-0 items-center">
-      {items.map((item, index) => (
+    <div key={key} className="flex min-w-screen shrink-0 items-center justify-around">
+      {run.map((item, index) => (
         <div key={index} className={cn('flex shrink-0 items-center', spacings[spacing])}>
           {item}
           {separator}

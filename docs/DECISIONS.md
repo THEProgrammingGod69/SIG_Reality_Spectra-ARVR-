@@ -876,8 +876,9 @@ replaced by the channels list, and `/admin` cannot be signed into.
 ## D-037 — Premium pass: React Bits effects rebuilt, the lab on every page
 
 **Context.** After Stage 10a a premium pass was requested: more motion and
-a stronger sense of place on every page, with React Bits as the inspiration (its site, reactbits.dev, is not reachable from the build
-environment; the components were read from the project's public repository).
+a stronger sense of place on every page, with React Bits as the inspiration.
+Its site, reactbits.dev, is not reachable from the build environment, so the
+components were read from React Bits' public GitHub repository instead.
 The permanent rules were kept exactly: nothing here is an exception to rule 4
 (D-009) or to the React Bits review rules (CLAUDE.md §12).
 
@@ -916,6 +917,20 @@ action, one pattern for every section), `DomainTicker` and `HomeCta` on Home.
   ScrollTrigger start/end in the motion primitives is now a scroll position
   clamped to the page's maximum scroll. This also fixes the same latent issue
   for `<Reveal>` and `<Stagger>`.
+- **Triggers are re-measured when the page changes under them**
+  (`motion/scroll-refresh.tsx`, in the site layout). ScrollTrigger measures on
+  load and resize only, but the footer's triggers outlive a client navigation
+  and Suspense sections stream in after the shell; either could leave a trigger
+  starting past the new page's end. `ScrollRefresh` re-measures after every
+  route change and whenever the document's height settles at a new value.
+- **Nothing on screen at load flashes**: timeline markers already in view when
+  the rail arms stay lit; only those below the fold wait for the reader.
+- **Marquee copies always outrun the band**: short lists repeat within each
+  copy (`minItems`) and a copy is at least a screen wide, so the loop never
+  shows an empty stretch on a very wide display.
+- **`:target` after a client navigation** (`site/hash-target.tsx`): Next.js
+  navigates with `pushState`, which never sets `:target`, so `HashTarget`
+  marks the element the fragment names with `data-targeted`.
 - **Inner page intros run under the header** (`data-full-bleed`, as the hero
   does), so their backdrop reaches the top of the screen.
 - **Home** gains the domain ticker (decorative, `aria-hidden`: the overview

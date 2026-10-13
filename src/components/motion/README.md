@@ -3,24 +3,25 @@
 Reusable animation primitives. Built in **Stage 2**, extended in **Stage 3**; see
 them all at `/dev/motion` (development only).
 
-| File                    | What it is                                                                  |
-| ----------------------- | --------------------------------------------------------------------------- |
-| `use-reduced-motion.ts` | `useReducedMotion()` hook + `prefersReducedMotion()` live check             |
-| `smooth-scroll.tsx`     | `<SmoothScroll />` — Lenis on GSAP's ticker, ScrollTrigger synced           |
-| `reveal.tsx`            | `<Reveal>` — fade and rise once, when scrolled into view                    |
-| `stagger.tsx`           | `<Stagger>` — the same for each direct child, `--stagger` apart             |
-| `focus-text.tsx`        | `<FocusText>` — our TrueFocus (D-009): words dim, corners translate         |
-| `enter-on-scroll.ts`    | the shared entrance used by Reveal and Stagger                              |
-| `magnetic.tsx`          | `<Magnetic>` — our Magnet: pull toward a mouse pointer (Stage 3)            |
-| `tilt.tsx`              | `<Tilt>` — our TiltedCard: a 4° lean toward the mouse (Stage 9)             |
-| `use-motion-tokens.ts`  | `useMotionTokens()` — live tokens for render-time props (Stage 3)           |
-| `scroll-lock.ts`        | `lockScroll()` for overlays; also stops Lenis (Stage 3)                     |
-| `split-text.tsx`        | `<SplitText>` — our SplitText: heading words rise out of line masks (D-037) |
-| `scroll-words.tsx`      | `<ScrollWords>` — our ScrollReveal: words brighten as you read (D-037)      |
-| `spotlight.tsx`         | `<Spotlight>` — our SpotlightCard: pointer light + rim (`Card spotlight`)   |
-| `marquee.tsx`           | `<Marquee>` — our ScrollVelocity/LogoLoop: CSS-only seamless ticker (D-037) |
-| `scroll-progress.tsx`   | `<ScrollProgress>` — the header's reading-progress hairline (D-037)         |
-| `timeline-rail.tsx`     | `<TimelineRail>` — the events rail that fills as you read (D-037)           |
+| File                    | What it is                                                                              |
+| ----------------------- | --------------------------------------------------------------------------------------- |
+| `use-reduced-motion.ts` | `useReducedMotion()` hook + `prefersReducedMotion()` live check                         |
+| `smooth-scroll.tsx`     | `<SmoothScroll />` — Lenis on GSAP's ticker, ScrollTrigger synced                       |
+| `reveal.tsx`            | `<Reveal>` — fade and rise once, when scrolled into view                                |
+| `stagger.tsx`           | `<Stagger>` — the same for each direct child, `--stagger` apart                         |
+| `focus-text.tsx`        | `<FocusText>` — our TrueFocus (D-009): words dim, corners translate                     |
+| `enter-on-scroll.ts`    | the shared entrance used by Reveal and Stagger                                          |
+| `magnetic.tsx`          | `<Magnetic>` — our Magnet: pull toward a mouse pointer (Stage 3)                        |
+| `tilt.tsx`              | `<Tilt>` — our TiltedCard: a 4° lean toward the mouse (Stage 9)                         |
+| `use-motion-tokens.ts`  | `useMotionTokens()` — live tokens for render-time props (Stage 3)                       |
+| `scroll-lock.ts`        | `lockScroll()` for overlays; also stops Lenis (Stage 3)                                 |
+| `split-text.tsx`        | `<SplitText>` — our SplitText: heading words rise out of line masks (D-037)             |
+| `scroll-words.tsx`      | `<ScrollWords>` — our ScrollReveal: words brighten as you read (D-037)                  |
+| `spotlight.tsx`         | `<Spotlight>` — our SpotlightCard: pointer light + rim (`Card spotlight`)               |
+| `marquee.tsx`           | `<Marquee>` — our ScrollVelocity/LogoLoop: CSS-only seamless ticker (D-037)             |
+| `scroll-progress.tsx`   | `<ScrollProgress>` — the header's reading-progress hairline (D-037)                     |
+| `timeline-rail.tsx`     | `<TimelineRail>` + `<TimelineMarker>` — the events rail that fills as you read (D-037)  |
+| `scroll-refresh.tsx`    | `<ScrollRefresh>` — re-measures triggers after navigations and streamed content (D-037) |
 
 Tokens and GSAP setup live in `src/lib/motion/` (`tokens.ts`, `gsap.ts`), and
 `scroll-point.ts` turns "top 85%" into a trigger point the reader can always

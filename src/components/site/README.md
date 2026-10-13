@@ -10,6 +10,7 @@ The public site's chrome, built in **Stage 3** and rendered by
 | `mobile-menu.tsx`     | Full-screen menu below `lg` — our rebuild of StaggeredMenu (D-020); "Open now" tag while recruiting                                                |
 | `site-footer.tsx`     | Logo badge, every page by group, contact channels once set, VIT Pune credit, the wordmark and "Back to top" (D-037)                                |
 | `film-grain.tsx`      | A static film-grain layer over the page, under the header, from `md` up (D-037)                                                                    |
+| `hash-target.tsx`     | `data-targeted` on the element the URL fragment names: client navigations never set `:target` (D-037)                                              |
 | `page-transition.tsx` | Opacity fade on client navigations only (never the first load); plain CSS, no library (D-033)                                                      |
 | `web-analytics.tsx`   | Cloudflare Web Analytics beacon: only with its token, never under `next dev` (D-033)                                                               |
 | `json-ld.tsx`         | `<JsonLd>`: schema.org data as an escaped script tag (Home, Events)                                                                                |

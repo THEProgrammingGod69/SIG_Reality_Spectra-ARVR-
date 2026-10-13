@@ -167,7 +167,7 @@
   --dur-toast: 6s; /* how long an admin notification stays (not motion: kept under reduced motion) */
   --dur-drift: 18s; /* the slow sway of background light (D-037) */
   --dur-orbit: 90s; /* one full turn of the page-intro rings (D-037) */
-  --dur-marquee: 60s; /* one loop of the domain ticker on Home (D-037) */
+  --dur-marquee: 90s; /* one loop of the domain ticker on Home (D-037) */
   --motion-word-drop: 110%; /* how far below its line mask a heading word starts */
   --motion-word-tilt: 3deg; /* and its lean as it rises (SplitText, D-037) */
   --motion-dim: 0.2; /* a ScrollWords word before the reader reaches it (D-037) */
@@ -334,6 +334,9 @@
    rises, with room below the baseline so descenders (g, p, y) are not cut. */
 @utility word-mask {
   display: inline-block;
+  /* `hidden` first for browsers without `clip` (Safari < 16); the top
+     alignment below keeps either from moving the word off the baseline. */
+  overflow: hidden;
   overflow: clip;
   padding-block-end: 0.14em;
   margin-block-end: -0.14em;
