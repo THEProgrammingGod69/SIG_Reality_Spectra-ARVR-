@@ -884,13 +884,13 @@ The permanent rules were kept exactly: nothing here is an exception to rule 4
 
 **What was rebuilt from React Bits, and how it differs.**
 
-| React Bits                | Ours                                     | What changed                                                                                                                                                         |
-| ------------------------- | ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| SplitText                 | `motion/split-text.tsx`                  | No GSAP SplitText plugin: words are real text in line masks, rising by `transform` only. `play="load"` is pure CSS (page titles); `play="scroll"` uses ScrollTrigger |
-| ScrollReveal              | `motion/scroll-words.tsx`                | `filter: blur()` dropped; `opacity` only; scrubbed by scroll; reverts only its own tween (ScrollReveal killed every ScrollTrigger)                                   |
-| SpotlightCard             | `motion/spotlight.tsx`, `Card spotlight` | Repainted a `radial-gradient` background per move; ours moves fixed-size lights with `transform`, fades with `opacity`; mouse only; adds a rim light on the edge     |
-| ScrollVelocity / LogoLoop | `motion/marquee.tsx`                     | No per-frame script: one `transform` keyframe on a doubled track; server component; pauses on hover; still under reduced motion                                      |
-| GlareHover                | `Button` primary glare                   | A skewed band moved with `transform` behind the label, instead of an animated `background-position`                                                                  |
+| React Bits     | Ours                                     | What changed                                                                                                                                                         |
+| -------------- | ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| SplitText      | `motion/split-text.tsx`                  | No GSAP SplitText plugin: words are real text in line masks, rising by `transform` only. `play="load"` is pure CSS (page titles); `play="scroll"` uses ScrollTrigger |
+| ScrollReveal   | `motion/scroll-words.tsx`                | `filter: blur()` dropped; `opacity` only; scrubbed by scroll; reverts only its own tween (ScrollReveal killed every ScrollTrigger)                                   |
+| SpotlightCard  | `motion/spotlight.tsx`, `Card spotlight` | Repainted a `radial-gradient` background per move; ours moves fixed-size lights with `transform`, fades with `opacity`; mouse only; adds a rim light on the edge     |
+| ScrollVelocity | `motion/marquee.tsx`                     | Scrubbed by the scroll position (`xPercent`), not a velocity-driven per-frame loop: nothing moves while the page is still (WCAG 2.2.2); still under reduced motion   |
+| GlareHover     | `Button` primary glare                   | A skewed band moved with `transform` behind the label, instead of an animated `background-position`                                                                  |
 
 **New in-house pieces.** `ScrollProgress` (header hairline, `scaleX`),
 `TimelineRail` (the events rail fills with `scaleY`, markers light with
@@ -926,8 +926,31 @@ action, one pattern for every section), `DomainTicker` and `HomeCta` on Home.
 - **Nothing on screen at load flashes**: timeline markers already in view when
   the rail arms stay lit; only those below the fold wait for the reader.
 - **Marquee copies always outrun the band**: short lists repeat within each
-  copy (`minItems`) and a copy is at least a screen wide, so the loop never
-  shows an empty stretch on a very wide display.
+  copy (`minItems`) and a copy is at least a screen wide, so the band never
+  shows an empty stretch, even on a very wide display.
+- **Nothing moves on its own for more than 5 seconds (WCAG 2.2.2).** The
+  domain ticker first ran as an endless CSS loop, which needs a pause control;
+  it is scroll-linked instead (as React Bits' ScrollVelocity is), so it moves
+  only while the reader scrolls. The backdrop's rings and light settle into
+  place once as a page opens (`--dur-settle`, 4.8 s), and the recruitment
+  status light and the hero's scroll cue play twice, then rest. (The Stage 3
+  StarBorder on "Apply now" and the hero scene are older and unchanged.)
+- **The hero pin is measured first** (`refreshPriority: 1`). It is created
+  once the device tier is known — after every other trigger on Home — but its
+  150vh of spacing moves all of them; refreshed last, every Home entrance
+  fired about 150vh early for visitors who get the 3D hero, off screen.
+- **Only the upper end of a trigger point is clamped**: a point already
+  passed, or a page that no longer scrolls (a taller window), fires on the
+  next refresh instead of leaving content hidden.
+- **Contrast in every state.** The hollow numerals' stroke is the caption
+  colour (axe counts a stroke of 0.03em or more as the text colour, and phone
+  sizes reach it); a ScrollWords word waiting to be read is at 45% (≥ 3.9:1 for
+  its large type, even on the violet glow), and a paragraph seen whole is fully
+  lit; the spotlight is softer (10%) and captions inside lit cards use the muted
+  tone; the map placeholder's text is body tone over the backdrop's light.
+- **`HashTarget` tolerates a mangled link** (`#%` no longer throws) and clears
+  the mark when a same-page navigation drops the fragment (Navigation API's
+  `currententrychange`, where available).
 - **`:target` after a client navigation** (`site/hash-target.tsx`): Next.js
   navigates with `pushState`, which never sets `:target`, so `HashTarget`
   marks the element the fragment names with `data-targeted`.
@@ -935,7 +958,7 @@ action, one pattern for every section), `DomainTicker` and `HomeCta` on Home.
   does), so their backdrop reaches the top of the screen.
 - **Home** gains the domain ticker (decorative, `aria-hidden`: the overview
   below lists every domain as linked text), and each domain name links to its
-  card on /recruitment (`:target` outlines it). The closing call to action
+  card on /recruitment, which is outlined on arrival. The closing call to action
   says nothing about whether recruitment is open, so it is never wrong.
 - **Events**: the soonest event spans the row from `lg` (poster beside its
   details), so one event no longer sits alone in a third of the row.
@@ -945,10 +968,10 @@ action, one pattern for every section), `DomainTicker` and `HomeCta` on Home.
   still the preloaded largest paint). Captions rise on hover and keyboard focus
   and are `aria-hidden` (the button is named by the photo's alt text).
 - **New tokens** in `globals.css`: `--text-display-3xl`, `--grid-cell`,
-  `--spotlight-size`, `--grain-strength`, `--z-grain`, `--dur-drift`,
-  `--dur-orbit`, `--dur-marquee`, `--motion-word-drop`, `--motion-word-tilt`,
-  `--motion-dim`, the keyframe tokens `animate-word-rise`, `-intro-in`,
-  `-enter`, `-marquee`, `-orbit`, `-ping-soft`, `-scroll-cue`, `-drift`, and the
+  `--spotlight-size`, `--grain-strength`, `--z-grain`, `--dur-settle`,
+  `--motion-word-drop`, `--motion-word-tilt`, `--motion-dim`, the keyframe
+  tokens `animate-word-rise`, `-intro-in`, `-enter`, `-orbit`, `-ping-soft`,
+  `-scroll-cue`, `-drift`, and the
   static utilities `word-mask`, `text-spectra`, `text-outline`, `bg-lab-grid`,
   `bg-grain`, `mask-rim`.
 

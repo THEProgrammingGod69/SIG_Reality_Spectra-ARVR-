@@ -82,16 +82,15 @@ test.describe('reduced motion', () => {
     });
   }
 
-  test('the domain ticker stands still', async ({ page }) => {
+  test('the domain ticker stands still, wherever the page is scrolled', async ({ page }) => {
     await page.goto('/');
-    const running = await page
-      .locator('.animate-marquee')
-      .evaluateAll(
-        (tracks) =>
-          tracks.flatMap((track) => track.getAnimations()).filter((a) => a.playState === 'running')
-            .length,
+    await readToTheEnd(page);
+    const moved = await page
+      .locator('[aria-hidden="true"] > .w-max')
+      .evaluateAll((tracks) =>
+        tracks.some((track) => !new DOMMatrix(getComputedStyle(track).transform).isIdentity),
       );
-    expect(running).toBe(0);
+    expect(moved).toBe(false);
   });
 });
 
@@ -174,5 +173,49 @@ test.describe('arriving at a domain', () => {
     // `:target` is not set by a client navigation; HashTarget marks the card.
     await expect(page.locator(`#${domain.id}`)).toHaveAttribute('data-targeted', 'true');
     await expect(page.locator(`#${domain.id}`)).toBeInViewport();
+  });
+});
+
+test.describe('robustness', () => {
+  test('a mangled #fragment never takes /recruitment down', async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (error) => errors.push(error.message));
+    await page.goto('/recruitment#%');
+    await expect(page.getByRole('heading', { level: 1, name: 'Recruitment' })).toBeVisible();
+    await page.waitForLoadState('networkidle');
+    expect(errors).toEqual([]);
+  });
+
+  test('a page taller than the window shows everything (no scroll to trigger it)', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto('/contact');
+    await page.waitForLoadState('networkidle');
+    // Grow the window past the page: it can no longer scroll at all.
+    await page.setViewportSize({ width: 1440, height: 5000 });
+    await expect(page.getByLabel('Your name')).toBeVisible();
+    await expect
+      .poll(() => wordsAtRest(page, '#sponsorship [data-word]'), { timeout: 5000 })
+      .toBe(true);
+    await expect(page.locator('[data-site-footer] p.text-display-3xl').locator('..')).toHaveCSS(
+      'opacity',
+      '1',
+      { timeout: 5000 },
+    );
+  });
+
+  test('the outlined domain clears when the fragment does', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    const domain = domains[0]!;
+    await page.goto(`/recruitment#${domain.id}`);
+    await expect(page.locator(`#${domain.id}`)).toHaveAttribute('data-targeted', 'true');
+    // The header's Recruitment link: same page, no fragment.
+    await page
+      .getByRole('banner')
+      .getByRole('link', { name: /Recruitment/ })
+      .click();
+    await expect(page).toHaveURL(/\/recruitment$/);
+    await expect(page.locator('[data-targeted]')).toHaveCount(0);
   });
 });

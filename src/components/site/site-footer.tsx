@@ -61,7 +61,9 @@ export function SiteFooter() {
                   <li key={route.href}>
                     <Link
                       href={route.href}
-                      className="group/link inline-flex items-center gap-2 text-(--color-text-body) hover:text-(--color-text)"
+                      // `pe-5` holds room for the label's 1.25rem shift, so the
+                      // focus ring surrounds the label where it ends up.
+                      className="group/link inline-flex items-center gap-2 pe-5 text-(--color-text-body) hover:text-(--color-text)"
                     >
                       <span
                         aria-hidden="true"

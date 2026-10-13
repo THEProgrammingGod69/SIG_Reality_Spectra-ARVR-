@@ -81,7 +81,7 @@ export function Spotlight({ rim = true }: { rim?: boolean }) {
       <span className="absolute inset-0 overflow-hidden rounded-[inherit]">
         <span
           data-light
-          className="absolute top-0 left-0 size-(--spotlight-size) rounded-full bg-[radial-gradient(closest-side,color-mix(in_oklab,var(--color-accent)_14%,transparent),transparent)] will-change-transform"
+          className="absolute top-0 left-0 size-(--spotlight-size) rounded-full bg-[radial-gradient(closest-side,color-mix(in_oklab,var(--color-accent)_10%,transparent),transparent)] will-change-transform"
         />
       </span>
       {rim ? (

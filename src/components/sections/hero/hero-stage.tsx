@@ -203,6 +203,11 @@ export function HeroStage({ children, still, labelledBy }: HeroStageProps) {
             end: PIN_LENGTH,
             pin: true,
             scrub: true,
+            // The pin is created after the tier is known — after every other
+            // trigger on the page — yet its spacing moves all of them. A higher
+            // priority makes every refresh measure it first, so the triggers
+            // below the hero are measured with the spacing in place (D-037).
+            refreshPriority: 1,
           },
         })
         .to(state, { scroll: 1, duration: 1 }, 0)

@@ -55,7 +55,8 @@ export function DomainOverview({ groups }: DomainOverviewProps) {
                 <Heading level={3} size="sm">
                   {group.label}
                 </Heading>
-                <Text as="span" size="sm" tone="subtle">
+                {/* Muted: subtle would fall under 4.5:1 beneath the spotlight. */}
+                <Text as="span" size="sm" tone="muted">
                   {group.domains.length} domains
                 </Text>
               </div>

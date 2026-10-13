@@ -60,11 +60,11 @@ D-018.
 
 ## Premium pass (D-037)
 
-| File                  | Used on               | What it renders                                                                    |
-| --------------------- | --------------------- | ---------------------------------------------------------------------------------- |
-| `section-heading.tsx` | every content section | `SectionHeading` (eyebrow, rising title, lead, action) and `EyebrowDash`           |
-| `domain-ticker.tsx`   | Home                  | The domains as two opposing marquees — decorative, the overview lists them as text |
-| `home-cta.tsx`        | Home                  | The closing call to action in the lab: find your domain, or work with the club     |
+| File                  | Used on               | What it renders                                                                                     |
+| --------------------- | --------------------- | --------------------------------------------------------------------------------------------------- |
+| `section-heading.tsx` | every content section | `SectionHeading` (eyebrow, rising title, lead, action) and `EyebrowDash`                            |
+| `domain-ticker.tsx`   | Home                  | The domains as two scroll-linked bands, opposite ways — decorative, the overview lists them as text |
+| `home-cta.tsx`        | Home                  | The closing call to action in the lab: find your domain, or work with the club                      |
 
 `PageIntro` now runs under the header (`data-full-bleed`) over a `LabBackdrop`,
 with its title in `SplitText play="load"`. Cards that should feel lit pass

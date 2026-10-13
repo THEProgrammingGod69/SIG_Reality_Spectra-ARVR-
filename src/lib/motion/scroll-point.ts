@@ -13,7 +13,12 @@ type Edge = 'top' | 'center' | 'bottom';
  * on the page plays as the reader arrives at the bottom.
  *
  * Function-based, so ScrollTrigger re-measures it on every refresh (resize,
- * fonts, the hero's pin spacing).
+ * fonts, the hero's pin spacing, ScrollRefresh).
+ *
+ * Only the upper end is clamped. A point the page has already passed — or,
+ * on a page that no longer scrolls at all (a taller window, zoomed out), the
+ * end itself at -1 — stays below the current scroll position, so the next
+ * refresh fires it at once instead of waiting for a scroll that cannot come.
  */
 export function reachablePoint(element: Element, edge: Edge, viewportFraction: number) {
   return () => {
@@ -21,7 +26,6 @@ export function reachablePoint(element: Element, edge: Edge, viewportFraction: n
     const offset = edge === 'top' ? 0 : edge === 'center' ? rect.height / 2 : rect.height;
     const natural = rect.top + window.scrollY + offset - window.innerHeight * viewportFraction;
     // One pixel short of the end: smooth scrolling may settle a fraction shy of it.
-    const reachable = Math.max(0, ScrollTrigger.maxScroll(window) - 1);
-    return Math.max(0, Math.min(natural, reachable));
+    return Math.min(natural, ScrollTrigger.maxScroll(window) - 1);
   };
 }

@@ -165,12 +165,15 @@
   --motion-rise: 1.5rem; /* how far an entering element travels */
   --dur-ambient: 6s; /* slow decorative loops (StarBorder, skeleton shimmer) */
   --dur-toast: 6s; /* how long an admin notification stays (not motion: kept under reduced motion) */
-  --dur-drift: 18s; /* the slow sway of background light (D-037) */
-  --dur-orbit: 90s; /* one full turn of the page-intro rings (D-037) */
-  --dur-marquee: 90s; /* one loop of the domain ticker on Home (D-037) */
+  /* The lab settling into place: the backdrop's rings and light, and how long
+     a status light pings. Never more than 5 s, so nothing moves on its own
+     for longer than WCAG 2.2.2 allows without a pause control (D-037). */
+  --dur-settle: 4.8s;
   --motion-word-drop: 110%; /* how far below its line mask a heading word starts */
   --motion-word-tilt: 3deg; /* and its lean as it rises (SplitText, D-037) */
-  --motion-dim: 0.2; /* a ScrollWords word before the reader reaches it (D-037) */
+  /* A ScrollWords word before the reader reaches it: still ≥ 3:1 for its large
+     type on the page background, so even the dimmed state is readable (D-037). */
+  --motion-dim: 0.45;
 
   /* Ambient animations — transform and opacity only (rule 4). The global
      reduced-motion rule below stops them. */
@@ -267,7 +270,8 @@
 
   /* Premium pass (D-037) — transform and opacity only, every duration and
      delay on a token, so reduced motion stops all of them (the global rule
-     below; delays are stagger multiples, and the stagger collapses too). */
+     below; delays are stagger multiples, and the stagger collapses too).
+     Every one of them ends: nothing here loops forever (WCAG 2.2.2). */
 
   /* Page titles: each word rises out of its own line mask (SplitHeading). */
   --animate-word-rise: word-rise var(--dur-long) var(--ease-out-expo) both;
@@ -276,25 +280,18 @@
   /* Items arriving in an open list (gallery tiles after a filter or "Show
      more"): `both`, so a staggered item waits unseen, never flashes. */
   --animate-enter: rise-in var(--dur-medium) var(--ease-out-expo) both;
-  /* The domain ticker on Home: a track holding two copies moves by one copy. */
-  --animate-marquee: marquee var(--dur-marquee) linear infinite;
-  /* The page-intro rings turn, far too slowly to read as motion at a glance. */
-  --animate-orbit: spin var(--dur-orbit) linear infinite;
-  /* A status light: a ring that grows from the dot and fades. */
-  --animate-ping-soft: ping-soft calc(var(--dur-long) * 2) var(--ease-out-expo) infinite;
-  /* The hero's scroll cue: a light runs down its track. */
-  --animate-scroll-cue: scroll-cue calc(var(--dur-long) * 2) var(--ease-in-out) infinite;
-  /* Background light sways and breathes. */
-  --animate-drift: drift var(--dur-drift) var(--ease-in-out) infinite alternate;
+  /* The backdrop's rings turn into place as a page opens. */
+  --animate-orbit: orbit-settle var(--dur-settle) var(--ease-out-expo) both;
+  /* A status light: twice, a ring grows from the dot and fades (2 × 2.4 s). */
+  --animate-ping-soft: ping-soft calc(var(--dur-long) * 2) var(--ease-out-expo) 2 forwards;
+  /* The hero's scroll cue: twice, a light runs down its track, then rests. */
+  --animate-scroll-cue: scroll-cue calc(var(--dur-long) * 2) var(--ease-in-out) 2;
+  /* The backdrop's light rises and spreads into place as a page opens. */
+  --animate-drift: drift-settle var(--dur-settle) var(--ease-out-expo) both;
 
   @keyframes word-rise {
     from {
       transform: translateY(var(--motion-word-drop)) rotate(var(--motion-word-tilt));
-    }
-  }
-  @keyframes marquee {
-    to {
-      transform: translateX(-50%);
     }
   }
   @keyframes ping-soft {
@@ -315,12 +312,15 @@
       transform: translateY(250%);
     }
   }
-  @keyframes drift {
+  @keyframes orbit-settle {
     from {
-      transform: translate3d(-4%, 2%, 0) scale(1);
+      transform: rotate(-24deg);
     }
-    to {
-      transform: translate3d(4%, -3%, 0) scale(1.12);
+  }
+  @keyframes drift-settle {
+    from {
+      transform: translate3d(-6%, 4%, 0) scale(0.85);
+      opacity: 0;
     }
   }
 }
@@ -351,10 +351,12 @@
   color: transparent;
 }
 
-/* Hollow display type: a hairline outline in the strong border colour. */
+/* Hollow display type: a hairline outline in the caption colour, which keeps
+   ≥ 4.5:1 on every surface — axe measures a stroke as the text's colour once
+   it is 0.03em or more, as it is on numerals set small on phones. */
 @utility text-outline {
   color: transparent;
-  -webkit-text-stroke: 1px var(--color-border-strong);
+  -webkit-text-stroke: 1px var(--color-subtle);
 }
 
 /* The lab floor: hairline grid in the border colour, one cell per token. */

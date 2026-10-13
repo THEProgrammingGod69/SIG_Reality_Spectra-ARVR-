@@ -14,12 +14,13 @@ type ScrollWordsProps = {
 };
 
 /**
- * The reading band: the first word starts to brighten as the paragraph's top
- * reaches 85% down the viewport, the last is lit by the time its bottom
- * reaches 55% — or by the end of the page, if that comes first.
+ * The reading band: the first word starts to brighten as the paragraph enters
+ * at the bottom of the viewport, and the last is lit by the time the whole
+ * paragraph is on screen (its bottom 85% down) — or by the end of the page, if
+ * that comes first. A paragraph the reader can see whole is always fully lit.
  */
-const SCRUB_START_AT = 0.85;
-const SCRUB_END_AT = 0.55;
+const SCRUB_START_AT = 1;
+const SCRUB_END_AT = 0.85;
 
 /**
  * ScrollWords — our version of React Bits' ScrollReveal (D-037).
@@ -33,7 +34,8 @@ const SCRUB_END_AT = 0.55;
  * Nothing is dimmed ahead of time: without JavaScript, under reduced motion,
  * or when the paragraph is already on screen at load, every word is at full
  * strength. The dimmed start (`--motion-dim`) is set only while the paragraph
- * is still below the fold.
+ * is still below the fold, and even dimmed it keeps 3:1 contrast for its
+ * large type (WCAG 1.4.3).
  */
 export function ScrollWords({ text, className }: ScrollWordsProps) {
   const ref = useRef<HTMLParagraphElement>(null);

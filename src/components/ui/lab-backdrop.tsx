@@ -32,9 +32,10 @@ type LabBackdropProps = {
  * satellite. One luminous object per section, as the board asks.
  *
  * Decorative and server-rendered: `aria-hidden`, no pointer events, colours
- * only from tokens. The rings turn on `--dur-orbit` (a full turn takes minutes)
- * and the light sways on `--dur-drift`; both are `transform` keyframes, and
- * both stop under reduced motion. Place it in a `relative isolate` section.
+ * only from tokens. As the page opens, the rings turn into place and the
+ * light rises and spreads (`animate-orbit`, `animate-drift`: transform and
+ * opacity, `--dur-settle`, under 5 s), then the lab is still — nothing loops.
+ * Reduced motion shows it at rest. Place it in a `relative isolate` section.
  */
 export function LabBackdrop({ align = 'end', className }: LabBackdropProps) {
   const place = placements[align];

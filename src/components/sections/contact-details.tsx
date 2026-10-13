@@ -15,7 +15,9 @@ type ContactDetailsProps = Pick<ContactInfo, 'email' | 'phone' | 'address' | 'ma
 /** What a detail shows while it is not supplied yet (D-024): text, never a link. */
 function ComingSoon() {
   return (
-    <Text as="span" size="sm" tone="subtle" data-placeholder>
+    // Muted, not subtle: it sits in a spotlight card, whose light would take
+    // the caption colour under 4.5:1.
+    <Text as="span" size="sm" tone="muted" data-placeholder>
       Coming soon
     </Text>
   );
@@ -96,7 +98,8 @@ export function ContactDetails({ email, phone, address, map }: ContactDetailsPro
                 {/* The lab floor and its orbit stand in for the map until it is set. */}
                 <LabBackdrop align="center" />
                 <Icon icon={MapPin} size="lg" className="text-(--color-muted)" />
-                <Text size="sm" tone="muted">
+                {/* Body tone: it sits on the backdrop's light (≥ 4.5:1 there). */}
+                <Text size="sm" tone="body">
                   Map coming soon
                 </Text>
                 {map.url ? (
