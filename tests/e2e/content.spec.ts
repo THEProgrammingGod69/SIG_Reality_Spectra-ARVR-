@@ -22,6 +22,11 @@ test.describe('home', () => {
     await expect(page.getByText(site.tagline).first()).toBeVisible();
     await expect(page.getByRole('heading', { level: 2, name: 'Who we are' })).toBeVisible();
     await expect(page.getByText(site.about.short)).toBeVisible();
+    // The "About Reality Spectra" card, read from the content file (D-039).
+    await expect(
+      page.getByRole('heading', { level: 3, name: site.about.card.title }),
+    ).toBeVisible();
+    await expect(page.getByText(site.about.card.body)).toBeVisible();
     await expect(page.getByText(site.mission)).toBeVisible();
     await expect(page.getByText(site.vision)).toBeVisible();
   });
