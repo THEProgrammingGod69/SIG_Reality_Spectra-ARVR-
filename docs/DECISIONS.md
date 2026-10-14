@@ -206,6 +206,9 @@ exception needs a new decision.
 
 ## D-012 — Navigation: PillNav on desktop, StaggeredMenu on mobile
 
+> **Superseded by D-038** (the HUD rail on desktop, the aperture menu on
+> mobile). Dock stays dropped, for the reason below.
+
 **Choice.** Desktop uses PillNav, patched to remove its `react-router-dom`
 dependency in favour of `next/link` and `usePathname`. Mobile uses StaggeredMenu.
 **Dock is dropped.**
@@ -981,3 +984,109 @@ action, one pattern for every section), `DomainTicker` and `HomeCta` on Home.
 contract), no stat counters (D-007), no text scramble/decrypt effects (they
 change text every frame), no custom cursor, no second WebGL context, and no
 new dependency.
+
+## D-038 — The XR HUD: a motion language of its own, on every page
+
+**Context.** After D-037 the club asked for far more motion, and for it to stop
+looking like every other site: "generic animations and a generic navigation
+bar". The brief stays the club's own — _cinematic, realistic XR lab, not gaming
+neon_ — so the answer is one idea carried everywhere, not a pile of effects:
+**the site seen through the lab's headset.** A heads-up display marks what is
+in reach with corner brackets that lock on, readouts decode as they come
+online, a line of light scans a scene once, pages change behind a shutter, and
+the lab has depth that answers the scroll. The club's Instagram
+(`@sig_realityspectra`) could not be read — it shows only a login wall to
+tools, through a scraper too — so the tone comes from the club's existing copy
+and VIT's public description of the club (an AR/VR hub for immersive R&D).
+Every permanent rule holds exactly as before; nothing here is an exception to
+rule 4 (D-009), and React Bits remains the only source (D-004).
+
+**What was rebuilt from React Bits, and how it differs.**
+
+| React Bits              | Ours                                       | What changed                                                                                                                                                                                                    |
+| ----------------------- | ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| DecryptedText           | `motion/decode-text.tsx`                   | The real text never leaves the DOM (made transparent while a decode runs); glyphs play in an `aria-hidden` copy over it, written directly, no re-render per frame; once per trigger; never under reduced motion |
+| TargetCursor            | `site/reticle-cursor.tsx`                  | Keeps the system cursor; no endless spin (WCAG 2.2.2); corners eased toward their goal on `--dur-micro` and the loop stops when they arrive; mouse only; never under reduced motion                             |
+| ScrollFloat             | `motion/scroll-float.tsx`                  | Same pose (below, stretched tall and narrow); scrubbed between reachable trigger points; decorative only (the footer wordmark)                                                                                  |
+| ScrollStack             | `motion/stack.tsx`                         | CSS `position: sticky` does the stacking; one scrubbed tween per panel on the site's ScrollTrigger instead of its own per-frame loop and Lenis instance; a scrim darkens the panel behind (opacity, not filter) |
+| ProfileCard             | `motion/holo-foil.tsx` + the access pass   | One oversized foil band moved with `transform` and faded with `opacity`, instead of rewriting `background-position` and a dozen CSS variables per move                                                          |
+| LightRays / Beams (ogl) | `three/spectral-field/` + `IntroField`     | Written fresh for three.js (no `ogl`, D-011); time advances only while the page settles and while the visitor moves, so it is still otherwise; high device tier only                                            |
+| StaggeredMenu           | `site/mobile-menu.tsx` (the aperture)      | The sweeping colour layers became five shutter slats closing from the centre out; a line of light scans down once; every behaviour of D-012's rebuild kept (focus, trap, Escape, inert page, scroll lock)       |
+| PillNav                 | `site/hud-nav.tsx` (in-house, replaces it) | A HUD rail: numbered mono readouts, a lock-on frame of two bracket pairs that glides between links (`translateX`, the leading pair first) and a spectrum hairline (`scaleX`), and a live scroll readout         |
+
+**New in-house pieces.** `HudCorners` (the one bracket shape behind the hero
+frame, the rail's ticks, the menu toggle, the reticle and every lock-on),
+`Parallax` (decoration that drifts, turns or opens like a portal with the
+scroll), the page-change shutter (`site/page-transition.tsx`), `HeroHud` (the
+hero's display frame, depth ruler, one scan and two readouts), `DomainRail`
+(Home's domains as a horizontal rail), the team access passes, the gallery's
+`focus-dim` and curtain develop, and lock-on frames on the featured event
+poster, the recruitment domain cards, the open recruitment card and the
+contact form.
+
+**Lead calls.**
+
+- **Navigation is the HUD, not a pill.** Desktop links are numbered mono
+  readouts in a glass strip with its own corner ticks; a lock-on frame rests
+  on the current page and glides to whatever the pointer or keyboard is on.
+  Links keep plain names (the numbers and decoding copies are `aria-hidden`),
+  and the Recruitment button's text is still exactly "Recruitment".
+- **Text that decodes stays text.** D-037 left scramble effects out because
+  they change text every frame. `DecodeText` makes that safe: the real text is
+  always in the DOM and only made transparent while an `aria-hidden` copy plays
+  over it, on mono type (no reflow), once per trigger, never under reduced
+  motion. It is used on eyebrows, the rail's labels, panel labels and dates —
+  short labels only, never body copy or headings.
+- **A reticle, not a custom cursor.** The system cursor is never hidden; the
+  reticle only marks targets (links, buttons, fields) and folds away between
+  them. It never takes a click, is `aria-hidden`, and does not exist on touch
+  screens or under reduced motion.
+- **Pages change behind a shutter** of five surface-coloured slats under the
+  header, which stays put as a headset's display would. It plays only on client
+  navigations (the first paint is never covered, D-010), is CSS keyframes
+  (`animate-shutter`, `-shutter-label`; no animation library, D-033), never
+  takes a click, unmounts when done, and is absent under reduced motion.
+- **The Home rail holds still with `position: sticky`, not a GSAP pin**: the
+  section is made as tall as the travel plus a screen, so nothing in the DOM
+  is moved and no pin competes with the hero's (`refreshPriority`, D-037).
+  The rail runs from `md`, with JavaScript, without reduced motion; elsewhere
+  the same links are a grid. Its frame is `overflow-x: clip`, so the browser
+  can never scroll it sideways; a panel reached by keyboard scrolls the page
+  to where that panel is in view instead. Panels lean with the scroll's speed
+  and straighten when it stops (`skewX`, eased back on a token).
+- **Stacked panels compute their own trigger points.** A stuck element reports
+  where it is stuck, not where it sits in the flow, so `Stack` measures from
+  the list's top and the panels' heights, clamped to the maximum scroll like
+  `reachablePoint`. It stacks only from `md`, on screens at least 40rem tall,
+  without reduced motion (the `stack:` variant); elsewhere a plain list.
+- **One WebGL context per page still.** Home keeps the hero's; each inner page
+  may now have one — the Spectral Field behind its opening — loaded only for
+  the high device tier (`useHeroTier`), so phones, weaker devices, software
+  WebGL and reduced motion keep the static lab, which is always drawn beneath.
+  It renders below the device ratio, stops when off screen, and moves only
+  while the page settles (`--dur-settle`) or the visitor moves.
+- **Nothing moves on its own for more than 5 seconds** (WCAG 2.2.2): the scan,
+  the lock-ons, the shutter and the field's settle all end; everything else
+  follows the reader's scroll or pointer.
+- **Decoration is decoration.** Every new layer is `aria-hidden` with no pointer
+  events, and none of them carries content: the motto and the realities in the
+  hero HUD are readouts of things the page says in words, and the pass's tier,
+  serial and barcode are ornaments around the member's real name, position and
+  domain.
+- **Gallery focus.** While one tile is hovered or focused, the others dim to
+  `--motion-focus-dim` (opacity, and still ≥ 4.5:1 for the "+N" count); tiles
+  below the fold develop from under a curtain (`scaleY`) as the reader reaches
+  them. Tiles on screen at load, tiles that arrive with their own entrance and
+  everything under reduced motion are never covered.
+- **New tokens** in `globals.css`: `--z-shutter`, `--z-cursor`,
+  `--scanline-gap`, `--reticle-size`, `--reticle-reach`, `--rail-panel`,
+  `--motion-depth`, `--motion-turn`, `--motion-portal`, `--motion-shelve`,
+  `--motion-focus-dim`, the keyframe tokens `animate-shutter`,
+  `-shutter-label`, `-scan`, `-lock-on`, the static utilities `bg-scanlines`,
+  `bg-holo`, `hud-corner`, `focus-dim`, and the variants `rail:` and `stack:`.
+  `siteConfig.realities` (AR · VR · XR) and each team tier's `pass` label are
+  structural constants.
+
+**Not done, on purpose.** No new pages (the six-page sitemap is the contract),
+no preloader or boot screen in front of content, no hidden system cursor, no
+sound, no endless loops, no stat counters (D-007), and no new dependency.

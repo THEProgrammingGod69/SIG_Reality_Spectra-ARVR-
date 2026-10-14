@@ -3,6 +3,7 @@ import { HashTarget } from '@/components/site/hash-target';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardBody } from '@/components/ui/card';
 import { Heading } from '@/components/ui/heading';
+import { HudCorners } from '@/components/ui/hud-corners';
 import { Section } from '@/components/ui/section';
 import { Text } from '@/components/ui/text';
 import type { DomainGroup } from '@/lib/content';
@@ -19,7 +20,9 @@ type DomainListProps = {
  * visible, whether recruitment is open or not. Each card is an anchor
  * (`/recruitment#web-development`) — Home's domain rows land on them.
  *
- * Cards carry their number in hollow display type and the spotlight (D-037).
+ * Cards carry their number in hollow display type and the spotlight (D-037);
+ * on hover, and on the card a link arrived at, corner brackets lock onto it
+ * (`HudCorners`, D-038) — `scale` and `opacity` only.
  */
 export function DomainList({ groups }: DomainListProps) {
   return (
@@ -61,12 +64,16 @@ export function DomainList({ groups }: DomainListProps) {
                   // with the chosen domain outlined in the accent — `:target`
                   // on a full load, `data-targeted` (HashTarget) after a
                   // client navigation, which never sets `:target`.
-                  className="scroll-mt-[calc(var(--spacing-header)+2rem)] target:border-(--color-accent) data-targeted:border-(--color-accent)"
+                  className="group/domain scroll-mt-[calc(var(--spacing-header)+2rem)] target:border-(--color-accent) data-targeted:border-(--color-accent)"
                 >
+                  <HudCorners
+                    className="inset-2.5 scale-110 text-(--color-accent) opacity-0 transition-[scale,opacity] duration-(--dur-medium) ease-out-expo group-target/domain:scale-100 group-target/domain:opacity-100 group-hover/domain:scale-100 group-hover/domain:opacity-100 group-data-targeted/domain:scale-100 group-data-targeted/domain:opacity-100"
+                    cornerClassName="size-3"
+                  />
                   <CardBody className="gap-4 p-7">
                     <span
                       aria-hidden="true"
-                      className="font-display text-display-lg leading-none text-outline"
+                      className="origin-left font-display text-display-lg leading-none text-outline transition-transform duration-(--dur-long) ease-out-expo group-hover/domain:translate-x-1"
                     >
                       {domain.number}
                     </span>

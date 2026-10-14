@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Heading } from '@/components/ui/heading';
 import { Section } from '@/components/ui/section';
+import { DecodeText } from '@/components/motion/decode-text';
 import { Eyebrow, Text } from '@/components/ui/text';
 import type { PublicEvents } from '@/lib/data';
 import { formatDate } from '@/lib/dates';
@@ -62,7 +63,9 @@ export function EventTimeline({ events }: { events: readonly TimelineEvent[] }) 
                 <Reveal className="flex flex-col gap-4">
                   <div className="flex flex-wrap items-center gap-3">
                     <Eyebrow as="span" className="text-(--color-text-body)">
-                      <time dateTime={event.startsAt}>{formatDate(event.startsAt)}</time>
+                      <time dateTime={event.startsAt}>
+                        <DecodeText text={formatDate(event.startsAt)} />
+                      </time>
                     </Eyebrow>
                     <Badge tone="accent">{categoryLabel(event.category)}</Badge>
                   </div>

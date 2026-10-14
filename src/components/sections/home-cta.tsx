@@ -17,13 +17,14 @@ const contactRoute = getRoute('/contact');
 /**
  * Home, last: the closing call to action (D-037), set in the lab — the orbit
  * centred behind it, as one luminous object. Two ways in: the domains and
- * recruitment, or a collaboration through Contact. Says nothing about whether
+ * recruitment, or a collaboration through Contact. The orbit opens around the
+ * reader as they arrive (`motion="portal"`, D-038). Says nothing about whether
  * recruitment is open, so it is never wrong: /recruitment says that.
  */
 export function HomeCta({ motto }: { motto: string }) {
   return (
     <Section labelledBy="home-cta" className="relative isolate overflow-hidden">
-      <LabBackdrop align="center" />
+      <LabBackdrop align="center" motion="portal" />
       <div className="mx-auto flex max-w-3xl flex-col items-center py-12 text-center md:py-20">
         <EyebrowDash>{motto}</EyebrowDash>
         <Heading level={2} id="home-cta" size="xl" className="mt-5">

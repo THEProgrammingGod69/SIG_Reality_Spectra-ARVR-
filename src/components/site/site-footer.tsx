@@ -1,7 +1,7 @@
 import { ArrowUp } from 'lucide-react';
 import Link from 'next/link';
 
-import { Reveal } from '@/components/motion/reveal';
+import { ScrollFloat } from '@/components/motion/scroll-float';
 import { Container } from '@/components/ui/container';
 import { Icon } from '@/components/ui/icon';
 import { BrandBadge } from '@/components/ui/logo';
@@ -28,8 +28,9 @@ const wordmark = siteConfig.name.replace(/^SIG\s+/, '');
  * for the club to follow.
  *
  * It closes on the club's name as a wordmark across the full width (D-037),
- * lit from above and fading into the floor — decorative (`aria-hidden`), the
- * badge already names the club — and a way back to the top.
+ * lit from above and fading into the floor, its letters floating up into
+ * place as the reader arrives (`ScrollFloat`, D-038) — decorative
+ * (`aria-hidden`), the badge already names the club — and a way back to the top.
  */
 export function SiteFooter() {
   return (
@@ -82,13 +83,14 @@ export function SiteFooter() {
       </Container>
 
       <Container aria-hidden="true" className="select-none">
-        <Reveal>
-          {/* Padded below so the gradient (the text's only fill) reaches the
-              descenders of "y" and "p", which hang under the tight line box. */}
-          <p className="bg-linear-to-b from-(--color-text)/30 to-(--color-text)/5 bg-clip-text pb-[0.22em] text-center font-display text-display-3xl whitespace-nowrap text-transparent">
-            {wordmark}
-          </p>
-        </Reveal>
+        {/* Each character carries the fill, padded below so the gradient
+            reaches the descenders of "y" and "p", which hang under the tight
+            line box (the negative margin keeps the line where it was). */}
+        <ScrollFloat
+          text={wordmark}
+          className="pb-[0.22em] text-center font-display text-display-3xl whitespace-nowrap"
+          charClassName="-mb-[0.22em] bg-linear-to-b from-(--color-text)/30 to-(--color-text)/5 bg-clip-text pb-[0.22em] text-transparent"
+        />
       </Container>
 
       <div className="border-t border-(--color-border)">

@@ -12,10 +12,10 @@ import type { Channels } from '@/lib/content';
 import { ctaNavRoutes, getRoute, primaryNavRoutes, siteConfig } from '@/lib/site';
 
 import { MobileMenuPanel, MobileMenuToggle, useMobileMenu } from './mobile-menu';
-import { PillNav } from './pill-nav';
+import { HudNav } from './hud-nav';
 
-/** The logo links Home, so Home is not repeated as a pill. */
-const pillItems = primaryNavRoutes.filter((route) => route.href !== '/');
+/** The logo links Home, so Home is not repeated in the rail. */
+const railItems = primaryNavRoutes.filter((route) => route.href !== '/');
 const homeRoute = getRoute('/');
 
 function subscribeToScroll(onChange: () => void) {
@@ -34,7 +34,7 @@ type SiteHeaderProps = {
  * page scrolls. The glass is a separate layer whose `opacity` changes (rule 4),
  * not an animated background.
  *
- * lg and up: logo · PillNav · Recruitment CTA. Below lg: logo · CTA (from sm)
+ * lg and up: logo · HudNav (D-038) · Recruitment CTA. Below lg: logo · CTA (from sm)
  * · Menu toggle, with the MobileMenu panel behind the header row.
  *
  * The CTA shows a status dot while recruitment is open. The layout passes the
@@ -76,7 +76,7 @@ export function SiteHeader({ channels, recruitmentOpen }: SiteHeaderProps) {
           </span>
         </Link>
 
-        <PillNav items={pillItems} />
+        <HudNav items={railItems} />
 
         <div className="flex items-center gap-2">
           {ctaNavRoutes.map((route) => (

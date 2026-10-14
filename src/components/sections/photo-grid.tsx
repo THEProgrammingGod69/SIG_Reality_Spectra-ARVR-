@@ -2,11 +2,15 @@
 
 import { ChevronLeft, ChevronRight, Expand } from 'lucide-react';
 import Image from 'next/image';
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 
+import { prefersReducedMotion } from '@/components/motion/use-reduced-motion';
 import { Icon } from '@/components/ui/icon';
 import { Modal } from '@/components/ui/modal';
 import { cn } from '@/lib/cn';
+import { gsap, gsapEase, ScrollTrigger } from '@/lib/motion/gsap';
+import { reachablePoint } from '@/lib/motion/scroll-point';
+import { readMotionTokens } from '@/lib/motion/tokens';
 import type { Image as StoredImage } from '@/lib/schemas/image';
 
 export type GridPhoto = {
@@ -57,10 +61,65 @@ const TILE_SIZES = {
 /** Entrances past this many tiles share the last delay, so a long batch never drags. */
 const MAX_STAGGER_STEPS = 12;
 
+/** A tile's curtain lifts when the tile's top is this far down the viewport. */
+const DEVELOP_AT = 0.92;
+/** How much closer the photo starts while its curtain is down. */
+const DEVELOP_ZOOM = 1.15;
+
+/**
+ * Develops the tiles below the fold as the reader reaches them (D-038): each
+ * tile waits under a curtain of the lab's surface with a line of spectrum
+ * light on its lower edge, and the curtain lifts (`scaleY`) while the photo
+ * settles back from slightly closer (`scale`) — row by row, a stagger apart.
+ *
+ * Tiles already on screen at load are never covered, so the first row (and
+ * the page's largest paint) shows at once; nothing is covered without
+ * JavaScript or under reduced motion, or for tiles that arrive with their own
+ * entrance (after a filter change or "Show more"). Returns the cleanup.
+ */
+function developOnScroll(list: HTMLElement): () => void {
+  const tiles = Array.from(list.querySelectorAll<HTMLElement>(':scope > li:not(.animate-enter)'));
+  const waiting = tiles.filter((tile) => tile.getBoundingClientRect().top >= window.innerHeight);
+  if (waiting.length === 0) return () => {};
+
+  const tokens = readMotionTokens();
+  const curtains = (batch: Element[]) => batch.map((tile) => tile.querySelector('[data-curtain]'));
+  const photos = (batch: Element[]) => batch.map((tile) => tile.querySelector('img'));
+
+  const context = gsap.context(() => {
+    gsap.set(curtains(waiting), { scaleY: 1 });
+    gsap.set(photos(waiting), { scale: DEVELOP_ZOOM });
+    ScrollTrigger.batch(waiting, {
+      once: true,
+      start: (self: ScrollTrigger) => reachablePoint(self.trigger as Element, 'top', DEVELOP_AT)(),
+      onEnter: (batch) => {
+        const ease = gsapEase(tokens, 'outExpo');
+        gsap.to(curtains(batch), {
+          scaleY: 0,
+          duration: tokens.dur.long,
+          ease,
+          stagger: tokens.stagger,
+        });
+        gsap.to(photos(batch), {
+          scale: 1,
+          duration: tokens.dur.long * 1.5,
+          ease,
+          stagger: tokens.stagger,
+          clearProps: 'transform',
+        });
+      },
+    });
+  }, list);
+
+  return () => context.revert();
+}
+
 /**
  * Square tiles, cropped to the centre so photos of any shape line up; opening
  * one shows it whole, with the rest one keypress away. Under the pointer (or
- * keyboard focus) a tile eases closer and its caption rises in (D-037).
+ * keyboard focus) a tile eases closer and its caption rises in (D-037), and
+ * the other tiles dim (`focus-dim`, D-038). Tiles below the fold develop from
+ * under a curtain as the reader reaches them (`developOnScroll`).
  */
 export function PhotoGrid({
   photos,
@@ -72,12 +131,28 @@ export function PhotoGrid({
   className,
 }: PhotoGridProps) {
   const [open, setOpen] = useState<number | null>(null);
+  const listRef = useRef<HTMLUListElement>(null);
   const shown = limit === undefined ? photos : photos.slice(0, limit);
   const hidden = photos.length - shown.length;
 
+  // The curtains are set once, for the tiles there at mount (see developOnScroll).
+  useLayoutEffect(() => {
+    const list = listRef.current;
+    if (!list || prefersReducedMotion()) return;
+    return developOnScroll(list);
+  }, []);
+
   return (
     <>
-      <ul className={cn('grid gap-2', tiles[tile], feature && 'md:grid-flow-dense', className)}>
+      <ul
+        ref={listRef}
+        className={cn(
+          'grid gap-2 focus-dim',
+          tiles[tile],
+          feature && 'md:grid-flow-dense',
+          className,
+        )}
+      >
         {shown.map((photo, index) => {
           const more = hidden > 0 && index === shown.length - 1;
           const featured = feature && index === 0;
@@ -126,6 +201,14 @@ export function PhotoGrid({
                     </span>
                   </span>
                 ) : null}
+                <span
+                  aria-hidden="true"
+                  data-curtain
+                  // Inline, not `scale-y-0`: the utility sets the separate `scale`
+                  // property, which would multiply with the scripted transform.
+                  style={{ transform: 'scaleY(0)' }}
+                  className="pointer-events-none absolute inset-0 origin-top bg-(--color-surface-raised) after:absolute after:inset-x-0 after:bottom-0 after:h-px after:bg-(image:--gradient-rim)"
+                />
                 {more ? (
                   <span className="absolute inset-0 flex items-center justify-center bg-(--color-void)/60 font-display text-display-sm text-(--color-text)">
                     +{hidden + 1}

@@ -15,8 +15,10 @@ Built in **Stage 2** (Hero) and **Stages 4, 7 and 8** (the rest).
 | ------------------------ | --------------------------- | -------------------------------------------------------------------------- |
 | `page-intro.tsx`         | About, Recruitment, Contact | Eyebrow, the page's `<h1>`, lead                                           |
 | `about-intro.tsx`        | Home                        | Motto, "Who we are", short about; opens under the horizon glow (D-018)     |
-| `mission-vision.tsx`     | Home, About                 | Mission and vision cards                                                   |
-| `domain-overview.tsx`    | Home                        | Domain names by group, link to the full list                               |
+| `mission-vision.tsx`     | Home, About                 | Mission and vision (and on Home the motto) as stacking panels (D-038)      |
+| `domain-overview.tsx`    | Home                        | Domain names, each tagged with its group, on the rail (`domain-rail.tsx`)  |
+| `domain-rail.tsx`        | Home                        | The domains as a horizontal rail from `md`, a grid elsewhere (D-038)       |
+| `intro-field.tsx`        | About, Events, …            | The Spectral Field shader behind a page intro, high tier only (D-038)      |
 | `domain-list.tsx`        | Recruitment                 | Every domain with its full description, by group                           |
 | `about-story.tsx`        | About                       | The long about, with an "at a glance" card                                 |
 | `recruitment-status.tsx` | Recruitment                 | Open: Apply now + QR + roles PDF or "coming soon"; closed: where to follow |
@@ -45,13 +47,14 @@ Built in **Stage 2** (Hero) and **Stages 4, 7 and 8** (the rest).
 
 ## `hero/` (Stage 2)
 
-| File                    | Renders on | What it does                                               |
-| ----------------------- | ---------- | ---------------------------------------------------------- |
-| `hero.tsx`              | server     | the text: eyebrow, `<h1>` name, intro line, two CTAs       |
-| `hero-still.tsx`        | server     | the designed static frame, SVG from tokens (D-017)         |
-| `hero-stage.tsx`        | client     | tier, lazy canvas, intro, scroll-out pin, pointer, pausing |
-| `hero-title.tsx`        | client     | the `<h1>` as `FocusText`, swept once during the intro     |
-| `hero-intro-context.ts` | client     | `idle` → `playing` → `done`                                |
+| File                    | Renders on | What it does                                                    |
+| ----------------------- | ---------- | --------------------------------------------------------------- |
+| `hero.tsx`              | server     | the text: eyebrow, `<h1>` name, intro line, two CTAs            |
+| `hero-still.tsx`        | server     | the designed static frame, SVG from tokens (D-017)              |
+| `hero-stage.tsx`        | client     | tier, lazy canvas, intro, scroll-out pin, pointer, pausing      |
+| `hero-title.tsx`        | client     | the `<h1>` as `FocusText`, swept once during the intro          |
+| `hero-hud.tsx`          | server     | the headset's display: frame, ruler, one scan, readouts (D-038) |
+| `hero-intro-context.ts` | client     | `idle` → `playing` → `done`                                     |
 
 The name is real text at first paint (D-010). The intro is about 1.35 s,
 skippable (button or Esc), plays once per session (`sessionStorage`), and is

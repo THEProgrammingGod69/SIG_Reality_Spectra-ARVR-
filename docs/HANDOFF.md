@@ -31,9 +31,24 @@ review findings that were fixed (trigger ordering with the hero pin, reachable
 trigger points, contrast in every state, nothing looping past 5 s) and what
 was left alone on purpose. New e2e: `tests/e2e/motion.spec.ts`.
 
+## The XR HUD (D-038) — after the premium pass
+
+On the same branch. The club asked for more motion and nothing generic, so the
+site now reads as the lab seen through a headset: a HUD navigation rail with a
+lock-on frame (`site/hud-nav.tsx`, replacing PillNav), an aperture-shutter
+mobile menu, a targeting reticle that locks onto links (system cursor kept),
+a shutter between pages, decoding mono labels, the hero's display frame and
+scan, Home's domains on a horizontal rail and its purpose panels stacking,
+the footer wordmark floating in, team members as holographic access passes,
+the gallery's focus dim and curtain develop, and — on capable devices only —
+a light-through-haze shader behind each inner page's opening
+(`three/spectral-field`). Read D-038 for every call; new e2e:
+`tests/e2e/hud.spec.ts`. The club's Instagram could not be read by tools (login
+wall), so no content was taken from it.
+
 ## Start of the next chat
 
-1. Read this file, then `CLAUDE.md`, `docs/DECISIONS.md` (D-001 – D-035),
+1. Read this file, then `CLAUDE.md`, `docs/DECISIONS.md` (D-001 – D-038),
    `docs/ARCHITECTURE.md`, `docs/OPEN_ITEMS.md`, and the READMEs in
    `src/lib/data`, `src/lib/schemas`, `src/lib/auth`, `src/components/admin`.
 2. Run `git status` (only the untracked `.claude/` launch config is expected).
@@ -219,8 +234,9 @@ stage-N`, push branch and tag, then a small "docs: handoff" commit.
 - `src/components/ui/`: Button/ButtonLink (incl. StarBorder `star` variant and
   `magnetic`), Card family, Badge, Container, Section, Heading, Text/Eyebrow,
   Field/Input/Textarea/Select, Modal, Skeleton, EmptyState, Icon, BrandMark/Badge.
-- `src/components/site/`: fixed header (glass on scroll), PillNav (`lg`+),
-  MobileMenu (StaggeredMenu rebuilt, accessible), footer, recruitment banner
+- `src/components/site/`: fixed header (glass on scroll), PillNav (`lg`+; the
+  HUD rail since D-038), MobileMenu (StaggeredMenu rebuilt, accessible; the
+  aperture since D-038), footer, recruitment banner
   slot, page transition (`(site)/template.tsx`).
 - Brand pack in (D-021); favicon + Apple icon; OPEN_ITEMS #2 and #3 resolved.
 - `/dev/ui` playground; `cn()` (D-019); contrast audit test; shell e2e suite

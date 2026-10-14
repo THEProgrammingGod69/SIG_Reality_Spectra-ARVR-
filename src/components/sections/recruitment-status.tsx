@@ -3,6 +3,7 @@ import { FileText } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { ButtonLink } from '@/components/ui/button';
 import { Card, CardBody } from '@/components/ui/card';
+import { HudCorners } from '@/components/ui/hud-corners';
 import { Heading } from '@/components/ui/heading';
 import { QrCode } from '@/components/ui/qr-code';
 import { Section } from '@/components/ui/section';
@@ -38,6 +39,13 @@ export function RecruitmentStatus({ recruitment, socials }: RecruitmentStatusPro
           <span
             aria-hidden="true"
             className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_60%_80%_at_0%_100%,color-mix(in_oklab,var(--color-spectra-violet)_16%,transparent),transparent_70%)]"
+          />
+        ) : null}
+        {formUrl ? (
+          // Open: the card is in the HUD's sights, its brackets locking on as it arrives (D-038).
+          <HudCorners
+            className="inset-3 animate-lock-on text-(--color-accent)"
+            cornerClassName="size-4"
           />
         ) : null}
         <CardBody className="gap-8 p-8 md:flex-row md:items-center md:justify-between md:p-12">

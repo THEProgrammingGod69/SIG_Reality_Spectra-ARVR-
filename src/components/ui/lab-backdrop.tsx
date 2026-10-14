@@ -1,3 +1,4 @@
+import { Parallax } from '@/components/motion/parallax';
 import { cn } from '@/lib/cn';
 
 const stop = (token: string, opacity = 1) => ({ stopColor: `var(${token})`, stopOpacity: opacity });
@@ -27,6 +28,12 @@ const placements = {
 
 type LabBackdropProps = {
   align?: keyof typeof placements;
+  /**
+   * How the lab answers the scroll (D-038): `drift` — the orbit turns and the
+   * light sinks as the section scrolls away (page intros); `portal` — the orbit
+   * opens around the reader as they arrive (calls to action).
+   */
+  motion?: 'drift' | 'portal';
   className?: string;
 };
 
@@ -40,9 +47,11 @@ type LabBackdropProps = {
  * only from tokens. As the page opens, the rings turn into place and the
  * light rises and spreads (`animate-orbit`, `animate-drift`: transform and
  * opacity, `--dur-settle`, under 5 s), then the lab is still — nothing loops.
- * Reduced motion shows it at rest. Place it in a `relative isolate` section.
+ * Then it answers the scroll (`Parallax`, D-038): the orbit turns or opens
+ * and the light drifts while the reader scrolls, and only then. Reduced
+ * motion shows it at rest. Place it in a `relative isolate` section.
  */
-export function LabBackdrop({ align = 'end', className }: LabBackdropProps) {
+export function LabBackdrop({ align = 'end', motion = 'drift', className }: LabBackdropProps) {
   const place = placements[align];
 
   return (
@@ -62,39 +71,43 @@ export function LabBackdrop({ align = 'end', className }: LabBackdropProps) {
       />
 
       <div className={cn('absolute', place.glow)}>
-        <div className="size-full animate-drift rounded-full bg-[radial-gradient(closest-side,color-mix(in_oklab,var(--color-spectra-violet)_20%,transparent),color-mix(in_oklab,var(--color-spectra-indigo)_8%,transparent)_55%,transparent)]" />
+        <Parallax depth={motion === 'drift' ? -1 : 0}>
+          <div className="size-full animate-drift rounded-full bg-[radial-gradient(closest-side,color-mix(in_oklab,var(--color-spectra-violet)_20%,transparent),color-mix(in_oklab,var(--color-spectra-indigo)_8%,transparent)_55%,transparent)]" />
+        </Parallax>
       </div>
 
       <div className={cn('absolute', place.rings)}>
-        <svg className="size-full animate-orbit" viewBox="-160 -160 320 320">
-          <defs>
-            <linearGradient id={`lab-orbit-${align}`} x1="0" x2="1" y1="0" y2="1">
-              <stop offset="0.15" style={stop('--color-spectra-orchid', 0.9)} />
-              <stop offset="0.85" style={stop('--color-spectra-azure', 0.9)} />
-            </linearGradient>
-          </defs>
-          <g fill="none" stroke={`url(#lab-orbit-${align})`}>
-            <circle r={156} strokeWidth={0.4} opacity={0.14} />
-            <circle r={128} strokeWidth={0.5} opacity={0.22} />
-            <circle r={100} strokeWidth={0.8} opacity={0.38} />
-            <circle r={72} strokeWidth={0.4} opacity={0.14} />
-          </g>
-          <g className={place.satellite.className}>
-            <circle
-              cx={place.satellite.cx}
-              cy={place.satellite.cy}
-              r={2.4}
-              style={{ fill: 'var(--color-spectra-cyan)' }}
-            />
-            <circle
-              cx={place.satellite.cx}
-              cy={place.satellite.cy}
-              r={7}
-              opacity={0.25}
-              style={{ fill: 'var(--color-spectra-cyan)' }}
-            />
-          </g>
-        </svg>
+        <Parallax turn={motion === 'drift' ? 1 : 0} portal={motion === 'portal'}>
+          <svg className="size-full animate-orbit" viewBox="-160 -160 320 320">
+            <defs>
+              <linearGradient id={`lab-orbit-${align}`} x1="0" x2="1" y1="0" y2="1">
+                <stop offset="0.15" style={stop('--color-spectra-orchid', 0.9)} />
+                <stop offset="0.85" style={stop('--color-spectra-azure', 0.9)} />
+              </linearGradient>
+            </defs>
+            <g fill="none" stroke={`url(#lab-orbit-${align})`}>
+              <circle r={156} strokeWidth={0.4} opacity={0.14} />
+              <circle r={128} strokeWidth={0.5} opacity={0.22} />
+              <circle r={100} strokeWidth={0.8} opacity={0.38} />
+              <circle r={72} strokeWidth={0.4} opacity={0.14} />
+            </g>
+            <g className={place.satellite.className}>
+              <circle
+                cx={place.satellite.cx}
+                cy={place.satellite.cy}
+                r={2.4}
+                style={{ fill: 'var(--color-spectra-cyan)' }}
+              />
+              <circle
+                cx={place.satellite.cx}
+                cy={place.satellite.cy}
+                r={7}
+                opacity={0.25}
+                style={{ fill: 'var(--color-spectra-cyan)' }}
+              />
+            </g>
+          </svg>
+        </Parallax>
       </div>
     </div>
   );

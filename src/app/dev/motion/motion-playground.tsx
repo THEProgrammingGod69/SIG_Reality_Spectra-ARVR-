@@ -2,10 +2,14 @@
 
 import { useState, useSyncExternalStore } from 'react';
 
+import { DecodeText } from '@/components/motion/decode-text';
 import { FocusText } from '@/components/motion/focus-text';
+import { HoloFoil } from '@/components/motion/holo-foil';
 import { Magnetic } from '@/components/motion/magnetic';
 import { Marquee } from '@/components/motion/marquee';
+import { Parallax } from '@/components/motion/parallax';
 import { Reveal } from '@/components/motion/reveal';
+import { ScrollFloat } from '@/components/motion/scroll-float';
 import { ScrollWords } from '@/components/motion/scroll-words';
 import { SplitText } from '@/components/motion/split-text';
 import { Stagger } from '@/components/motion/stagger';
@@ -16,6 +20,7 @@ import { useHeroTier } from '@/components/three/use-hero-tier';
 import { Button, ButtonLink } from '@/components/ui/button';
 import { Card, CardBody } from '@/components/ui/card';
 import { Heading } from '@/components/ui/heading';
+import { HudCorners } from '@/components/ui/hud-corners';
 import { Text } from '@/components/ui/text';
 import { readHeroTierSignals, type HeroTier } from '@/lib/motion/hero-tier';
 import { DURATION_TOKENS } from '@/lib/motion/tokens';
@@ -212,6 +217,25 @@ export function MotionPlayground() {
         />
       </DevPanel>
 
+      <div className="grid gap-6 md:grid-cols-2">
+        <DevPanel title="DecodeText (D-038)">
+          <DecodePlayground />
+        </DevPanel>
+        <DevPanel title="HudCorners + HoloFoil (D-038)">
+          <div className="group/demo relative isolate aspect-video overflow-hidden rounded-card border border-(--color-border) bg-(--color-surface-raised)">
+            <span className="absolute inset-0 bg-scanlines" />
+            <HoloFoil />
+            <HudCorners
+              className="inset-3 scale-110 text-(--color-spectra-cyan) opacity-0 transition-[scale,opacity] duration-(--dur-medium) ease-out-expo group-hover/demo:scale-100 group-hover/demo:opacity-100"
+              cornerClassName="size-4"
+            />
+            <span className="absolute inset-0 flex items-center justify-center font-mono text-label text-(--color-muted) uppercase">
+              Hover me
+            </span>
+          </div>
+        </DevPanel>
+      </div>
+
       <div className="flex min-h-[80svh] items-center justify-center rounded-card border border-dashed border-(--color-border) text-(--color-muted)">
         Scroll down: Reveal, Stagger, ScrollWords and TimelineRail play as they enter the viewport.
       </div>
@@ -237,6 +261,28 @@ export function MotionPlayground() {
         </div>
       </DevPanel>
 
+      <DevPanel title="Parallax (D-038): drift, turn, portal">
+        <div className="grid h-64 grid-cols-3 gap-4">
+          {[{ depth: 1 }, { turn: 1 }, { portal: true }].map((props, index) => (
+            <div
+              key={index}
+              className="relative flex items-center justify-center overflow-hidden rounded-card border border-(--color-border)"
+            >
+              <Parallax {...props} className="flex items-center justify-center">
+                <span className="size-16 rounded-full border border-(--color-accent)" />
+              </Parallax>
+            </div>
+          ))}
+        </div>
+      </DevPanel>
+
+      <DevPanel title="ScrollFloat (D-038)">
+        <ScrollFloat
+          text="Reality Spectra"
+          className="text-center font-display text-display-xl whitespace-nowrap text-(--color-text)"
+        />
+      </DevPanel>
+
       <Reveal>
         <DevPanel title="Reveal">
           <Text>
@@ -259,6 +305,21 @@ export function MotionPlayground() {
           ))}
         </Stagger>
       </DevPanel>
+    </div>
+  );
+}
+
+/** DecodeText on demand: each press decodes the label again. */
+function DecodePlayground() {
+  const [replay, setReplay] = useState(0);
+  return (
+    <div className="flex flex-col items-start gap-4">
+      <p className="font-mono text-label text-(--color-text) uppercase">
+        <DecodeText text="Signal acquired · 01 / 06" trigger="manual" replay={replay} />
+      </p>
+      <Button size="sm" variant="secondary" onClick={() => setReplay((count) => count + 1)}>
+        Decode again
+      </Button>
     </div>
   );
 }

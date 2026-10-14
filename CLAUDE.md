@@ -196,7 +196,7 @@ src/
     robots.ts
   components/
     ui/              design-system primitives          (Stage 3)
-    site/            site chrome: header, PillNav, mobile menu, footer   (Stage 3)
+    site/            site chrome: header, HudNav, mobile menu, reticle, footer   (Stage 3, D-038)
     motion/          reusable animation primitives     (Stage 2)
     three/           R3F scenes                        (Stage 2)
     sections/        composed page sections            (Stages 2, 4, 7, 8)
@@ -400,7 +400,7 @@ contributor must know before writing UI:
 | Motion             | Rule 4 has no exceptions (D-009); TrueFocus is replaced by our own `FocusText`                                                                                  |
 | WebGL              | One context in the hero, at most two heavy WebGL components per page; no `ogl` (D-010, D-011)                                                                   |
 | Hero text          | The name is real text at first paint; the intro plays around it, skippable, once per session (D-010)                                                            |
-| Navigation         | PillNav on desktop (patched to `next/link`), StaggeredMenu on mobile; no Dock (D-012)                                                                           |
+| Navigation         | HUD rail on desktop (`HudNav`), aperture menu on mobile; no Dock (D-038, superseding D-012's PillNav/StaggeredMenu)                                             |
 | Home               | Hero, mission/vision/about, domains; no team section (D-027). No stat counters in v1 (D-007)                                                                    |
 | Contact            | One page: details and the sponsorship form (D-006)                                                                                                              |
 | Sponsorship inbox  | Admin panel only; no email integration (D-008)                                                                                                                  |
@@ -409,7 +409,7 @@ contributor must know before writing UI:
 | Hero build         | MagicRings shader ported into the one R3F canvas (D-016); static still is token SVG (D-017); scroll-out pin (D-018)                                             |
 | Motion tokens      | `--dur-*`, `--ease-*`, `--stagger`, `--motion-rise` in CSS; JS reads them via `readMotionTokens()` — never a literal                                            |
 | Design tokens      | Type scale `text-display-*`/`text-body*`/`text-label`, `py-section`, `px-gutter`, `h-header`, `max-w-content`, `rounded-card`/`-control`, `shadow-card`/`-glow` |
-| Shell              | Fixed header over the page; `data-full-bleed` sections run under it. PillNav (`lg`+) and MobileMenu rebuilt from React Bits (D-020)                             |
+| Shell              | Fixed header over the page; `data-full-bleed` sections run under it. HudNav (`lg`+) and the aperture MobileMenu (D-020, D-038)                                  |
 | Logo               | Original badge + white-ring mark, raster via `next/image`; masters in `references/brand` (D-021)                                                                |
 | Rule 4 and colour  | No colour/background transitions: hover colour is instant, overlays fade with opacity (D-022)                                                                   |
 | Content            | Copy lives only in `src/content/*.json`, read through `src/lib/content.ts` (server-only); client components get props (D-023)                                   |
@@ -440,6 +440,11 @@ contributor must know before writing UI:
 | Premium motion     | React Bits SplitText/ScrollReveal/SpotlightCard/ScrollVelocity/GlareHover rebuilt on rule 4; `SectionHeading` for every section; `Card spotlight` (D-037)       |
 | Page openings      | `PageIntro` runs under the header over `LabBackdrop`; its title rises in CSS (`SplitText play="load"`), delays are `--stagger` multiples (D-037)                |
 | Scroll triggers    | Starts/ends via `reachablePoint()` (clamped to max scroll), never a bare `'top 85%'` — nothing near a short page's end stays hidden (D-037)                     |
+| XR HUD             | The site seen through the lab's headset: `HudCorners` lock-ons, `DecodeText` mono readouts, one scan, the page-change shutter, `Parallax` depth (D-038)         |
+| Reticle            | Brackets lock onto what can be clicked; system cursor kept, mouse only, `aria-hidden`, never under reduced motion (D-038)                                       |
+| Decoding text      | Mono labels only; the real text stays in the DOM, the glyphs play in an `aria-hidden` copy; once per trigger (D-038)                                            |
+| Home rail / stack  | Domains ride a sticky horizontal rail from `md` (grid elsewhere); purpose panels stack (`stack:` variant); both off under reduced motion (D-038)                |
+| Inner-page WebGL   | The Spectral Field behind `PageIntro`, high tier only, one context per page, still unless the visitor moves (D-038)                                             |
 
 ---
 

@@ -3,6 +3,7 @@ import { Container } from '@/components/ui/container';
 import { Eyebrow, Text } from '@/components/ui/text';
 import { clubCredit, getRoute, siteConfig } from '@/lib/site';
 
+import { HeroHud } from './hero-hud';
 import { HeroStage } from './hero-stage';
 import { HeroStill } from './hero-still';
 import { HeroTitle } from './hero-title';
@@ -25,11 +26,13 @@ const recruitmentRoute = getRoute('/recruitment');
  * orbit-lab-scene.tsx), so the bottom padding of 14svh keeps the buttons
  * above the crest.
  *
- * The one-line intro comes from src/content/site.json, passed in by the page.
+ * The one-line intro and the motto come from src/content/site.json, passed in
+ * by the page. The headset's display (`HeroHud`, D-038) frames the scene.
  */
-export function Hero({ tagline }: { tagline: string }) {
+export function Hero({ tagline, motto }: { tagline: string; motto: string }) {
   return (
     <HeroStage labelledBy={TITLE_ID} still={<HeroStill />}>
+      <HeroHud motto={motto} />
       <Container className="flex flex-col justify-end pt-header pb-[max(4rem,14svh)] [@media(min-aspect-ratio:23/20)]:justify-center [@media(min-aspect-ratio:23/20)]:pb-24">
         <div className="max-w-xl">
           <Eyebrow>{clubCredit}</Eyebrow>

@@ -25,6 +25,19 @@ async function wordsAtRest(page: Page, selector: string) {
   );
 }
 
+/**
+ * The footer wordmark's characters at rest — in place and fully opaque — once
+ * they have floated up (ScrollFloat, D-038).
+ */
+async function wordmarkAtRest(page: Page) {
+  return page.locator('[data-site-footer] [data-char]').evaluateAll((chars) =>
+    chars.every((char) => {
+      const style = getComputedStyle(char);
+      return new DOMMatrix(style.transform).isIdentity && style.opacity === '1';
+    }),
+  );
+}
+
 /** Wheel down until the page cannot scroll further, as a reader would. */
 async function readToTheEnd(page: Page) {
   for (let step = 0; step < 60; step += 1) {
@@ -132,9 +145,8 @@ test.describe('the end of the page', () => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
     await readToTheEnd(page);
-    const wordmark = page.locator('[data-site-footer] p.text-display-3xl');
-    // Its reveal wrapper plays once the reader reaches the bottom.
-    await expect(wordmark.locator('..')).toHaveCSS('opacity', '1', { timeout: 5000 });
+    // Its characters have floated into place once the reader reaches the bottom.
+    await expect.poll(() => wordmarkAtRest(page), { timeout: 5000 }).toBe(true);
   });
 
   test('…and after a client navigation to a shorter page (triggers re-measured)', async ({
@@ -152,8 +164,7 @@ test.describe('the end of the page', () => {
     await expect(page).toHaveURL(/\/about$/, { timeout: 15_000 });
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
     await readToTheEnd(page);
-    const wordmark = page.locator('[data-site-footer] p.text-display-3xl');
-    await expect(wordmark.locator('..')).toHaveCSS('opacity', '1', { timeout: 5000 });
+    await expect.poll(() => wordmarkAtRest(page), { timeout: 5000 }).toBe(true);
   });
 });
 
@@ -198,11 +209,7 @@ test.describe('robustness', () => {
     await expect
       .poll(() => wordsAtRest(page, '#sponsorship [data-word]'), { timeout: 5000 })
       .toBe(true);
-    await expect(page.locator('[data-site-footer] p.text-display-3xl').locator('..')).toHaveCSS(
-      'opacity',
-      '1',
-      { timeout: 5000 },
-    );
+    await expect.poll(() => wordmarkAtRest(page), { timeout: 5000 }).toBe(true);
   });
 
   test('the outlined domain clears when the fragment does', async ({ page }) => {

@@ -18,6 +18,8 @@ export const siteConfig = {
   parentOrganisation: 'VIT Pune',
   /** What the club is, in the words used for titles and structured data. */
   kind: 'Special Interest Group',
+  /** The realities the club works in — the hero's HUD readout (D-038). */
+  realities: ['AR', 'VR', 'XR'],
 } as const;
 
 /** "Special Interest Group · VIT Pune" — the subtle club credit (hero, menu, footer). */

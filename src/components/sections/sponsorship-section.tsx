@@ -4,6 +4,7 @@ import type { ComponentProps } from 'react';
 import { Reveal } from '@/components/motion/reveal';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Icon } from '@/components/ui/icon';
+import { HudCorners } from '@/components/ui/hud-corners';
 import { Section } from '@/components/ui/section';
 import { Text } from '@/components/ui/text';
 import type { LiveSocial } from '@/lib/content';
@@ -75,7 +76,15 @@ export function SponsorshipSection({ action, turnstileSiteKey, socials }: Sponso
           </Reveal>
         </div>
 
-        <Reveal>
+        <Reveal className="group/form relative">
+          {/* The HUD locks onto the form while the visitor fills it in (D-038). */}
+          {action ? (
+            <HudCorners
+              // Within the page gutter at every width, at rest and while it settles.
+              className="-inset-2 scale-[0.97] text-(--color-accent) opacity-0 transition-[scale,opacity] duration-(--dur-medium) ease-out-expo group-focus-within/form:scale-100 group-focus-within/form:opacity-100"
+              cornerClassName="size-5"
+            />
+          ) : null}
           {action ? (
             <SponsorshipForm
               action={action}

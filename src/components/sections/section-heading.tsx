@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 
+import { DecodeText } from '@/components/motion/decode-text';
 import { SplitText } from '@/components/motion/split-text';
 import { Heading, type HeadingSize } from '@/components/ui/heading';
 import { Eyebrow, Text } from '@/components/ui/text';
@@ -60,12 +61,15 @@ export function SectionHeading({
   );
 }
 
-/** An eyebrow led by a short spectrum dash — the section-opening label. */
+/**
+ * An eyebrow led by a short spectrum dash — the section-opening label. Plain
+ * text decodes like a HUD readout as it comes into view (`DecodeText`, D-038).
+ */
 export function EyebrowDash({ children, className }: { children: ReactNode; className?: string }) {
   return (
     <Eyebrow className={cn('flex items-center gap-3', className)}>
       <span aria-hidden="true" className="h-px w-8 shrink-0 bg-(image:--gradient-spectra)" />
-      {children}
+      {typeof children === 'string' ? <DecodeText text={children} /> : children}
     </Eyebrow>
   );
 }

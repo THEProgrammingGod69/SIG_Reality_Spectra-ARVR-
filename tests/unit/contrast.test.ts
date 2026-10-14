@@ -87,8 +87,10 @@ describe('colour tokens meet WCAG AA', () => {
     },
   );
 
-  it('PillNav hover label reads on its light pill', () => {
-    expect(contrastRatio(colour('bg'), colour('text'))).toBeGreaterThanOrEqual(WCAG_AA_TEXT);
+  it('HudNav labels, numbers and its scroll readout read on the glass (D-038)', () => {
+    for (const tone of ['muted', 'subtle', 'accent']) {
+      expect(contrastRatio(colour(tone), colour('bg'))).toBeGreaterThanOrEqual(WCAG_AA_TEXT);
+    }
   });
 
   it('form control borders are visible boundaries (3:1)', () => {

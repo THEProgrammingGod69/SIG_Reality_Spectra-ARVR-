@@ -22,6 +22,11 @@ them all at `/dev/motion` (development only).
 | `scroll-progress.tsx`   | `<ScrollProgress>` — the header's reading-progress hairline (D-037)                     |
 | `timeline-rail.tsx`     | `<TimelineRail>` + `<TimelineMarker>` — the events rail that fills as you read (D-037)  |
 | `scroll-refresh.tsx`    | `<ScrollRefresh>` — re-measures triggers after navigations and streamed content (D-037) |
+| `decode-text.tsx`       | `<DecodeText>` — our DecryptedText: a mono label decodes like a HUD readout (D-038)     |
+| `parallax.tsx`          | `<Parallax>` — decoration that drifts, turns or opens as a portal with the scroll       |
+| `stack.tsx`             | `<Stack>` — our ScrollStack: sticky panels that stack and step back (D-038)             |
+| `scroll-float.tsx`      | `<ScrollFloat>` — our ScrollFloat: characters float up into place (footer wordmark)     |
+| `holo-foil.tsx`         | `<HoloFoil>` — the foil sheen on a team access pass, after ProfileCard (D-038)          |
 
 Tokens and GSAP setup live in `src/lib/motion/` (`tokens.ts`, `gsap.ts`), and
 `scroll-point.ts` turns "top 85%" into a trigger point the reader can always
@@ -47,6 +52,10 @@ Rules:
   `revert()` it. Never `ScrollTrigger.getAll().forEach(kill)`.
 - Import `gsap` / `ScrollTrigger` from `@/lib/motion/gsap`, not the package, so
   plugins are registered once.
+- Text that changes (`DecodeText`) keeps the real text in the DOM at every
+  moment; the changing copy is `aria-hidden`. Mono labels only (D-038).
+- Scroll-driven distances are tokens too (`--motion-depth`, `--motion-turn`,
+  `--motion-portal`, `--motion-shelve`), read with `readCssVar`.
 
 The page transition lives with the site chrome (`components/site/page-transition.tsx`);
 the magnetic button is `Button`/`ButtonLink` with `magnetic`; `<Tilt>` is on

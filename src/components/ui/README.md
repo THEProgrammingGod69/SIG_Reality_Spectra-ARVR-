@@ -20,7 +20,8 @@ Design-system primitives, built in **Stage 3**. See every one, in every state, a
 | `logo.tsx`         | `BrandMark`, `BrandBadge` — the club logo via `next/image`                                                                                                         |
 | `qr-code.tsx`      | `QrCode` — server-only SVG QR generated from a link, token colours (D-023)                                                                                         |
 | `viewfinder.tsx`   | `Viewfinder` — accent corner brackets around a QR code; static, never over the code (D-037)                                                                        |
-| `lab-backdrop.tsx` | `LabBackdrop` — grid floor, violet light and orbit rings behind an opening; `end` or `center` (D-037)                                                              |
+| `lab-backdrop.tsx` | `LabBackdrop` — grid floor, violet light and orbit rings behind an opening; `end` or `center`; `drift` or `portal` with the scroll (D-037, D-038)                  |
+| `hud-corners.tsx`  | `HudCorners` — the HUD's four corner brackets: frames, ticks and lock-ons (D-038)                                                                                  |
 
 Rules:
 

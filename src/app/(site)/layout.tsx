@@ -1,6 +1,7 @@
 import { ScrollRefresh } from '@/components/motion/scroll-refresh';
 import { SmoothScroll } from '@/components/motion/smooth-scroll';
 import { FilmGrain } from '@/components/site/film-grain';
+import { ReticleCursor } from '@/components/site/reticle-cursor';
 import { SiteFooter } from '@/components/site/site-footer';
 import { SiteHeader } from '@/components/site/site-header';
 import { WebAnalytics } from '@/components/site/web-analytics';
@@ -52,6 +53,7 @@ export default async function SiteLayout({ children }: LayoutProps<'/'>) {
       <SiteFooter />
       <ScrollRefresh />
       <FilmGrain />
+      <ReticleCursor />
       <WebAnalytics />
     </>
   );

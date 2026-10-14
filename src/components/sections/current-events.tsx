@@ -13,6 +13,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
+import { HudCorners } from '@/components/ui/hud-corners';
 import { Icon } from '@/components/ui/icon';
 import { Section } from '@/components/ui/section';
 import type { LiveSocial } from '@/lib/content';
@@ -74,7 +75,7 @@ export function CurrentEvents({
 function EventCard({ event, featured }: { event: PublicEvent; featured: boolean }) {
   const mode = EVENT_MODES.find((entry) => entry.id === event.mode)?.label;
   return (
-    <Card featured={featured} spotlight className={cn(featured && 'lg:flex-row')}>
+    <Card featured={featured} spotlight className={cn('group/event', featured && 'lg:flex-row')}>
       <CardMedia
         ratio="4/5"
         className={cn('bg-(--color-void)', featured && 'lg:w-[min(26rem,40%)]')}
@@ -97,6 +98,11 @@ function EventCard({ event, featured }: { event: PublicEvent; featured: boolean 
         ) : (
           <div className="flex h-full items-center justify-center bg-(image:--gradient-spectra) opacity-20" />
         )}
+        {/* The poster in the headset's sights (D-038): brackets lock on under the pointer. */}
+        <HudCorners
+          className="inset-3 scale-110 text-(--color-spectra-cyan) opacity-0 transition-[scale,opacity] duration-(--dur-medium) ease-out-expo group-focus-within/event:scale-100 group-focus-within/event:opacity-100 group-hover/event:scale-100 group-hover/event:opacity-100"
+          cornerClassName="size-5"
+        />
       </CardMedia>
       <CardBody className={cn(featured && 'lg:justify-center lg:gap-4 lg:p-10')}>
         <div className="flex flex-wrap gap-2">
