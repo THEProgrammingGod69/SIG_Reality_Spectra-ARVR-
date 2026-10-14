@@ -26,9 +26,16 @@ export type FieldInput = {
   pointer: { x: number; y: number } | null;
   /** Movement energy put in so far; it only grows. The scene drains what is new. */
   energy: number;
+  /**
+   * When the intro mounted (`performance.now()`). The settle is counted from
+   * here, not from the first frame: a slow chunk shortens it, never extends it.
+   */
+  startedAt: number;
 };
 
 type FieldClock = {
+  /** Seconds left to settle, fixed at the first frame; `null` before it. */
+  settle: number | null;
   /** Field time: what the shader animates by. */
   time: number;
   /** Real seconds since the first frame. */
@@ -60,6 +67,8 @@ const DRAIN_PER_SECOND = 0.12;
 const REST = 0.002;
 /** How much field time one unit of energy buys per second. */
 const ENERGY_SPEED = 2.4;
+/** Seconds the light takes to come up after the first frame (as the canvas fades in). */
+const REVEAL = 1;
 
 function createResources() {
   const colours = Object.fromEntries(
@@ -91,7 +100,11 @@ function createResources() {
  * outside the component, as the hero does with its scene state. Returns
  * whether anything is still moving, so the demand loop keeps drawing.
  */
-function advance(clock: FieldClock, input: FieldInput, step: number, settle: number): boolean {
+function advance(clock: FieldClock, input: FieldInput, step: number, settleFor: number): boolean {
+  // The settle is what is left of `--dur-settle` since the intro mounted.
+  clock.settle ??= Math.max(0, settleFor - (performance.now() - input.startedAt) / 1000);
+  const settle = clock.settle;
+
   // New energy from the visitor, then the drain.
   clock.energy = Math.min(1, clock.energy + Math.max(0, input.energy - clock.seen));
   clock.seen = input.energy;
@@ -111,16 +124,16 @@ function advance(clock: FieldClock, input: FieldInput, step: number, settle: num
   const pointerMoving =
     Math.abs(target.x - clock.pointer.x) > 0.001 || Math.abs(target.y - clock.pointer.y) > 0.001;
 
-  return settling || clock.energy > REST || pointerMoving;
+  return settling || clock.elapsed < REVEAL || clock.energy > REST || pointerMoving;
 }
 
 /** Write the clock into the field's uniforms. */
-function applyClock(mesh: Mesh | null, clock: FieldClock, settle: number, aspect: number) {
+function applyClock(mesh: Mesh | null, clock: FieldClock, aspect: number) {
   const material = mesh?.material;
   if (!(material instanceof ShaderMaterial)) return;
   const uniforms = material.uniforms;
   uniforms.uTime!.value = clock.time;
-  uniforms.uReveal!.value = settle > 0 ? Math.min(1, clock.elapsed / (settle * 0.4)) : 1;
+  uniforms.uReveal!.value = Math.min(1, clock.elapsed / REVEAL);
   uniforms.uAspect!.value = [aspect, 1];
   uniforms.uPointer!.value = [clock.pointer.x, clock.pointer.y];
 }
@@ -137,6 +150,7 @@ function Field({ input, onReady }: Omit<SpectralFieldSceneProps, 'active'>) {
 
   const meshRef = useRef<Mesh>(null);
   const clockRef = useRef<FieldClock>({
+    settle: null,
     time: 0,
     elapsed: 0,
     energy: 0,
@@ -148,12 +162,15 @@ function Field({ input, onReady }: Omit<SpectralFieldSceneProps, 'active'>) {
   const invalidate = useThree((state) => state.invalidate);
 
   useFrame((frame, delta) => {
-    const settle = settleRef.current;
-    const moving = advance(clockRef.current, input.current, Math.min(delta, 0.1), settle);
+    const moving = advance(
+      clockRef.current,
+      input.current,
+      Math.min(delta, 0.1),
+      settleRef.current,
+    );
     applyClock(
       meshRef.current,
       clockRef.current,
-      settle,
       frame.size.width / Math.max(frame.size.height, 1),
     );
 

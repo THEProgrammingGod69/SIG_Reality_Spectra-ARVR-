@@ -176,10 +176,14 @@ test.describe('arriving at a domain', () => {
   }) => {
     const domain = domains[2]!;
     await page.goto('/');
-    await page
+    // From `md` the domains ride a rail that moves with the scroll (D-038):
+    // reach the link by keyboard, as the rail brings a focused panel into view.
+    const link = page
       .locator('section[aria-labelledby="domains-overview"]')
-      .getByRole('link', { name: domain.name, exact: true })
-      .click();
+      .getByRole('link', { name: domain.name, exact: true });
+    await link.focus();
+    await expect(link).toBeInViewport();
+    await page.keyboard.press('Enter');
     await expect(page).toHaveURL(new RegExp(`/recruitment#${domain.id}$`), { timeout: 15_000 });
     // `:target` is not set by a client navigation; HashTarget marks the card.
     await expect(page.locator(`#${domain.id}`)).toHaveAttribute('data-targeted', 'true');

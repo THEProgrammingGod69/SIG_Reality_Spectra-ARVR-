@@ -36,7 +36,7 @@ export function IntroField() {
   const decision = useHeroTier();
   const enabled = decision?.tier === 'high';
   const rootRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<FieldInput>({ pointer: null, energy: 0 });
+  const inputRef = useRef<FieldInput>({ pointer: null, energy: 0, startedAt: 0 });
   const [onScreen, setOnScreen] = useState(true);
   const [ready, setReady] = useState(false);
 
@@ -49,6 +49,11 @@ export function IntroField() {
     observer.observe(root);
     return () => observer.disconnect();
   }, [enabled]);
+
+  // The field's settle is counted from here, however long its chunk takes.
+  useEffect(() => {
+    inputRef.current.startedAt = performance.now();
+  }, []);
 
   useEffect(() => {
     if (!enabled) return;

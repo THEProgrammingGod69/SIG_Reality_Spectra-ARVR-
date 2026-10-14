@@ -8,9 +8,9 @@ import { Spotlight } from '@/components/motion/spotlight';
 import { prefersReducedMotion, useReducedMotion } from '@/components/motion/use-reduced-motion';
 import { Container } from '@/components/ui/container';
 import { Icon } from '@/components/ui/icon';
-import { gsap, ScrollTrigger } from '@/lib/motion/gsap';
+import { gsap, gsapEase, ScrollTrigger } from '@/lib/motion/gsap';
 import { reachablePoint } from '@/lib/motion/scroll-point';
-import { readMotionTokens } from '@/lib/motion/tokens';
+import { readCssVar, readMotionTokens } from '@/lib/motion/tokens';
 
 export type RailDomain = {
   id: string;
@@ -20,8 +20,11 @@ export type RailDomain = {
   group: string;
 };
 
-/** The rail runs from `md`; below it the domains are a grid. */
-const WIDE = '(min-width: 48rem)';
+/**
+ * The rail runs from `md`, on screens tall enough to hold its frame (a phone
+ * on its side is not); elsewhere the domains are a grid.
+ */
+const WIDE = '(min-width: 48rem) and (min-height: 40rem)';
 function subscribeToWide(onChange: () => void) {
   const media = window.matchMedia(WIDE);
   media.addEventListener('change', onChange);
@@ -29,9 +32,7 @@ function subscribeToWide(onChange: () => void) {
 }
 const isWide = () => window.matchMedia(WIDE).matches;
 
-/** How far the panels lean while the rail is moving, at most, in degrees. */
-const MAX_LEAN = 4;
-/** Scroll speed (px/s) that produces the full lean. */
+/** Scroll speed (CSS px per second) that produces the full lean, `--motion-lean`. */
 const LEAN_SPEED = 2400;
 
 /**
@@ -81,6 +82,7 @@ export function DomainRail({
     if (!on || prefersReducedMotion() || !root || !viewport || !track || !bar || !count) return;
 
     const tokens = readMotionTokens();
+    const maxLean = parseFloat(readCssVar('--motion-lean')) || 0;
     const panels = Array.from(track.querySelectorAll<HTMLElement>('[data-rail-panel]'));
     const distance = () => Math.max(0, track.scrollWidth - viewport.clientWidth);
     // The section is the travel plus one screen tall; measured before every refresh.
@@ -95,7 +97,7 @@ export function DomainRail({
       // The lean eases back to upright on the token duration once scrolling stops.
       const leanTo = gsap.quickTo(panels, 'skewX', {
         duration: tokens.dur.medium,
-        ease: 'power3.out',
+        ease: gsapEase(tokens, 'outExpo'),
       });
       let settle: gsap.core.Tween | null = null;
       const lean = (degrees: number) => {
@@ -117,7 +119,7 @@ export function DomainRail({
             bar.style.transform = `scaleX(${self.progress})`;
             const index = Math.min(domains.length, Math.floor(self.progress * domains.length) + 1);
             count.textContent = String(index).padStart(2, '0');
-            lean(Math.max(-1, Math.min(1, self.getVelocity() / LEAN_SPEED)) * -MAX_LEAN);
+            lean(Math.max(-1, Math.min(1, self.getVelocity() / LEAN_SPEED)) * -maxLean);
           },
         },
       });
@@ -191,7 +193,7 @@ export function DomainRail({
               <li key={domain.id} data-rail-panel className="rail:w-(--rail-panel) rail:shrink-0">
                 <Link
                   href={`/recruitment#${domain.id}` as const}
-                  className="group/panel relative isolate flex h-full items-center gap-4 overflow-hidden rounded-card border border-(--color-border) bg-(--color-surface) p-4 hover:border-(--color-border-strong) rail:h-[min(28rem,56svh)] rail:flex-col rail:items-stretch rail:justify-between rail:gap-0 rail:p-7"
+                  className="group/panel relative isolate flex h-full items-center gap-4 overflow-hidden rounded-card border border-(--color-border) bg-(--color-surface) p-4 hover:border-(--color-border-strong) rail:h-(--rail-panel-height) rail:flex-col rail:items-stretch rail:justify-between rail:gap-0 rail:p-7"
                 >
                   <Spotlight />
                   <span
@@ -208,7 +210,7 @@ export function DomainRail({
                   >
                     <span
                       data-rail-numeral
-                      className="font-display text-[clamp(7rem,12vw,11rem)] leading-none text-outline transition-transform duration-(--dur-long) ease-out-expo group-hover/panel:scale-110"
+                      className="font-display text-numeral text-outline transition-[scale] duration-(--dur-long) ease-out-expo group-hover/panel:scale-110"
                     >
                       {domain.number}
                     </span>

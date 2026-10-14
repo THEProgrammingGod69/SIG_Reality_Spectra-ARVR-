@@ -31,12 +31,12 @@ export function HeroHud({ motto }: { motto: string }) {
       </div>
 
       {/* The display frame. */}
-      <div className="absolute inset-x-gutter top-[calc(var(--spacing-header)+0.5rem)] bottom-6 animate-lock-on text-(--color-border-strong)">
+      <div className="absolute inset-x-gutter top-[calc(var(--spacing-header)+--spacing(2))] bottom-6 animate-lock-on text-(--color-border-strong)">
         <HudCorners cornerClassName="size-6" />
 
-        {/* Depth ruler: a tick every 2rem, a longer one every 8rem. */}
-        <span className="absolute top-1/2 left-0 hidden h-64 w-3 -translate-y-1/2 bg-[repeating-linear-gradient(to_bottom,var(--color-border-strong)_0_1px,transparent_1px_2rem)] lg:block" />
-        <span className="absolute top-1/2 left-0 hidden h-64 w-5 -translate-y-1/2 bg-[repeating-linear-gradient(to_bottom,var(--color-subtle)_0_1px,transparent_1px_8rem)] lg:block" />
+        {/* Depth ruler: a tick every half grid cell, a longer one every two cells. */}
+        <span className="absolute top-1/2 left-0 hidden h-64 w-3 -translate-y-1/2 bg-[repeating-linear-gradient(to_bottom,var(--color-border-strong)_0_1px,transparent_1px_calc(var(--grid-cell)/2))] lg:block" />
+        <span className="absolute top-1/2 left-0 hidden h-64 w-5 -translate-y-1/2 bg-[repeating-linear-gradient(to_bottom,var(--color-subtle)_0_1px,transparent_1px_calc(var(--grid-cell)*2))] lg:block" />
 
         <span className="absolute top-4 right-4 hidden items-center gap-3 font-mono text-label text-(--color-muted) uppercase md:flex">
           <span className="relative flex size-1.5">

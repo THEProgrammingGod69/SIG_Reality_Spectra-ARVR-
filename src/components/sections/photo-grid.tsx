@@ -185,7 +185,8 @@ export function PhotoGrid({
                   {...(index === 0 && eager > 0
                     ? { preload: true }
                     : { loading: index < eager ? 'eager' : 'lazy' })}
-                  className="object-cover transition-transform duration-(--dur-long) ease-out-expo group-hover:scale-105 group-focus-visible:scale-105"
+                  // `scale` only: the develop tween owns `transform` (see developOnScroll).
+                  className="object-cover transition-[scale] duration-(--dur-long) ease-out-expo group-hover:scale-105 group-focus-visible:scale-105"
                 />
                 {caption ? (
                   // Decorative: the button is named by the photo's alt text.

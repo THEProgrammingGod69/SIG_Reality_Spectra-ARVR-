@@ -55,12 +55,12 @@ export function MissionVision({
   return (
     <Section labelledBy={id}>
       <SectionHeading id={id} eyebrow="Purpose" title="What we stand for" />
-      <Stack className="mt-12 gap-6 stack:pb-16">
+      <Stack className="mt-12 gap-6 stack:pb-(--stack-hold)">
         {statements.map((statement, index) => (
           <li
             key={statement.label}
             style={{ '--stack-index': index } as CSSProperties}
-            className="stack:sticky stack:top-[calc(var(--spacing-header)+1.5rem+var(--stack-index)*1.5rem)]"
+            className="stack:sticky stack:top-[calc(var(--spacing-header)+var(--stack-step)*(var(--stack-index)+1))]"
           >
             <div data-stack-body className="origin-top">
               <Card featured={index === 0} spotlight>

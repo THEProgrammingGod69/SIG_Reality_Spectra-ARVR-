@@ -71,7 +71,9 @@ export function ReticleCursor() {
     // Time constant of the ease toward the goal: arrival in about `--dur-micro`.
     const tau = Math.max(tokens.dur.micro / 3, 0.001);
 
-    const current: Point[] = corners.map(() => ({ x: -100, y: -100 }));
+    // Off screen until the pointer first moves.
+    const away = (): Point => ({ x: -window.innerWidth, y: -window.innerHeight });
+    const current: Point[] = corners.map(away);
     let pointer: Point | null = null;
     let target: Element | null = null;
     let pressed = false;
@@ -102,7 +104,7 @@ export function ReticleCursor() {
         ];
       }
       // Folded at the pointer, a small square around its tip.
-      const p = pointer ?? { x: -100, y: -100 };
+      const p = pointer ?? away();
       const half = arm / 2;
       return [
         { x: p.x - arm - half, y: p.y - arm - half },
@@ -222,7 +224,7 @@ export function ReticleCursor() {
           key={sides}
           data-corner
           className={`hud-corner top-0 left-0 ${sides} will-change-transform`}
-          style={{ transform: 'translate3d(-100px, -100px, 0)' }}
+          style={{ transform: 'translate3d(-100vw, -100vh, 0)' }}
         />
       ))}
     </div>

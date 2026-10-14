@@ -1045,12 +1045,15 @@ contact form.
   header, which stays put as a headset's display would. It plays only on client
   navigations (the first paint is never covered, D-010), is CSS keyframes
   (`animate-shutter`, `-shutter-label`; no animation library, D-033), never
-  takes a click, unmounts when done, and is absent under reduced motion.
+  takes a click, unmounts when done, and is absent under reduced motion. Its
+  slats and label rest invisible (`backwards` fill), so a stylesheet that
+  disables animations can never leave the page covered.
 - **The Home rail holds still with `position: sticky`, not a GSAP pin**: the
   section is made as tall as the travel plus a screen, so nothing in the DOM
   is moved and no pin competes with the hero's (`refreshPriority`, D-037).
-  The rail runs from `md`, with JavaScript, without reduced motion; elsewhere
-  the same links are a grid. Its frame is `overflow-x: clip`, so the browser
+  The rail runs from `md` on screens at least 40rem tall, with JavaScript,
+  without reduced motion; elsewhere (a phone on its side included) the same
+  links are a grid. Its frame is `overflow-x: clip`, so the browser
   can never scroll it sideways; a panel reached by keyboard scrolls the page
   to where that panel is in view instead. Panels lean with the scroll's speed
   and straighten when it stops (`skewX`, eased back on a token).
@@ -1058,13 +1061,17 @@ contact form.
   where it is stuck, not where it sits in the flow, so `Stack` measures from
   the list's top and the panels' heights, clamped to the maximum scroll like
   `reachablePoint`. It stacks only from `md`, on screens at least 40rem tall,
-  without reduced motion (the `stack:` variant); elsewhere a plain list.
+  without reduced motion (the `stack:` variant); elsewhere a plain list. A
+  panel steps back only once the next one starts to cover it, so a panel in
+  full view is never dimmed.
 - **One WebGL context per page still.** Home keeps the hero's; each inner page
   may now have one — the Spectral Field behind its opening — loaded only for
   the high device tier (`useHeroTier`), so phones, weaker devices, software
   WebGL and reduced motion keep the static lab, which is always drawn beneath.
   It renders below the device ratio, stops when off screen, and moves only
-  while the page settles (`--dur-settle`) or the visitor moves.
+  while the page settles or the visitor moves. The settle is counted from the
+  intro's mount, not the canvas's first frame, so a slow chunk shortens it and
+  never stretches the page's motion past `--dur-settle`.
 - **Nothing moves on its own for more than 5 seconds** (WCAG 2.2.2): the scan,
   the lock-ons, the shutter and the field's settle all end; everything else
   follows the reader's scroll or pointer.
@@ -1078,9 +1085,14 @@ contact form.
   below the fold develop from under a curtain (`scaleY`) as the reader reaches
   them. Tiles on screen at load, tiles that arrive with their own entrance and
   everything under reduced motion are never covered.
+- **Transitions never fight scripted transforms.** Where GSAP owns an
+  element's `transform` (the rail numerals, the developing photos), hover
+  zooms use the separate `scale` property with `transition-[scale]`, so the
+  scrub is not re-eased.
 - **New tokens** in `globals.css`: `--z-shutter`, `--z-cursor`,
   `--scanline-gap`, `--reticle-size`, `--reticle-reach`, `--rail-panel`,
-  `--motion-depth`, `--motion-turn`, `--motion-portal`, `--motion-shelve`,
+  `--rail-panel-height`, `--stack-step`, `--stack-hold`, `--text-numeral`, `--motion-depth`,
+  `--motion-turn`, `--motion-portal`, `--motion-shelve`, `--motion-lean`,
   `--motion-focus-dim`, the keyframe tokens `animate-shutter`,
   `-shutter-label`, `-scan`, `-lock-on`, the static utilities `bg-scanlines`,
   `bg-holo`, `hud-corner`, `focus-dim`, and the variants `rail:` and `stack:`.

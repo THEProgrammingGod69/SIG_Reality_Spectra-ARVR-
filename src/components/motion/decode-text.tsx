@@ -39,9 +39,12 @@ type DecodeTextProps = {
  * shifts (use it on mono type, where every glyph is the same width). Nothing
  * re-renders per frame: the copy's text is written directly.
  *
- * It changes text, not a CSS property, so it is outside rule 4; it is short
- * (`--dur-medium` plus a stagger per character), runs once per trigger, and
- * under reduced motion never runs — the text is simply there.
+ * Nothing moves: no property animates, and on a mono grid each glyph changes
+ * in place (rule 4 is about what moves; this is recorded as D-038, which
+ * reverses D-037's "no scramble effects" for this construction only). It is
+ * short (`--dur-medium` plus a stagger per character), runs once per trigger,
+ * plays only in an `aria-hidden` copy, and under reduced motion never runs —
+ * the text is simply there.
  */
 export function DecodeText({ text, trigger = 'view', replay = 0, className }: DecodeTextProps) {
   const realRef = useRef<HTMLSpanElement>(null);

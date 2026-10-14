@@ -29,8 +29,8 @@ type StackProps = {
  * sticky`, the `stack:` variant), and each new panel slides up over the last,
  * which steps back: it shrinks to `--motion-shelve` and a scrim darkens it, as
  * if it moved deeper into the lab. Scrubbed by the scroll — it moves only
- * while the page does — from the moment the next panel enters the screen to
- * the moment it lands. ScrollStack drove every card's `transform` from its own
+ * while the page does — from the moment the next panel starts to cover it to
+ * the moment that panel lands, so a panel in full view is never dimmed. ScrollStack drove every card's `transform` from its own
  * per-frame loop with a Lenis instance of its own; here it is one scrubbed
  * tween per panel on the site's ScrollTrigger, `transform` and `opacity` only
  * (rule 4).
@@ -63,6 +63,8 @@ export function Stack({ children, className }: StackProps) {
       return top;
     };
     const clamp = (value: number) => Math.min(value, ScrollTrigger.maxScroll(window) - 1);
+    /** Where a panel sticks, from the top of the viewport (its computed `top`). */
+    const stickyTop = (item: HTMLElement) => parseFloat(getComputedStyle(item).top) || 0;
 
     const context = gsap.context(() => {
       items.forEach((item, index) => {
@@ -75,10 +77,11 @@ export function Stack({ children, className }: StackProps) {
           .timeline({
             scrollTrigger: {
               trigger: list,
-              // From the next panel entering the screen…
-              start: () => clamp(flowTop(index + 1) - window.innerHeight),
+              // From the next panel starting to cover this one (until then this
+              // panel is in full view, and stays at full strength)…
+              start: () => clamp(flowTop(index + 1) - stickyTop(item) - item.offsetHeight),
               // …to it landing at its own sticky top.
-              end: () => clamp(flowTop(index + 1) - (parseFloat(getComputedStyle(next).top) || 0)),
+              end: () => clamp(flowTop(index + 1) - stickyTop(next)),
               scrub: true,
               invalidateOnRefresh: true,
             },

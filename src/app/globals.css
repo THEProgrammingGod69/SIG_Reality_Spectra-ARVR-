@@ -1,8 +1,9 @@
 @import 'tailwindcss';
 
 /* Inside the Home domain rail once it runs horizontally (D-038). The rail sets
-   `data-rail="on"` only from `md`, with JavaScript and without reduced motion;
-   everywhere else these styles never apply and the domains are a plain grid. */
+   `data-rail="on"` only from `md` on screens at least 40rem tall, with
+   JavaScript and without reduced motion; everywhere else these styles never
+   apply and the domains are a plain grid. */
 @custom-variant rail (&:where([data-rail='on'] *));
 
 /* Where panels stack as the reader scrolls (D-038): from `md`, on screens tall
@@ -65,6 +66,8 @@
   --text-display-md--line-height: 1.2;
   --text-display-md--letter-spacing: -0.015em;
   --text-display-md--font-weight: 500;
+  --text-numeral: clamp(7rem, 12vw, 11rem); /* a rail panel's hollow numeral (D-038) */
+  --text-numeral--line-height: 1;
   --text-display-sm: 1.25rem; /* card titles */
   --text-display-sm--line-height: 1.3;
   --text-display-sm--letter-spacing: -0.01em;
@@ -94,6 +97,9 @@
   --reticle-size: 0.625rem; /* one arm of a targeting-reticle corner (D-038) */
   --reticle-reach: 0.375rem; /* how far the reticle locks outside its target */
   --rail-panel: clamp(17rem, 24vw, 23rem); /* a domain panel on the Home rail */
+  --rail-panel-height: min(28rem, 56svh);
+  --stack-step: 1.5rem; /* how much lower each stacked panel sticks than the last */
+  --stack-hold: 25svh; /* how long the finished stack holds before the page moves on */
 
   /* Shape */
   --radius-control: 0.75rem; /* buttons, inputs */
@@ -347,14 +353,17 @@
   --motion-turn: 32deg; /* how far a backdrop orbit turns as its section scrolls by */
   --motion-portal: 2.2; /* how wide the closing orbit opens as the reader arrives */
   --motion-shelve: 0.92; /* a stacked panel's scale once the next one covers it */
+  --motion-lean: 4deg; /* the most the Home rail's panels lean while it moves */
   /* The other tiles while one is in focus: dim, and still ≥ 4.5:1 for any
      text on them (the "+N more" count). */
   --motion-focus-dim: 0.6;
 
-  /* Page change: shutter slats lift off the new page, one stagger apart. */
-  --animate-shutter: shutter-open var(--dur-medium) var(--ease-in-out) both;
+  /* Page change: shutter slats lift off the new page, one stagger apart.
+     `backwards`: the slats and the name rest invisible (scaleY(0), opacity 0
+     inline), so a shutter whose animation never runs never covers the page. */
+  --animate-shutter: shutter-open var(--dur-medium) var(--ease-in-out) backwards;
   /* …while the destination's name shows through and fades with them. */
-  --animate-shutter-label: shutter-label var(--dur-long) var(--ease-out-expo) both;
+  --animate-shutter-label: shutter-label var(--dur-long) var(--ease-out-expo) backwards;
   /* A HUD scan: one line of light crosses its layer once, then is gone. */
   --animate-scan: scan-sweep calc(var(--dur-long) * 2) var(--ease-in-out) both;
   /* HUD corners converge on their frame — the lock-on. */

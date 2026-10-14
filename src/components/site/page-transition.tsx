@@ -1,9 +1,10 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { useEffect, useState, type AnimationEvent, type ReactNode } from 'react';
+import { useCallback, useEffect, useState, type AnimationEvent, type ReactNode } from 'react';
 
 import { prefersReducedMotion } from '@/components/motion/use-reduced-motion';
+import { readMotionTokens } from '@/lib/motion/tokens';
 import { siteRoutes } from '@/lib/site';
 
 /** Becomes true after the first page has hydrated; later pages are navigations. */
@@ -37,6 +38,7 @@ export function PageTransition({ children }: { children: ReactNode }) {
   // Decided once per mount; false during hydration so server and client agree.
   const [animate] = useState(() => typeof window !== 'undefined' && session.hydrated);
   const [shutter, setShutter] = useState(() => animate && !prefersReducedMotion());
+  const lift = useCallback(() => setShutter(false), []);
 
   useEffect(() => {
     session.hydrated = true;
@@ -46,7 +48,7 @@ export function PageTransition({ children }: { children: ReactNode }) {
     <>
       <div className={animate ? 'animate-fade-in' : undefined}>{children}</div>
       {/* After the page, so `#main-content > div:first-child` is always the page. */}
-      {shutter ? <Shutter onDone={() => setShutter(false)} /> : null}
+      {shutter ? <Shutter onDone={lift} /> : null}
     </>
   );
 }
@@ -57,7 +59,15 @@ function Shutter({ onDone }: { onDone: () => void }) {
   const route = index === -1 ? null : siteRoutes[index];
   const centre = (SLATS - 1) / 2;
 
-  // Unmount once every slat has lifted and the name has faded.
+  // Unmount once every slat has lifted and the name has faded — or, should the
+  // animations never run (a stylesheet that disables them), after their time.
+  // The slats and the name rest invisible either way (`backwards` fill).
+  useEffect(() => {
+    const { dur, stagger } = readMotionTokens();
+    const id = window.setTimeout(onDone, (dur.long + stagger * (HOLD + SLATS)) * 2000);
+    return () => window.clearTimeout(id);
+  }, [onDone]);
+
   const onAnimationEnd = (event: AnimationEvent<HTMLDivElement>) => {
     const running = event.currentTarget
       .getAnimations({ subtree: true })
@@ -76,12 +86,18 @@ function Shutter({ onDone }: { onDone: () => void }) {
         <span
           key={slat}
           // Centre first, then outward: 2, then 1 and 3, then 0 and 4.
-          style={{ animationDelay: `calc(var(--stagger) * ${HOLD + Math.abs(slat - centre)})` }}
+          style={{
+            transform: 'scaleY(0)',
+            animationDelay: `calc(var(--stagger) * ${HOLD + Math.abs(slat - centre)})`,
+          }}
           className={`h-full flex-1 animate-shutter border-e border-(--color-border) bg-(--color-surface) last:border-e-0 ${slat % 2 === 0 ? 'origin-top' : 'origin-bottom'}`}
         />
       ))}
       {route ? (
-        <span className="absolute inset-0 flex animate-shutter-label items-center justify-center gap-4 font-mono text-label text-(--color-muted) uppercase">
+        <span
+          style={{ opacity: 0 }}
+          className="absolute inset-0 flex animate-shutter-label items-center justify-center gap-4 font-mono text-label text-(--color-muted) uppercase"
+        >
           <span className="text-(--color-accent)">
             {twoDigits(index + 1)} / {twoDigits(siteRoutes.length)}
           </span>
