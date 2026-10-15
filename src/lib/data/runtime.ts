@@ -47,6 +47,20 @@ function blobStore(which: keyof typeof BLOB_STORES) {
   }));
 }
 
+/**
+ * Whether Netlify Blobs can be reached here: inside a Netlify function (the
+ * platform's context), or from a laptop with a site ID and token. False during
+ * `next build`, which has neither.
+ */
+function blobsContextAvailable(): boolean {
+  const scope = globalThis as { netlifyBlobsContext?: unknown };
+  return Boolean(
+    scope.netlifyBlobsContext ||
+    process.env.NETLIFY_BLOBS_CONTEXT ||
+    (env.NETLIFY_SITE_ID && env.NETLIFY_AUTH_TOKEN),
+  );
+}
+
 let hostedFiles: HostedStorage | undefined;
 
 /**
@@ -79,8 +93,13 @@ export function hostedMediaFiles(): HostedStorage | null {
  */
 export function dataAvailability() {
   if (isLocal) return { backend, records: true, files: Boolean(env.AUTH_SECRET) };
-  // Netlify supplies the Blobs credentials; uploads are signed with AUTH_SECRET.
-  if (isBlobs) return { backend, records: true, files: Boolean(env.AUTH_SECRET) };
+  // Netlify supplies the Blobs credentials to its functions, not to the build:
+  // while prerendering there is no store, so pages bake the empty state and
+  // read the real records at request time (admin saves refresh them by tag).
+  if (isBlobs) {
+    const reachable = blobsContextAvailable();
+    return { backend, records: reachable, files: reachable && Boolean(env.AUTH_SECRET) };
+  }
   return { backend, records: isConfigured('redis'), files: isConfigured('r2') };
 }
 
