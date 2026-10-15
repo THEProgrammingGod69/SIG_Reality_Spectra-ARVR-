@@ -14,7 +14,7 @@ Design: D-025 (Netlify, Upstash, R2) and D-029 (this layer).
 | `runtime.ts`               | Builds the real services from the environment; shared by the app and `scripts/seed.mts`                                                        |
 | `entity.ts`                | The generic repository: validation on write and read, versions, files, cache tags                                                              |
 | `events.ts`                | Events, `listPublic`, `splitByPhase` (current / timeline at request time)                                                                      |
-| `gallery.ts`               | Standalone photos, `buildGallery` (event photos + club photos, newest first)                                                                   |
+| `gallery.ts`               | Standalone photos, `buildGallery` (event photos + club photos), `mergeGallery`/`sortGallery` (any sources, the Git archive too, newest first)  |
 | `team.ts`                  | Team members, `append` (end of the tier), `reorder`, `groupTeam` (core, then secretaries by domain)                                            |
 | `recruitment.ts`           | The one settings record: `get`, `getStatus` (closed by default), `save`                                                                        |
 | `sponsorships.ts`          | Requests from /contact: `submit` (rate-limited per sender), `list` (newest first, paged), `setStatus`, `remove`                                |

@@ -10,6 +10,7 @@ schemas.
 | ---------------- | ----------------------------------------------------------- | -------------------- | ----- |
 | `fields.ts`      | Shared field rules; `entitySchemas()` builds input + record | —                    | 5     |
 | `content.ts`     | SiteInfo, Domain, ContactInfo                               | Git (`src/content`)  | 4     |
+| `archive.ts`     | ArchiveEntry (club archive photo or clip), Archive          | Git (`src/content`)  | 10    |
 | `category.ts`    | Category (shared enum)                                      | —                    | 5     |
 | `image.ts`       | Image (url, alt, width, height)                             | —                    | 5     |
 | `upload.ts`      | UploadRequest, upload targets, folders and limits           | —                    | 5     |
@@ -64,6 +65,13 @@ Time.
 **GalleryPhoto** (standalone) — id · image · category · caption (≤ 120,
 optional). The public gallery shows these together with the photos of timeline
 events (which take the event's category), newest first.
+
+**ArchiveEntry** (Git, `src/content/archive.json`) — src (`/archive/<folder>/<name>`,
+an image, or `.mp4` for a clip; never `..`) · kind (`photo` · `video`) · poster
+(image; a clip only) · duration (seconds > 0; a clip only) · width · height ·
+category · album (3–60, optional) · date · alt (3–200) · caption (3–120) ·
+credit (3–80, optional). Paths are not `mediaUrl`s: these files are served
+from `public/`, not uploaded. `src` is unique across the file.
 
 **TeamMember** — id · name (2–60) · position (2–60) · tier (`core` ·
 `secretary`, D-027) · domainId (required for a secretary, from

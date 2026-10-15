@@ -22,16 +22,27 @@ export function createGalleryRepository(deps: RepositoryDeps) {
 
 export type GalleryRepository = ReturnType<typeof createGalleryRepository>;
 
-/** One photo on the public gallery, whichever source it came from. */
+/** One photo or clip on the public gallery, whichever source it came from. */
 export type GalleryItem = {
   /** Stable React key. */
   key: string;
+  /** The photo, or a clip's poster frame (what the grid tile shows). */
   image: Image;
   category: Category;
   caption: string | null;
-  /** The event's start for event photos, the upload time for club photos. */
+  /**
+   * The event's start for event photos, the upload time for club photos, when
+   * it was taken for the archive. An ISO instant, so it always sorts.
+   */
   date: string;
-  source: { kind: 'event'; eventId: string; eventTitle: string } | { kind: 'club' };
+  /** A clip (archive only): the file and its length in seconds. */
+  video: { src: string; duration: number } | null;
+  /** The event or series an archive item belongs to, shown in the viewer. */
+  album: string | null;
+  /** The photographer, where their watermark is on the photo. */
+  credit: string | null;
+  source:
+    { kind: 'event'; eventId: string; eventTitle: string } | { kind: 'club' } | { kind: 'archive' };
 };
 
 type GalleryPhotoLike = {
@@ -62,6 +73,9 @@ export function buildGallery(
         category: event.category,
         caption: null,
         date: event.startsAt,
+        video: null,
+        album: null,
+        credit: null,
         source: { kind: 'event', eventId: event.id, eventTitle: event.title },
       })),
     );
@@ -71,7 +85,24 @@ export function buildGallery(
     category: photo.category,
     caption: photo.caption,
     date: photo.createdAt,
+    video: null,
+    album: null,
+    credit: null,
     source: { kind: 'club' },
   }));
-  return [...fromEvents, ...fromClub].sort((a, b) => Date.parse(b.date) - Date.parse(a.date));
+  return mergeGallery(fromEvents, fromClub);
+}
+
+/** Newest first. The sort is stable: items from the same moment keep their order. */
+export function sortGallery(items: readonly GalleryItem[]): GalleryItem[] {
+  return [...items].sort((a, b) => Date.parse(b.date) - Date.parse(a.date));
+}
+
+/**
+ * Several sources as one gallery, newest first. The /gallery page merges the
+ * club archive (`src/content/archive.json`) with the data store's photos this
+ * way, so the archive shows even where the store is missing or down.
+ */
+export function mergeGallery(...sources: readonly (readonly GalleryItem[])[]): GalleryItem[] {
+  return sortGallery(sources.flat());
 }
