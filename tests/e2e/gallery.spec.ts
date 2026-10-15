@@ -37,6 +37,17 @@ async function countOf(filters: ReturnType<Page['getByRole']>, name: RegExp) {
   return Number(/(\d+)\s*$/.exec(label ?? '')?.[1]);
 }
 
+/**
+ * Reveal every batch ("Show more"): the store's own photos can be newer than
+ * the archive and push archive items past the first batch.
+ */
+async function showAll(page: Page) {
+  const more = page.getByRole('button', { name: /^Show more/ });
+  while ((await more.count()) > 0) {
+    await more.click();
+  }
+}
+
 /** The grid's tiles that are really there (a leaving tile is hidden, then removed). */
 const tiles = (page: Page) => page.locator('main ul').first().getByRole('button');
 
@@ -56,6 +67,7 @@ test('the lead tile is the newest photo, never a clip', async ({ page }) => {
   const lead = tiles(page).first();
   await expect(lead).not.toHaveAccessibleName(/\(video, \d+:\d\d\)$/);
   // The newest clip is still there, just not first.
+  await showAll(page);
   await expect(
     page.getByRole('button', { name: new RegExp(`^${escape(newestClip.alt)}`) }),
   ).toBeVisible();
@@ -67,8 +79,8 @@ test('the Hackathons filter shows only hackathon items', async ({ page }) => {
   await hackathonFilter.click();
   await expect(hackathonFilter).toHaveAttribute('aria-pressed', 'true');
 
-  const expected = Math.min(await countOf(filters, /^Hackathons/), 27);
-  await expect(tiles(page)).toHaveCount(expected);
+  await showAll(page);
+  await expect(tiles(page)).toHaveCount(await countOf(filters, /^Hackathons/));
   for (const entry of workshops) {
     await expect(page.getByRole('button', { name: entry.alt })).toHaveCount(0);
   }
@@ -76,6 +88,7 @@ test('the Hackathons filter shows only hackathon items', async ({ page }) => {
 
   // And back: every archive workshop item returns.
   await filters.getByRole('button', { name: /^All/ }).click();
+  await showAll(page);
   await expect(page.getByRole('button', { name: workshops[0]!.alt })).toBeVisible();
 });
 
@@ -169,9 +182,11 @@ test.describe('hover preview', () => {
       const filters = await openGallery(page);
       const workshopFilter = filters.getByRole('button', { name: /^Workshops/ });
       await workshopFilter.click();
+      await showAll(page);
       // No tiles kept back for an exit animation: the list is the filter's items.
-      const expected = Math.min(await countOf(filters, /^Workshops/), 27);
-      await expect(page.locator('main ul').first().locator(':scope > li')).toHaveCount(expected);
+      await expect(page.locator('main ul').first().locator(':scope > li')).toHaveCount(
+        await countOf(filters, /^Workshops/),
+      );
 
       const clip = clips.find((entry) => entry.category === 'workshop')!;
       const tile = page.getByRole('button', { name: new RegExp(`^${escape(clip.alt)}`) });

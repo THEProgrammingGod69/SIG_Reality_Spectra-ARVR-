@@ -6,7 +6,9 @@ import { env } from '@/lib/env';
  * The nightly job (D-034): back up every record to the file storage, then
  * sweep uploaded files no record uses. The Netlify scheduled function
  * (netlify/functions/nightly.mts) calls it with `Authorization: Bearer
- * $CRON_SECRET`; anyone else gets 401. It can also be run by hand:
+ * $CRON_SECRET`; on Vercel its cron (vercel.json) sends the same header with
+ * a GET, so GET runs the same job (D-040). Anyone else gets 401. It can also
+ * be run by hand:
  * `pnpm data backup` / `pnpm data sweep`.
  *
  * A failed backup stops the job before the sweep: files are only ever
@@ -40,3 +42,6 @@ export async function POST(request: Request) {
     return Response.json({ ok: false, error: message }, { status: 500 });
   }
 }
+
+/** Vercel Cron calls with GET (and the same Bearer secret). */
+export const GET = POST;

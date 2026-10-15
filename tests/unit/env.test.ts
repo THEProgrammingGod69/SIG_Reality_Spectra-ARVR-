@@ -96,6 +96,35 @@ describe('serverEnvSchema', () => {
       ).toBe(false);
     });
 
+    it('uses Vercel Blob on a Vercel deploy without Upstash, with the same guards (D-040)', () => {
+      const production = serverEnvSchema.parse({ VERCEL_ENV: 'production' });
+      expect(production.DATA_BACKEND).toBe('vercel-blob');
+      expect(production.DATA_NAMESPACE).toBe('prod');
+      const preview = serverEnvSchema.parse({ VERCEL_ENV: 'preview' });
+      expect(preview.DATA_BACKEND).toBe('vercel-blob');
+      expect(preview.DATA_NAMESPACE).toBe('preview');
+      expect(
+        serverEnvSchema.parse({
+          VERCEL_ENV: 'production',
+          UPSTASH_REDIS_REST_URL: 'https://db.upstash.io',
+        }).DATA_BACKEND,
+      ).toBe('upstash');
+      // `vercel dev` on a laptop is not a deploy.
+      expect(serverEnvSchema.parse({ VERCEL_ENV: 'development' }).DATA_BACKEND).toBe('upstash');
+      for (const unsafe of [
+        { DATA_BACKEND: 'local' },
+        { AUTH_DEV_SIGN_IN: 'true' },
+        { DATA_NAMESPACE: 'dev' },
+      ]) {
+        expect(serverEnvSchema.safeParse({ VERCEL_ENV: 'production', ...unsafe }).success).toBe(
+          false,
+        );
+      }
+      expect(
+        serverEnvSchema.safeParse({ VERCEL_ENV: 'preview', DATA_NAMESPACE: 'prod' }).success,
+      ).toBe(false);
+    });
+
     it('shape-checks the command-line Netlify credentials', () => {
       const site = '3970e0fe-8564-4903-9a55-c5f8de49fb8b';
       expect(serverEnvSchema.safeParse({ NETLIFY_SITE_ID: site }).success).toBe(true);

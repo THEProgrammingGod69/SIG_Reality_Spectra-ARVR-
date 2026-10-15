@@ -17,11 +17,12 @@ import { integrations } from '@/lib/integrations';
 /** Where this deployment keeps records and files, in words for the dashboard. */
 const BACKEND_LABELS = {
   'netlify-blobs': 'Netlify Blobs (built into Netlify)',
+  'vercel-blob': 'Vercel Blob (connected to the Vercel project)',
   upstash: 'Upstash Redis and Cloudflare R2',
   local: 'This computer (the .data folder)',
 } as const;
 
-/** Integrations the Netlify Blobs backend replaces: shown as not needed, not as missing. */
+/** Integrations a host's blob store replaces: shown as not needed, not as missing. */
 const REPLACED_BY_BLOBS: readonly string[] = ['redis', 'r2'];
 
 /**
@@ -32,7 +33,8 @@ const REPLACED_BY_BLOBS: readonly string[] = ['redis', 'r2'];
  */
 export function SetupChecklist() {
   const { backend } = dataAvailability();
-  const notNeeded = (id: string) => backend === 'netlify-blobs' && REPLACED_BY_BLOBS.includes(id);
+  const notNeeded = (id: string) =>
+    (backend === 'netlify-blobs' || backend === 'vercel-blob') && REPLACED_BY_BLOBS.includes(id);
   const relevant = integrations.filter((integration) => !notNeeded(integration.id));
   const missing = relevant.filter(
     (integration) => !integration.configured && !integration.optional,

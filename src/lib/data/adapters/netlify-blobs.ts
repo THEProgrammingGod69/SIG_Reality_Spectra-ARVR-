@@ -76,11 +76,20 @@ export const blobsFetch: typeof fetch = async (input, init) => {
   });
 };
 
-/** Whether this process runs inside Netlify, which hands the SDK its credentials. */
+/**
+ * Whether this process runs inside Netlify, which hands the SDK its
+ * credentials. Read where the SDK reads them: a global, or the platform's
+ * `Netlify.env` (not always mirrored in `process.env`), else `process.env`.
+ */
 function hasNetlifyContext(): boolean {
+  const scope = globalThis as {
+    netlifyBlobsContext?: unknown;
+    Netlify?: { env?: { get(key: string): string | undefined } };
+  };
+  const environment = scope.Netlify?.env;
   return Boolean(
-    process.env.NETLIFY_BLOBS_CONTEXT ||
-    (globalThis as { netlifyBlobsContext?: unknown }).netlifyBlobsContext,
+    scope.netlifyBlobsContext ||
+    (environment ? environment.get('NETLIFY_BLOBS_CONTEXT') : process.env.NETLIFY_BLOBS_CONTEXT),
   );
 }
 

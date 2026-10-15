@@ -67,6 +67,10 @@ export async function publicRead<T>(
   what: string,
   load: () => Promise<T>,
 ): Promise<{ data: T } | { failed: true }> {
+  // Netlify Blobs is reachable from functions, not from the build: rather than
+  // bake (and cache) the empty state while prerendering, wait for a request.
+  const { backend, records } = dataAvailability();
+  if (backend === 'netlify-blobs' && !records) await connection();
   try {
     return { data: await load() };
   } catch (error) {

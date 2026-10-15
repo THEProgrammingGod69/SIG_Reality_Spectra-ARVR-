@@ -12,10 +12,16 @@ import { createBlobsStore } from './adapters/blobs-store';
 import { createFileStorage } from './adapters/file-storage';
 import { createFileStore } from './adapters/file-store';
 import { HOSTED_UPLOAD_PART_BYTES, type HostedStorage } from './adapters/hosted-uploads';
-import { BLOB_STORES, openBlobStore } from './adapters/netlify-blobs';
+import {
+  BLOB_STORES,
+  type MediaBlobs,
+  openBlobStore,
+  type RecordBlobs,
+} from './adapters/netlify-blobs';
 import { createR2Storage } from './adapters/r2-storage';
 import { createRedisStore } from './adapters/redis-store';
 import type { ObjectStorage } from './adapters/types';
+import { vercelMediaBlobs, vercelRecordBlobs } from './adapters/vercel-blob';
 import type { RepositoryDeps } from './entity';
 import { createEventsRepository } from './events';
 import { createGalleryRepository } from './gallery';
@@ -29,36 +35,50 @@ import { createTeamRepository } from './team';
 
 const backend = env.DATA_BACKEND;
 const isLocal = backend === 'local';
-const isBlobs = backend === 'netlify-blobs';
+const isNetlifyBlobs = backend === 'netlify-blobs';
+const isVercelBlob = backend === 'vercel-blob';
+/** A blob store the app reads and serves through itself: Netlify Blobs or Vercel Blob. */
+const isBlobs = isNetlifyBlobs || isVercelBlob;
 
 /** Local data mode keeps everything here (gitignored), D-031. */
 const LOCAL_DATA_DIR = join(process.cwd(), '.data');
 
 /**
- * Netlify Blobs stores, opened on first use: on Netlify the function's
- * environment supplies the credentials; the command-line tools use
- * NETLIFY_SITE_ID and NETLIFY_AUTH_TOKEN.
+ * The blob store behind each slice. Opened on every use, never kept: on
+ * Netlify the credentials come with each invocation, and an object holding
+ * an old invocation's token would fail once it expires. Netlify's command-line
+ * tools use NETLIFY_SITE_ID and NETLIFY_AUTH_TOKEN; Vercel Blob uses the
+ * store's BLOB_READ_WRITE_TOKEN, which Vercel adds when the store is connected.
  */
-const blobStores: Partial<Record<keyof typeof BLOB_STORES, ReturnType<typeof openBlobStore>>> = {};
-function blobStore(which: keyof typeof BLOB_STORES) {
-  return (blobStores[which] ??= openBlobStore(BLOB_STORES[which], {
-    siteID: env.NETLIFY_SITE_ID,
-    token: env.NETLIFY_AUTH_TOKEN,
-  }));
+function recordBlobs(): RecordBlobs {
+  return isVercelBlob
+    ? vercelRecordBlobs(BLOB_STORES.records, { token: env.BLOB_READ_WRITE_TOKEN })
+    : openBlobStore(BLOB_STORES.records, netlifyCredentials());
 }
+function mediaBlobs(): MediaBlobs {
+  return isVercelBlob
+    ? vercelMediaBlobs(BLOB_STORES.media, { token: env.BLOB_READ_WRITE_TOKEN })
+    : openBlobStore(BLOB_STORES.media, netlifyCredentials());
+}
+const netlifyCredentials = () => ({
+  siteID: env.NETLIFY_SITE_ID,
+  token: env.NETLIFY_AUTH_TOKEN,
+});
 
 /**
- * Whether Netlify Blobs can be reached here: inside a Netlify function (the
- * platform's context), or from a laptop with a site ID and token. False during
- * `next build`, which has neither.
+ * Whether the blob store can be reached here. Netlify hands its credentials
+ * to functions, not to `next build`: the SDK's own check is to open a store,
+ * which throws without them, so that is the test. Vercel Blob needs its token,
+ * which Vercel provides to builds and functions alike.
  */
-function blobsContextAvailable(): boolean {
-  const scope = globalThis as { netlifyBlobsContext?: unknown };
-  return Boolean(
-    scope.netlifyBlobsContext ||
-    process.env.NETLIFY_BLOBS_CONTEXT ||
-    (env.NETLIFY_SITE_ID && env.NETLIFY_AUTH_TOKEN),
-  );
+function blobsReachable(): boolean {
+  if (isVercelBlob) return Boolean(env.BLOB_READ_WRITE_TOKEN);
+  try {
+    openBlobStore(BLOB_STORES.records, netlifyCredentials());
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 let hostedFiles: HostedStorage | undefined;
@@ -75,7 +95,7 @@ function hostedStorage(): HostedStorage {
         routePath: LOCAL_MEDIA_PATH,
         secret,
       })
-    : createBlobsStorage({ blobs: () => blobStore('media'), routePath: LOCAL_MEDIA_PATH, secret }));
+    : createBlobsStorage({ blobs: mediaBlobs, routePath: LOCAL_MEDIA_PATH, secret }));
 }
 
 /**
@@ -94,10 +114,10 @@ export function hostedMediaFiles(): HostedStorage | null {
 export function dataAvailability() {
   if (isLocal) return { backend, records: true, files: Boolean(env.AUTH_SECRET) };
   // Netlify supplies the Blobs credentials to its functions, not to the build:
-  // while prerendering there is no store, so pages bake the empty state and
-  // read the real records at request time (admin saves refresh them by tag).
+  // while prerendering there is no store, so public reads wait for the request
+  // (`publicRead`) instead of baking the empty state into the page.
   if (isBlobs) {
-    const reachable = blobsContextAvailable();
+    const reachable = blobsReachable();
     return { backend, records: reachable, files: reachable && Boolean(env.AUTH_SECRET) };
   }
   return { backend, records: isConfigured('redis'), files: isConfigured('r2') };
@@ -144,7 +164,7 @@ export function createDataServices({ invalidate }: { invalidate: Invalidate }) {
     store: isLocal
       ? createFileStore(join(LOCAL_DATA_DIR, `records-${namespace}.json`))
       : isBlobs
-        ? createBlobsStore({ blobs: () => blobStore('records'), namespace })
+        ? createBlobsStore({ blobs: recordBlobs, namespace })
         : createRedisStore({
             url: requireEnv('UPSTASH_REDIS_REST_URL', 'the data layer'),
             token: requireEnv('UPSTASH_REDIS_REST_TOKEN', 'the data layer'),

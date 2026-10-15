@@ -42,6 +42,7 @@ export function isAllowedAdmin(
 type AuthEnv = {
   NODE_ENV: 'development' | 'test' | 'production';
   CONTEXT?: string | undefined;
+  VERCEL_ENV?: string | undefined;
   AUTH_SECRET?: string | undefined;
   AUTH_GOOGLE_ID?: string | undefined;
   AUTH_GOOGLE_SECRET?: string | undefined;
@@ -53,11 +54,12 @@ type AuthEnv = {
 /**
  * The development sign-in: one click as an allowlisted email, no password, for
  * working on the panel before Google sign-in is configured. On under `next dev`
- * or with AUTH_DEV_SIGN_IN=true, and never where Netlify sets CONTEXT — a
- * deployed site cannot have it.
+ * or with AUTH_DEV_SIGN_IN=true, and never where Netlify sets CONTEXT or
+ * Vercel a deployed VERCEL_ENV — a deployed site cannot have it.
  */
 export function isDevSignInEnabled(env: AuthEnv): boolean {
   if (env.CONTEXT !== undefined) return false;
+  if (env.VERCEL_ENV !== undefined && env.VERCEL_ENV !== 'development') return false;
   return env.NODE_ENV === 'development' || env.AUTH_DEV_SIGN_IN === 'true';
 }
 

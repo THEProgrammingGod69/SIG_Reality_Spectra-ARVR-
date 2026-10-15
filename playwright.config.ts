@@ -52,7 +52,7 @@ export default defineConfig({
     {
       name: 'mobile-webkit',
       use: { ...devices['iPhone 14'] },
-      testMatch: /(routes|content|hero|shell|sponsorships|a11y).spec.ts$/,
+      testMatch: /(routes|content|hero|shell|sponsorships|a11y|gallery).spec.ts$/,
     },
   ],
 

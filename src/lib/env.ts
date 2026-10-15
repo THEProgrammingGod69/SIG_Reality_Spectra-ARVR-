@@ -53,14 +53,19 @@ export const serverEnvSchema = z
      * Where data lives.
      * - `netlify-blobs`: records and files in the Netlify site's own Blobs
      *   storage; no other account needed.
+     * - `vercel-blob`: the same on Vercel, in a private Vercel Blob store
+     *   connected to the project (its BLOB_READ_WRITE_TOKEN), D-040.
      * - `upstash`: records in Upstash Redis, files in Cloudflare R2.
      * - `local`: both in the gitignored `.data/` folder, for working before
      *   the accounts exist (D-031); refused on Netlify by the guard below.
      *
-     * Left unset, a Netlify deploy without Upstash variables uses
-     * `netlify-blobs`, and everything else `upstash` (see `defaultBackend`).
+     * Left unset, a deploy without Upstash variables uses its host's own
+     * store (`netlify-blobs` or `vercel-blob`), and everything else `upstash`
+     * (see `defaultBackend`).
      */
-    DATA_BACKEND: z.enum(['netlify-blobs', 'upstash', 'local']).optional(),
+    DATA_BACKEND: z.enum(['netlify-blobs', 'vercel-blob', 'upstash', 'local']).optional(),
+    /** Vercel Blob's read-write token; Vercel sets it when a store is connected. */
+    BLOB_READ_WRITE_TOKEN: z.string().min(1).optional(),
     /** Upstash REST endpoint and token, from the database page on upstash.com. */
     UPSTASH_REDIS_REST_URL: z.url({ protocol: /^https$/ }).optional(),
     UPSTASH_REDIS_REST_TOKEN: z.string().min(1).optional(),
@@ -124,6 +129,11 @@ export const serverEnvSchema = z
      * `deploy-preview`, `branch-deploy` or `dev`. Read only by the guard below.
      */
     CONTEXT: z.string().optional(),
+    /**
+     * Set by Vercel on every build and function: `production`, `preview` or
+     * `development`. Mapped onto Netlify's contexts (`hostContext`).
+     */
+    VERCEL_ENV: z.enum(['production', 'preview', 'development']).optional(),
 
     // ---- Stage 6: admin authentication --------------------------------------
     /** Auth.js session signing secret. Generate with `openssl rand -base64 32`. */
@@ -162,14 +172,16 @@ export const serverEnvSchema = z
   })
   .superRefine((value, ctx) => {
     // A deploy preview must never be able to write to the live club data, and
-    // production must never quietly run on a test copy. Netlify sets CONTEXT, so
-    // a wrongly scoped variable fails the deploy instead of mixing the two.
-    if (value.CONTEXT === undefined) return;
+    // production must never quietly run on a test copy. Netlify and Vercel say
+    // which deploy this is, so a wrongly scoped variable fails the deploy
+    // instead of mixing the two.
+    const context = hostContext(value);
+    if (context === undefined) return;
     if (value.AUTH_DEV_SIGN_IN === 'true') {
       ctx.addIssue({
         code: 'custom',
         path: ['AUTH_DEV_SIGN_IN'],
-        message: 'The development sign-in is never allowed on a Netlify deploy',
+        message: 'The development sign-in is never allowed on a deployed site',
       });
     }
     if (value.DATA_BACKEND === 'local') {
@@ -177,44 +189,66 @@ export const serverEnvSchema = z
         code: 'custom',
         path: ['DATA_BACKEND'],
         message:
-          'Local data lives on one computer; a Netlify deploy must use "netlify-blobs" or "upstash"',
+          'Local data lives on one computer; a deployed site must use its host\'s blob store or "upstash"',
       });
     }
     // An unset namespace is derived from CONTEXT below, so only an explicit
     // value can be wrong.
     if (value.DATA_NAMESPACE === undefined) return;
-    const isLive = value.CONTEXT === 'production';
+    const isLive = context === 'production';
     if (isLive !== (value.DATA_NAMESPACE === 'prod')) {
       ctx.addIssue({
         code: 'custom',
         path: ['DATA_NAMESPACE'],
         message: isLive
           ? 'Production deploys must use DATA_NAMESPACE="prod"'
-          : `Only production may use DATA_NAMESPACE="prod" (this is a ${value.CONTEXT} deploy)`,
+          : `Only production may use DATA_NAMESPACE="prod" (this is a ${context} deploy)`,
       });
     }
   })
   .transform(({ DATA_NAMESPACE, DATA_BACKEND, ...value }) => ({
     ...value,
     DATA_BACKEND: DATA_BACKEND ?? defaultBackend(value),
-    DATA_NAMESPACE: DATA_NAMESPACE ?? defaultNamespace(value.CONTEXT),
+    DATA_NAMESPACE: DATA_NAMESPACE ?? defaultNamespace(hostContext(value)),
   }));
 
 /**
- * The backend when DATA_BACKEND is not set: on Netlify, its built-in Blobs
- * unless Upstash has been configured; elsewhere Upstash, as before Blobs
- * existed here (a developer's computer sets `local`).
+ * Which deploy this is, in Netlify's words: Netlify's CONTEXT, or Vercel's
+ * VERCEL_ENV mapped onto it (`preview` → `deploy-preview`). Undefined on a
+ * developer's computer.
+ */
+function hostContext({
+  CONTEXT,
+  VERCEL_ENV,
+}: {
+  CONTEXT?: string;
+  VERCEL_ENV?: string;
+}): string | undefined {
+  if (CONTEXT !== undefined) return CONTEXT;
+  if (VERCEL_ENV === 'production') return 'production';
+  if (VERCEL_ENV === 'preview') return 'deploy-preview';
+  return undefined;
+}
+
+/**
+ * The backend when DATA_BACKEND is not set: once Upstash is configured,
+ * Upstash; until then the host's own blob store (Netlify Blobs on Netlify,
+ * Vercel Blob on Vercel); on a developer's computer Upstash, as before (they
+ * set `local`).
  */
 function defaultBackend({
   CONTEXT,
+  VERCEL_ENV,
   UPSTASH_REDIS_REST_URL,
 }: {
   CONTEXT?: string;
+  VERCEL_ENV?: string;
   UPSTASH_REDIS_REST_URL?: string;
-}): 'netlify-blobs' | 'upstash' {
-  return CONTEXT !== undefined && UPSTASH_REDIS_REST_URL === undefined
-    ? 'netlify-blobs'
-    : 'upstash';
+}): 'netlify-blobs' | 'vercel-blob' | 'upstash' {
+  if (UPSTASH_REDIS_REST_URL !== undefined) return 'upstash';
+  if (CONTEXT !== undefined) return 'netlify-blobs';
+  if (VERCEL_ENV !== undefined && VERCEL_ENV !== 'development') return 'vercel-blob';
+  return 'upstash';
 }
 
 /** The namespace for a deploy that does not set one: see DATA_NAMESPACE above. */
