@@ -11,6 +11,7 @@ import { withoutAuthor } from './entity';
 import { splitByPhase } from './events';
 import { buildGallery } from './gallery';
 import { createDataServices, dataAvailability, type DataServices } from './runtime';
+import { createSignInLimit, type SignInAttempt, type SignInLimit } from './sign-in-limit';
 import { TAGS } from './tags';
 import { groupTeam } from './team';
 
@@ -73,6 +74,20 @@ export async function publicRead<T>(
     console.error(`[site] Could not load ${what}.`, error);
     return { failed: true };
   }
+}
+
+let offlineSignIns: SignInLimit | undefined;
+
+/**
+ * Count one admin password sign-in attempt; false when the client or the
+ * email has made too many and it must be refused (`SIGN_IN_LIMITS`). Counted
+ * in the data store where there is one, in memory where there is not.
+ */
+export function allowSignInAttempt(attempt: SignInAttempt): Promise<boolean> {
+  const limit = dataAvailability().records
+    ? repositories().signIns
+    : (offlineSignIns ??= createSignInLimit({ store: null }));
+  return limit.allow(attempt);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -153,6 +168,7 @@ export {
   RateLimitedError,
 } from './errors';
 export type { GalleryItem } from './gallery';
+export { SIGN_IN_LIMITS, type SignInAttempt } from './sign-in-limit';
 export { groupTeam } from './team';
 export { dataAvailability, localMediaFiles } from './runtime';
 export type { DataServices } from './runtime';

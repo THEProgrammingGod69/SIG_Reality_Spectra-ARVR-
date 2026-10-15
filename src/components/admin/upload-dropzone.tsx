@@ -8,7 +8,7 @@ import { Icon } from '@/components/ui/icon';
 import { cn } from '@/lib/cn';
 import { MEDIA_KINDS, UPLOAD_TARGETS, type UploadTarget } from '@/lib/schemas/upload';
 
-import { prepareFile, uploadPrepared } from './upload-file';
+import { prepareFile, queueUpload, uploadPrepared } from './upload-file';
 
 export type UploadedFile = {
   url: string;
@@ -24,6 +24,8 @@ type Item = {
   file: File;
   recordId: string | null;
   progress: number;
+  /** Queued behind other uploads (`queueUpload`). */
+  waiting: boolean;
   error: string | null;
 };
 
@@ -43,8 +45,9 @@ type UploadDropzoneProps = {
 
 /**
  * Drop or pick files; each is prepared (images become WebP), uploaded straight
- * to storage with a progress bar, and handed to `onUploaded` when done. A
- * failed upload stays in the list with its reason and a retry button.
+ * to storage with a progress bar, and handed to `onUploaded` when done — at
+ * most `MAX_CONCURRENT_UPLOADS` at a time, the rest marked "Waiting". A failed
+ * upload stays in the list with its reason and a retry button.
  */
 export function UploadDropzone({
   target,
@@ -67,12 +70,18 @@ export function UploadDropzone({
     );
 
   async function run(item: Item) {
-    update(item.key, { progress: 0, error: null });
+    update(item.key, { progress: 0, error: null, waiting: true });
     try {
-      const prepared = await prepareFile(item.file, target);
-      const url = await uploadPrepared(prepared, { target, recordId: item.recordId }, (progress) =>
-        update(item.key, { progress }),
-      );
+      // At most MAX_CONCURRENT_UPLOADS files are converted and sent at once;
+      // the rest wait their turn, so a whole folder can be dropped safely.
+      const { prepared, url } = await queueUpload(async () => {
+        update(item.key, { waiting: false });
+        const file = await prepareFile(item.file, target);
+        const stored = await uploadPrepared(file, { target, recordId: item.recordId }, (progress) =>
+          update(item.key, { progress }),
+        );
+        return { prepared: file, url: stored };
+      });
       setItems((current) => current.filter((entry) => entry.key !== item.key));
       onUploaded({
         url,
@@ -82,7 +91,10 @@ export function UploadDropzone({
         fileName: item.file.name,
       });
     } catch (error) {
-      update(item.key, { error: error instanceof Error ? error.message : 'The upload failed.' });
+      update(item.key, {
+        waiting: false,
+        error: error instanceof Error ? error.message : 'The upload failed.',
+      });
     }
   }
 
@@ -95,6 +107,7 @@ export function UploadDropzone({
         file,
         recordId: typeof recordId === 'function' ? recordId() : recordId,
         progress: 0,
+        waiting: true,
         error: null,
       }));
     setItems((current) => [...current, ...added]);
@@ -165,7 +178,9 @@ export function UploadDropzone({
                     </Button>
                   </span>
                 ) : (
-                  <span className="text-muted-foreground">{Math.round(item.progress * 100)}%</span>
+                  <span className="text-muted-foreground">
+                    {item.waiting ? 'Waiting' : `${Math.round(item.progress * 100)}%`}
+                  </span>
                 )}
               </div>
               {item.error ? (

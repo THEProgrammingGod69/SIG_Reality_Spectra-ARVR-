@@ -13,7 +13,7 @@ import {
 } from 'react';
 
 import { useMotionTokens } from '@/components/motion/use-motion-tokens';
-import type { ActionResult } from '@/lib/action-result';
+import type { ActionFailure, ActionResult } from '@/lib/action-result';
 import { Icon } from '@/components/ui/icon';
 import { cn } from '@/lib/cn';
 import { parseDuration } from '@/lib/motion/tokens';
@@ -28,7 +28,24 @@ import { parseDuration } from '@/lib/motion/tokens';
  */
 
 export type ToastTone = 'success' | 'error' | 'info';
-export type Toast = { id: number; tone: ToastTone; message: string };
+/** A next step offered in the notification, e.g. signing in again. */
+export type ToastLink = { href: string; label: string };
+export type Toast = { id: number; tone: ToastTone; message: string; link?: ToastLink };
+
+/**
+ * Offered when a save failed because the session ended (`signed-out`). It
+ * opens the sign-in page in a new tab, so the form — and everything typed
+ * into it — is still here to save again once the admin has signed in.
+ */
+export const SIGN_IN_AGAIN: ToastLink = {
+  href: '/admin/login',
+  label: 'Sign in again (opens a new tab)',
+};
+
+/** The link a failed Server Action's notification offers, if any. */
+export function failureLink(failure: ActionFailure): ToastLink | undefined {
+  return failure.reason === 'signed-out' ? SIGN_IN_AGAIN : undefined;
+}
 
 type ToastAction = { type: 'add'; toast: Toast } | { type: 'dismiss'; id: number };
 
@@ -41,7 +58,9 @@ export function toastReducer(toasts: readonly Toast[], action: ToastAction): Toa
 }
 
 type ToastApi = {
-  toast: (message: string, tone?: ToastTone) => void;
+  toast: (message: string, tone?: ToastTone, link?: ToastLink) => void;
+  /** Report a failed admin Server Action: its message, and a way to sign in if signed out. */
+  fail: (failure: ActionFailure) => void;
   /** Report an admin Server Action's result: its error, or `success`. */
   notify: (result: ActionResult<unknown>, success: string) => void;
 };
@@ -59,19 +78,19 @@ let nextId = 0;
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, dispatch] = useReducer(toastReducer, []);
 
-  const toast = useCallback((message: string, tone: ToastTone = 'info') => {
-    dispatch({ type: 'add', toast: { id: (nextId += 1), tone, message } });
+  const toast = useCallback((message: string, tone: ToastTone = 'info', link?: ToastLink) => {
+    dispatch({ type: 'add', toast: { id: (nextId += 1), tone, message, link } });
   }, []);
   const dismiss = useCallback((id: number) => dispatch({ type: 'dismiss', id }), []);
 
-  const api = useMemo<ToastApi>(
-    () => ({
+  const api = useMemo<ToastApi>(() => {
+    const fail = (failure: ActionFailure) => toast(failure.message, 'error', failureLink(failure));
+    return {
       toast,
-      notify: (result, success) =>
-        result.ok ? toast(success, 'success') : toast(result.message, 'error'),
-    }),
-    [toast],
-  );
+      fail,
+      notify: (result, success) => (result.ok ? toast(success, 'success') : fail(result)),
+    };
+  }, [toast]);
 
   return (
     <ToastContext value={api}>
@@ -119,7 +138,21 @@ function ToastItem({ toast, dismiss }: { toast: Toast; dismiss: (id: number) => 
       className="pointer-events-auto flex items-start gap-3 rounded-card border bg-popover p-4 text-body-sm text-popover-foreground shadow-card"
     >
       <Icon icon={tone.icon} size="sm" className={cn('mt-0.5', tone.className)} />
-      <p className="flex-1">{toast.message}</p>
+      <div className="flex flex-1 flex-col gap-1">
+        <p>{toast.message}</p>
+        {toast.link ? (
+          // A plain link in a new tab, not a client navigation: the panel's
+          // session is gone, and this tab keeps the unsaved form.
+          <a
+            href={toast.link.href}
+            target="_blank"
+            rel="noopener"
+            className="self-start font-medium text-foreground underline underline-offset-4"
+          >
+            {toast.link.label}
+          </a>
+        ) : null}
+      </div>
       <button
         type="button"
         onClick={() => dismiss(toast.id)}

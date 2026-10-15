@@ -7,8 +7,10 @@ import { siteConfig } from '@/lib/site';
  *
  * Two things here are permanent and must not regress:
  *   1. `robots: noindex, nofollow` on every admin route (rule 7).
- *   2. The public site never links to /admin (rule 6). The panel links back to
- *      the public site, never the other way around.
+ *   2. The public site links to /admin from one place only (rule 6): a small
+ *      `rel="nofollow"` "Admin" link to /admin/login in the footer's last row.
+ *      Never in the header, the menu, `siteRoutes` or the sitemap; an e2e test
+ *      checks every public page.
  */
 export const metadata: Metadata = {
   title: {

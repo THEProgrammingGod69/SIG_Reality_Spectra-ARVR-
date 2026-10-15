@@ -18,6 +18,7 @@ import { createGalleryRepository } from './gallery';
 import { createMaintenance, type Maintenance } from './maintenance';
 import { createMedia, type Media, type MediaStore } from './media';
 import { createRecruitmentRepository } from './recruitment';
+import { createSignInLimit } from './sign-in-limit';
 import { createSponsorshipsRepository } from './sponsorships';
 import type { Invalidate } from './tags';
 import { createTeamRepository } from './team';
@@ -113,6 +114,8 @@ export function createDataServices({ invalidate }: { invalidate: Invalidate }) {
   return {
     namespace,
     ...repositories,
+    /** The admin password sign-in's attempt limit, on the store's counters. */
+    signIns: createSignInLimit({ store: deps.store }),
     /** Upload tickets and server-side file writes. */
     get media(): Media {
       return getMedia();
