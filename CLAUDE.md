@@ -14,14 +14,14 @@ group at **VIT Pune**.
 
 **Public visitors never log in.** Six public pages:
 
-| Page           | Shows                                                                                                       |
-| -------------- | ----------------------------------------------------------------------------------------------------------- |
-| `/` Home       | Hero (name + one-line intro) · mission, vision and short "about us" · domains overview (no team, D-027)     |
-| `/about`       | Club details · the core team, then the secretary of each domain (name, photo, position), D-027              |
-| `/events`      | Current event on top (details + registration link) · timeline of past events with photos                    |
-| `/gallery`     | All photos — event photos and standalone club photos — filterable by category (hackathons, competitions, …) |
-| `/recruitment` | The club's domains, always · roles PDF and Google Form link, **only while recruitment is open**             |
-| `/contact`     | Contact details · sponsorship/collaboration request form (goes to the admin panel)                          |
+| Page           | Shows                                                                                                   |
+| -------------- | ------------------------------------------------------------------------------------------------------- |
+| `/` Home       | Hero (name + one-line intro) · mission, vision and short "about us" · domains overview (no team, D-027) |
+| `/about`       | Club details · the core team, then the secretary of each domain (name, photo, position), D-027          |
+| `/events`      | Current event on top (details + registration link) · timeline of past events with photos                |
+| `/gallery`     | All photos — event photos, club photos and the Git archive with clips — filterable by category (D-039)  |
+| `/recruitment` | The club's domains, always · roles PDF and Google Form link, **only while recruitment is open**         |
+| `/contact`     | Contact details · sponsorship/collaboration request form (goes to the admin panel)                      |
 
 **Admins** (2–3 allowlisted emails, with Google or the admin password — D-039)
 sign in at `/admin` to manage five things:
@@ -83,7 +83,7 @@ a lab that builds real things, or a gaming landing page?
 | Spam protection    | Cloudflare Turnstile + honeypot                                                                                         |
 | Analytics          | Cloudflare Web Analytics, cookieless, public site only (D-033)                                                          |
 | Testing            | Playwright (E2E) + Vitest (schemas/utils) + axe-core (accessibility, D-033)                                             |
-| Hosting            | Netlify + club-owned GitHub org (D-025)                                                                                 |
+| Hosting            | Netlify + club-owned GitHub org (D-025); Vercel as a second host (D-040)                                                |
 
 If a library looks like a better fit mid-build, raise it — do not silently swap it.
 
@@ -195,7 +195,7 @@ src/
     dev/             developer tools: /dev/ui, /dev/motion — 404 in production
     api/admin/upload presigned-upload route (Stage 5)
     api/auth/        Auth.js endpoints (Stage 6)
-    api/local-media/ local data mode only: receives and serves uploads (Stage 7)
+    api/local-media/ app-hosted files (local, Netlify Blobs, Vercel Blob): receives and serves uploads (Stage 7, D-039)
     api/cron/nightly backup + orphan sweep, Bearer CRON_SECRET (Stage 10, D-034)
     og/[page]        each public page's share image, prerendered            (Stage 9)
     globals.css      design tokens live here, in @theme
@@ -228,7 +228,7 @@ src/
     metadata.ts      pageMetadata(): title, canonical, OpenGraph per page   (Stage 4)
     structured-data.ts  schema.org JSON-LD for the club                     (Stage 4)
   assets/            brand logo images (Stage 3); fonts/ = OG-image TTFs, server-only (Stage 9)
-  content/           site, domains, contact — JSON, validated at build time
+  content/           site, domains, contact, archive — JSON, validated at build time
   proxy.ts           the /admin guard (Next 16's renamed middleware)       (Stage 6)
 scripts/             seed.mts — pnpm seed --demo; data.mts — pnpm data (backup, sweep, restore)
 netlify/functions/   nightly.mts — the scheduled call to /api/cron/nightly   (Stage 10)
@@ -261,7 +261,7 @@ test fails if a dynamic `[param]` folder appears under `(site)`.
 | `/`                   | primary | site info (Git)                                  | 2, 4     |
 | `/about`              | primary | site info (Git) · team (Redis/R2)                | 4, 8     |
 | `/events`             | primary | events (Redis/R2)                                | 7        |
-| `/gallery`            | primary | timeline event photos + club photos (Redis/R2)   | 7        |
+| `/gallery`            | primary | event + club photos (store) · archive (Git)      | 7, D-039 |
 | `/contact`            | primary | contact info (Git) · writes sponsorship requests | 4, 8     |
 | `/recruitment`        | CTA     | domains (Git) · recruitment settings (Redis/R2)  | 4, 8     |
 | `/admin`              | never   | dashboard                                        | 6        |
@@ -434,6 +434,7 @@ contributor must know before writing UI:
 | Admin UI           | Reviewed shadcn subset on token aliases (no `accent`/`muted`); in-house toasts; `useUnsavedChanges` + `GuardedLink` (D-030)                                     |
 | Local data         | `DATA_BACKEND=local`: records + uploads in `.data/`, same upload flow as R2; refused on Netlify (D-031)                                                         |
 | Netlify Blobs      | `DATA_BACKEND=netlify-blobs`, default on Netlify without Upstash: CAS-on-etag JSON snapshots, files in ≤ 4 MiB parts through `/api/local-media` (D-039)         |
+| Vercel             | Second host: `DATA_BACKEND=vercel-blob` runs the same Blobs adapters on a private Vercel Blob store; `VERCEL_ENV` maps onto the deploy guards (D-040)           |
 | Images             | Any ratio: posters whole in a 4:5 frame, photos as square centre-cropped tiles, viewer shows them whole; WebP ≤ 2400 px (D-031)                                 |
 | Admin-written text | Plain text as paragraphs (`<Paragraphs>`), never HTML; no Markdown renderer (D-031)                                                                             |
 | Contact form       | Honeypot, Turnstile (fails closed on Netlify without keys), 3 requests/sender/hour in the data layer; no form where it cannot work (D-032)                      |

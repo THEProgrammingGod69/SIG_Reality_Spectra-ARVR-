@@ -84,7 +84,7 @@ export const siteRoutes = [
   {
     href: '/gallery',
     label: 'Gallery',
-    description: 'Photos from our hackathons, competitions, workshops and club life.',
+    description: 'Photos and clips from our hackathons, competitions, workshops and club life.',
     placement: 'primary',
     group: 'explore',
     priority: 0.7,

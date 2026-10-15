@@ -139,7 +139,7 @@ function EventCard({ event, featured }: { event: PublicEvent; featured: boolean 
             <ButtonLink
               href={event.registrationUrl}
               external
-              variant={featured ? 'star' : 'primary'}
+              variant={featured ? 'star' : 'secondary'}
               size={featured ? 'lg' : 'md'}
               magnetic={featured}
               aria-label={`Register for ${event.title}`}

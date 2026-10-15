@@ -49,6 +49,7 @@ the call and it was made on the reasoning shown).
 | D-037 | Premium pass: React Bits effects rebuilt, the lab on every page                 | lead       |
 | D-038 | The XR HUD: a motion language of its own, on every page                         | lead       |
 | D-039 | Club archive, password sign-in, footer admin link, Netlify Blobs                | team       |
+| D-040 | Vercel as a second host, on a private Vercel Blob store                         | team       |
 
 ---
 
@@ -1190,3 +1191,43 @@ WCAG 2.2.2.
 **Not done, on purpose.** No new pages; no autoplaying video; no password in
 the repository; the Upstash/R2 path is not removed; the club's Instagram was
 still unreadable by tools.
+
+---
+
+## D-040 — Vercel as a second host, on a private Vercel Blob store
+
+**Decided by:** team (the club asked for a Vercel deployment with its
+variables); lead for how.
+
+**Context.** On Netlify the admin panel showed "Data store not connected": the
+check for Netlify Blobs read `process.env`, while Netlify passes the
+credentials through its own `Netlify.env`. Deploy previews also carry
+Netlify's review drawer. The club asked for the site on Vercel as well.
+
+**Decisions.**
+
+1. **Netlify Blobs is detected the SDK's way:** by opening a store, which
+   throws without credentials. Stores are opened per use, never kept past an
+   invocation. Public reads on Netlify Blobs wait for a request instead of
+   baking the build's empty state into the page; the header's recruitment
+   read has its own Suspense boundary for that.
+2. **`DATA_BACKEND=vercel-blob`** runs the same two Blobs adapters (D-039) on a
+   _private_ Vercel Blob store, through `adapters/vercel-blob.ts`: `ifMatch`
+   is the compare-and-swap, a create refuses an existing pathname, reads skip
+   the CDN (`useCache: false`), and files reach visitors through
+   `/api/local-media` like Netlify's. It is the default on a Vercel deploy
+   without Upstash, and needs only the store's `BLOB_READ_WRITE_TOKEN`, which
+   Vercel adds when the store is connected to the project.
+3. **One set of guards for both hosts.** `VERCEL_ENV` maps onto Netlify's
+   contexts (`preview` → `deploy-preview`), so the development sign-in and
+   local data stay refused, and `DATA_NAMESPACE` defaults to `prod` /
+   `preview` the same way. Vercel Cron calls the nightly job with GET and the
+   same Bearer secret (`vercel.json`).
+4. **Netlify stays the documented host** (D-025); Vercel is a second home the
+   club can use or drop. Switching to Upstash + R2 later is still one set of
+   variables on either host.
+
+**Not done, on purpose.** The Vercel project's preview toolbar and Vercel's
+login wall on the production URL are switched off; previews stay behind
+Vercel login. Netlify's drawer is a Netlify setting (Site configuration →
+Build & deploy → Deploy Previews → Netlify Drawer), not code.
