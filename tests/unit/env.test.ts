@@ -21,6 +21,19 @@ describe('serverEnvSchema', () => {
     expect(parsed.UPSTASH_REDIS_REST_URL).toBeUndefined();
     expect(parsed.AUTH_SECRET).toBeUndefined();
     expect(parsed.TURNSTILE_SECRET_KEY).toBeUndefined();
+    expect(parsed.ADMIN_PASSWORD).toBeUndefined();
+  });
+
+  it('takes ADMIN_PASSWORD as any string of 1 to 200 characters, kept exactly', () => {
+    // Weak passwords still parse: the dashboard warns, a deploy never fails on it.
+    expect(serverEnvSchema.parse({ ADMIN_PASSWORD: 'admin' }).ADMIN_PASSWORD).toBe('admin');
+    expect(serverEnvSchema.parse({ ADMIN_PASSWORD: ' two words ' }).ADMIN_PASSWORD).toBe(
+      ' two words ',
+    );
+    expect(serverEnvSchema.safeParse({ ADMIN_PASSWORD: 'x'.repeat(200) }).success).toBe(true);
+    expect(serverEnvSchema.safeParse({ ADMIN_PASSWORD: 'x'.repeat(201) }).success).toBe(false);
+    // Blank is "not set": parseEnv drops empty variables before this schema sees them.
+    expect(serverEnvSchema.safeParse({ ADMIN_PASSWORD: '' }).success).toBe(false);
   });
 
   describe('DATA_NAMESPACE and the Netlify deploy context', () => {
@@ -52,6 +65,74 @@ describe('serverEnvSchema', () => {
       expect(serverEnvSchema.safeParse({ ...deploy, DATA_BACKEND: 'local' }).success).toBe(false);
       expect(serverEnvSchema.safeParse({ DATA_BACKEND: 'local' }).success).toBe(true);
       expect(serverEnvSchema.parse({}).DATA_BACKEND).toBe('upstash');
+    });
+
+    it('uses Netlify Blobs on a Netlify deploy without Upstash, and Upstash otherwise', () => {
+      const deploy = { CONTEXT: 'production' };
+      expect(serverEnvSchema.parse(deploy).DATA_BACKEND).toBe('netlify-blobs');
+      expect(
+        serverEnvSchema.parse({ ...deploy, UPSTASH_REDIS_REST_URL: 'https://db.upstash.io' })
+          .DATA_BACKEND,
+      ).toBe('upstash');
+      expect(serverEnvSchema.parse({ ...deploy, DATA_BACKEND: 'upstash' }).DATA_BACKEND).toBe(
+        'upstash',
+      );
+      expect(serverEnvSchema.parse({ DATA_BACKEND: 'netlify-blobs' }).DATA_BACKEND).toBe(
+        'netlify-blobs',
+      );
+    });
+
+    it('allows Netlify Blobs on every deploy context, with the usual namespaces', () => {
+      for (const CONTEXT of ['production', 'deploy-preview', 'branch-deploy']) {
+        const parsed = serverEnvSchema.parse({ CONTEXT, DATA_BACKEND: 'netlify-blobs' });
+        expect(parsed.DATA_NAMESPACE).toBe(CONTEXT === 'production' ? 'prod' : 'preview');
+      }
+      expect(
+        serverEnvSchema.safeParse({
+          CONTEXT: 'deploy-preview',
+          DATA_BACKEND: 'netlify-blobs',
+          DATA_NAMESPACE: 'prod',
+        }).success,
+      ).toBe(false);
+    });
+
+    it('uses Vercel Blob on a Vercel deploy without Upstash, with the same guards (D-040)', () => {
+      const production = serverEnvSchema.parse({ VERCEL_ENV: 'production' });
+      expect(production.DATA_BACKEND).toBe('vercel-blob');
+      expect(production.DATA_NAMESPACE).toBe('prod');
+      const preview = serverEnvSchema.parse({ VERCEL_ENV: 'preview' });
+      expect(preview.DATA_BACKEND).toBe('vercel-blob');
+      expect(preview.DATA_NAMESPACE).toBe('preview');
+      expect(
+        serverEnvSchema.parse({
+          VERCEL_ENV: 'production',
+          UPSTASH_REDIS_REST_URL: 'https://db.upstash.io',
+        }).DATA_BACKEND,
+      ).toBe('upstash');
+      // `vercel dev` on a laptop is not a deploy.
+      expect(serverEnvSchema.parse({ VERCEL_ENV: 'development' }).DATA_BACKEND).toBe('upstash');
+      for (const unsafe of [
+        { DATA_BACKEND: 'local' },
+        { AUTH_DEV_SIGN_IN: 'true' },
+        { DATA_NAMESPACE: 'dev' },
+      ]) {
+        expect(serverEnvSchema.safeParse({ VERCEL_ENV: 'production', ...unsafe }).success).toBe(
+          false,
+        );
+      }
+      expect(
+        serverEnvSchema.safeParse({ VERCEL_ENV: 'preview', DATA_NAMESPACE: 'prod' }).success,
+      ).toBe(false);
+    });
+
+    it('shape-checks the command-line Netlify credentials', () => {
+      const site = '3970e0fe-8564-4903-9a55-c5f8de49fb8b';
+      expect(serverEnvSchema.safeParse({ NETLIFY_SITE_ID: site }).success).toBe(true);
+      expect(serverEnvSchema.safeParse({ NETLIFY_SITE_ID: 'my-site' }).success).toBe(false);
+      expect(
+        serverEnvSchema.safeParse({ NETLIFY_AUTH_TOKEN: 'nfp_' + 'a'.repeat(36) }).success,
+      ).toBe(true);
+      expect(serverEnvSchema.safeParse({ NETLIFY_AUTH_TOKEN: 'short' }).success).toBe(false);
     });
 
     it('fails a Netlify deploy that turns the development sign-in on', () => {

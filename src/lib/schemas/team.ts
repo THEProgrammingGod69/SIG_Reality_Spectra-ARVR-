@@ -9,8 +9,9 @@ import { ImageSchema } from './image';
  * Coordinators and volunteers are not listed on the site.
  */
 export const TEAM_TIERS = [
-  { id: 'core', label: 'Core team' },
-  { id: 'secretary', label: 'Domain secretaries' },
+  // `pass`: the tier as printed on a member's access pass on About (D-038).
+  { id: 'core', label: 'Core team', pass: 'Core' },
+  { id: 'secretary', label: 'Domain secretaries', pass: 'Secretary' },
 ] as const;
 
 export type TeamTier = (typeof TEAM_TIERS)[number]['id'];

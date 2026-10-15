@@ -7,7 +7,9 @@
  * | `sig:{ns}:{collection}:{id}`          | hash: `data` (JSON) and `version`       |
  * | `sig:{ns}:{collection}:index`         | sorted set of the collection's ids      |
  * | `sig:{ns}:ratelimit:{key}`            | a counter that expires (rate limits)    |
- * | `{ns}/{folder}{file}` (R2)            | an uploaded file (see `UPLOAD_TARGETS`) |
+ * | `{ns}/records/{collection}.json`      | Netlify Blobs: one collection's records |
+ * | `{ns}/counters/{sha256(key)}`         | Netlify Blobs: a rate-limit counter     |
+ * | `{ns}/{folder}{file}` (R2, Blobs)     | an uploaded file (see `UPLOAD_TARGETS`) |
  */
 
 /** The record collections, one per entity. */
@@ -27,6 +29,16 @@ export function redisKeys(namespace: string) {
     rateLimit: (key: string) => `${root}:ratelimit:${key}`,
     /** SCAN pattern matching every key of this namespace (maintenance and tests). */
     pattern: `${root}:*`,
+  };
+}
+
+/** Keys in the Netlify Blobs records store (`adapters/blobs-store.ts`). */
+export function blobKeys(namespace: string) {
+  return {
+    /** Every record of one collection, in one JSON blob. */
+    collection: (collection: Collection) => `${namespace}/records/${collection}.json`,
+    /** A rate-limit counter (`RecordStore.hit`); `hash` is the key's SHA-256, in hex. */
+    counter: (hash: string) => `${namespace}/counters/${hash}`,
   };
 }
 

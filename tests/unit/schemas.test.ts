@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { ArchiveEntrySchema, ArchiveSchema } from '@/lib/schemas/archive';
 import { CATEGORIES, categoryLabel, CategorySchema } from '@/lib/schemas/category';
 import {
   EventInputSchema,
@@ -146,6 +147,81 @@ describe('GalleryPhoto', () => {
     expect(fails(GalleryPhotoInputSchema.safeParse({ ...valid, image: undefined }))).toEqual([
       'image',
     ]);
+  });
+});
+
+describe('ArchiveEntry', () => {
+  const photo = {
+    src: '/archive/workshops/2025-11-03-group-photo.webp',
+    kind: 'photo',
+    width: 1600,
+    height: 1200,
+    category: 'workshop',
+    date: '2025-11-03T18:00:00+05:30',
+    alt: 'Workshop participants gathered for a group photo',
+    caption: 'The group photo on the last day',
+  };
+  const clip = {
+    ...photo,
+    src: '/archive/hackathons/2026-10-11-judging.mp4',
+    kind: 'video',
+    poster: '/archive/hackathons/2026-10-11-judging.webp',
+    duration: 6.6,
+    category: 'hackathon',
+  };
+
+  it('accepts a photo and a clip, and stores the date in UTC', () => {
+    expect(ArchiveEntrySchema.parse(photo).date).toBe('2025-11-03T12:30:00.000Z');
+    expect(ArchiveEntrySchema.parse(clip)).toMatchObject({ kind: 'video', duration: 6.6 });
+    expect(
+      ArchiveEntrySchema.parse({ ...photo, album: 'Unity workshop', credit: 'Photo: X Y' }),
+    ).toMatchObject({ album: 'Unity workshop', credit: 'Photo: X Y' });
+  });
+
+  it('takes only files in a folder of public/archive, with nothing climbing out', () => {
+    for (const src of [
+      '/archive/workshops/../../.env.local',
+      '/archive/workshops/..%2f.webp',
+      '/archive/../archive/workshops/x.webp',
+      '/archive/x.webp',
+      '/archive/workshops/deeper/x.webp',
+      '/archive/workshops/Group Photo.webp',
+      '/images/workshops/x.webp',
+      'https://media.example.org/archive/workshops/x.webp',
+      '/archive/workshops/x.gif',
+    ]) {
+      expect(fails(ArchiveEntrySchema.safeParse({ ...photo, src })), src).toEqual(['src']);
+    }
+  });
+
+  it('matches the file to the kind: a photo is an image, a clip an MP4 with a poster and a length', () => {
+    expect(fails(ArchiveEntrySchema.safeParse({ ...photo, src: clip.src }))).toEqual(['src']);
+    expect(fails(ArchiveEntrySchema.safeParse({ ...clip, src: photo.src }))).toEqual(['src']);
+    expect(fails(ArchiveEntrySchema.safeParse({ ...clip, poster: undefined }))).toEqual(['poster']);
+    expect(fails(ArchiveEntrySchema.safeParse({ ...clip, poster: clip.src }))).toEqual(['poster']);
+    expect(fails(ArchiveEntrySchema.safeParse({ ...clip, duration: 0 }))).toEqual(['duration']);
+    expect(fails(ArchiveEntrySchema.safeParse({ ...photo, kind: 'audio' }))).toEqual(['kind']);
+  });
+
+  it('keeps the text to what the gallery lays out', () => {
+    expect(fails(ArchiveEntrySchema.safeParse({ ...photo, caption: 'x'.repeat(121) }))).toEqual([
+      'caption',
+    ]);
+    expect(fails(ArchiveEntrySchema.safeParse({ ...photo, alt: 'x' }))).toEqual(['alt']);
+    expect(fails(ArchiveEntrySchema.safeParse({ ...photo, album: 'x'.repeat(61) }))).toEqual([
+      'album',
+    ]);
+    expect(fails(ArchiveEntrySchema.safeParse({ ...photo, width: 0, height: 1.5 }))).toEqual([
+      'width',
+      'height',
+    ]);
+    expect(fails(ArchiveEntrySchema.safeParse({ ...photo, category: 'meetup' }))).toEqual([
+      'category',
+    ]);
+  });
+
+  it('refuses the same file twice', () => {
+    expect(fails(ArchiveSchema.safeParse([photo, clip, photo]))).toEqual(['2.src']);
   });
 });
 

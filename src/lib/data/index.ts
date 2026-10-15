@@ -11,6 +11,7 @@ import { withoutAuthor } from './entity';
 import { splitByPhase } from './events';
 import { buildGallery } from './gallery';
 import { createDataServices, dataAvailability, type DataServices } from './runtime';
+import { createSignInLimit, type SignInAttempt, type SignInLimit } from './sign-in-limit';
 import { TAGS } from './tags';
 import { groupTeam } from './team';
 
@@ -66,6 +67,10 @@ export async function publicRead<T>(
   what: string,
   load: () => Promise<T>,
 ): Promise<{ data: T } | { failed: true }> {
+  // Netlify Blobs is reachable from functions, not from the build: rather than
+  // bake (and cache) the empty state while prerendering, wait for a request.
+  const { backend, records } = dataAvailability();
+  if (backend === 'netlify-blobs' && !records) await connection();
   try {
     return { data: await load() };
   } catch (error) {
@@ -73,6 +78,20 @@ export async function publicRead<T>(
     console.error(`[site] Could not load ${what}.`, error);
     return { failed: true };
   }
+}
+
+let offlineSignIns: SignInLimit | undefined;
+
+/**
+ * Count one admin password sign-in attempt; false when the client or the
+ * email has made too many and it must be refused (`SIGN_IN_LIMITS`). Counted
+ * in the data store where there is one, in memory where there is not.
+ */
+export function allowSignInAttempt(attempt: SignInAttempt): Promise<boolean> {
+  const limit = dataAvailability().records
+    ? repositories().signIns
+    : (offlineSignIns ??= createSignInLimit({ store: null }));
+  return limit.allow(attempt);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -106,7 +125,9 @@ export async function getPublicEvents() {
 
 /**
  * /gallery: photos of timeline events and standalone club photos, newest
- * first. Tagged with both sources.
+ * first. Tagged with both sources. The club archive is Git content, not
+ * store data: the page merges it in (`mergeGallery`), so it shows even when
+ * this read returns nothing or fails.
  */
 export async function getGallery() {
   'use cache';
@@ -152,7 +173,9 @@ export {
   NotFoundError,
   RateLimitedError,
 } from './errors';
-export type { GalleryItem } from './gallery';
+export { mergeGallery, type GalleryItem } from './gallery';
+export { SIGN_IN_LIMITS, type SignInAttempt } from './sign-in-limit';
 export { groupTeam } from './team';
-export { dataAvailability, localMediaFiles } from './runtime';
+export { MAX_HOSTED_UPLOAD_BYTES } from './adapters/hosted-uploads';
+export { dataAvailability, hostedMediaFiles } from './runtime';
 export type { DataServices } from './runtime';

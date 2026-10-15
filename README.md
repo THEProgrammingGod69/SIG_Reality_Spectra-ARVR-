@@ -16,7 +16,7 @@ mission, vision, domains, contact details) is edited as JSON in Git.
 
 ## Setup
 
-Requires **Node.js 20.9+** (this repo is developed on 24 — see `.nvmrc`) and
+Requires **Node.js 22.12+** (this repo is developed on 24 — see `.nvmrc`) and
 **pnpm 10**.
 
 ```bash
@@ -25,10 +25,10 @@ cp .env.example .env.local
 pnpm dev
 ```
 
-Open <http://localhost:3000>. The admin panel is at `/admin` (never linked from
-the site): with `AUTH_SECRET` and `ADMIN_EMAILS` set, `pnpm dev` offers a
-development sign-in until Google sign-in is configured
-([`docs/SETUP_AUTH.md`](./docs/SETUP_AUTH.md)).
+Open <http://localhost:3000>. The admin panel is at `/admin` (the footer's
+small "Admin" link): with `AUTH_SECRET`, `ADMIN_EMAILS` and `ADMIN_PASSWORD`
+set, sign in with an allowlisted email and the password; `pnpm dev` also offers
+a development sign-in ([`docs/SETUP_AUTH.md`](./docs/SETUP_AUTH.md)).
 
 `.env.local` can stay mostly blank for now. Every variable belongs to the stage
 that introduces it, and the app only fails when a feature that needs one actually
@@ -75,7 +75,7 @@ content ([`docs/SETUP_STORAGE.md`](./docs/SETUP_STORAGE.md)).
 
 ```
 src/app/(site)/     public pages, one folder per sitemap route
-src/app/admin/      admin panel (noindex, never linked from the public site)
+src/app/admin/      admin panel (noindex; one nofollow footer link)
 src/components/     ui / motion / three / sections / admin
 src/lib/            data repository, Zod schemas, auth, env, site config
 src/content/        site info, domains, contact details
@@ -96,17 +96,17 @@ footer, page metadata and the route smoke tests all read from it.
 
 ## Sitemap
 
-| Public page    | Shows                                                                              |
-| -------------- | ---------------------------------------------------------------------------------- |
-| `/`            | Hero, mission / vision / about, domains                                            |
-| `/about`       | Club details; the core team, then the secretary of each domain                     |
-| `/events`      | Current event with registration link, timeline of past events with photos          |
-| `/gallery`     | Event photos and standalone club photos, by category (hackathons, competitions, …) |
-| `/recruitment` | Domains always; roles PDF and Google Form only while recruitment is open           |
-| `/contact`     | Contact details and the sponsorship request form                                   |
+| Public page    | Shows                                                                     |
+| -------------- | ------------------------------------------------------------------------- |
+| `/`            | Hero, mission / vision / about, domains                                   |
+| `/about`       | Club details; the core team, then the secretary of each domain            |
+| `/events`      | Current event with registration link, timeline of past events with photos |
+| `/gallery`     | Event photos, club photos and the club archive (with clips), by category  |
+| `/recruitment` | Domains always; roles PDF and Google Form only while recruitment is open  |
+| `/contact`     | Contact details and the sponsorship request form                          |
 
 **Admin** — `/admin` (dashboard), `/admin/login`, `/admin/events`, `/admin/gallery`,
-`/admin/team`, `/admin/recruitment`, `/admin/sponsorships`. Never linked from the public site.
+`/admin/team`, `/admin/recruitment`, `/admin/sponsorships`. Reached from one nofollow footer link (D-039).
 
 There are no per-record URLs: events, photos and team members render inline on
 their list pages.
@@ -143,7 +143,8 @@ product choices in [`docs/DECISIONS.md`](./docs/DECISIONS.md).
 ## Tech stack
 
 Next.js 16 (App Router) · TypeScript strict · Tailwind CSS v4 · React Three Fiber
-· GSAP + ScrollTrigger · Motion · Lenis · Upstash Redis · Cloudflare R2 · Zod ·
+· GSAP + ScrollTrigger · Motion · Lenis · Upstash Redis · Cloudflare R2 (or Netlify
+Blobs) · Zod ·
 Auth.js · react-hook-form · Cloudflare Turnstile · Cloudflare Web Analytics ·
 Playwright · axe-core · Vitest ·
 deployed on Netlify.

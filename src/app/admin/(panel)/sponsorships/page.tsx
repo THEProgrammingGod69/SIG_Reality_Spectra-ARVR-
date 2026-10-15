@@ -62,7 +62,19 @@ async function Requests({ searchParams }: Pick<PageProps<'/admin/sponsorships'>,
         {total} {total === 1 ? 'request' : 'requests'}, newest first. New ones open by default.
       </p>
       {requests.length === 0 ? (
-        <EmptyState title="Nothing on this page" description="Go back to the first page." />
+        // A page past the end: an old link, or requests deleted meanwhile.
+        <EmptyState
+          title="Nothing on this page"
+          description={`The inbox has ${pages} ${pages === 1 ? 'page' : 'pages'}.`}
+          action={
+            <Button variant="outline" asChild>
+              <GuardedLink href="/admin/sponsorships">
+                <Icon icon={ChevronLeft} size="sm" />
+                Back to the first page
+              </GuardedLink>
+            </Button>
+          }
+        />
       ) : (
         <ul className="flex flex-col gap-3">
           {requests.map((request) => (

@@ -5,7 +5,10 @@ import { Heading } from '@/components/ui/heading';
 import { QrCode } from '@/components/ui/qr-code';
 import { Section } from '@/components/ui/section';
 import { Text } from '@/components/ui/text';
+import { Viewfinder } from '@/components/ui/viewfinder';
 import type { LiveSocial } from '@/lib/content';
+
+import { SectionHeading } from './section-heading';
 
 type SocialChannelsProps = {
   socials: readonly LiveSocial[];
@@ -13,31 +16,31 @@ type SocialChannelsProps = {
 
 /**
  * Contact page: the club's channels, each with a button and — for channels
- * marked `qr` — a QR code generated from the same link. QR codes show from
- * `md` up: on a phone the button is the way in (a phone cannot scan its own
- * screen). Renders nothing while no channel is set.
+ * marked `qr` — a QR code generated from the same link, in a viewfinder
+ * (D-037). QR codes show from `md` up: on a phone the button is the way in (a
+ * phone cannot scan its own screen). Renders nothing while no channel is set.
  */
 export function SocialChannels({ socials }: SocialChannelsProps) {
   if (socials.length === 0) return null;
 
   return (
     <Section labelledBy="social-channels" className="pb-0">
-      <Heading level={2} size="md" id="social-channels">
-        Follow and join
-      </Heading>
+      <SectionHeading id="social-channels" eyebrow="Stay close" title="Follow and join" size="md" />
       <Stagger
         as="ul"
-        className="mt-8 grid grid-cols-[repeat(auto-fill,minmax(min(100%,16rem),1fr))] gap-6"
+        className="mt-10 grid grid-cols-[repeat(auto-fill,minmax(min(100%,16rem),1fr))] gap-6"
       >
         {socials.map((social) => (
-          <Card key={social.id} as="li">
+          <Card key={social.id} as="li" spotlight>
             <CardBody className="items-start gap-5">
               {social.qr ? (
-                <QrCode
-                  value={social.href}
-                  label={`QR code for ${social.label}`}
-                  className="hidden size-36 md:block"
-                />
+                <Viewfinder className="hidden md:block">
+                  <QrCode
+                    value={social.href}
+                    label={`QR code for ${social.label}`}
+                    className="size-36"
+                  />
+                </Viewfinder>
               ) : null}
               <div className="flex flex-col gap-1">
                 <Heading level={3} size="sm">

@@ -18,7 +18,8 @@ import { Icon, type IconSize } from './icon';
  *               React Bits' StarBorder: two light points travel the border
  *
  * Motion obeys rule 4: hover fades an overlay (`opacity`), press scales
- * (`transform`); colours never transition. `magnetic` adds the Magnetic pull.
+ * (`transform`), and the primary fill catches a glare (`transform`); colours
+ * never transition. `magnetic` adds the Magnetic pull.
  */
 
 export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'star';
@@ -29,8 +30,18 @@ const base =
   // Hover/focus overlay, painted between the fill and the label.
   'before:absolute before:inset-0 before:-z-10 before:rounded-[inherit] before:opacity-0 before:transition-opacity before:duration-(--dur-micro) hover:before:opacity-100 focus-visible:before:opacity-100';
 
+/**
+ * The primary button's glare (our GlareHover, D-037): a skewed band of light
+ * that sweeps across once as the pointer arrives. `transform` only, behind the
+ * label; it moves with a transition on the way in and snaps back unseen on the
+ * way out (the resting state has no transition).
+ */
+const glare =
+  'after:absolute after:inset-y-0 after:left-0 after:-z-10 after:w-1/3 after:-translate-x-full after:-skew-x-12 after:bg-linear-to-r after:from-transparent after:via-(--color-text)/45 after:to-transparent ' +
+  'hover:after:translate-x-[300%] hover:after:transition-transform hover:after:duration-(--dur-long) hover:after:ease-out-expo';
+
 const variants: Record<ButtonVariant, string> = {
-  primary: 'bg-(--color-accent) text-(--color-accent-contrast) before:bg-(--color-text)/20',
+  primary: `bg-(--color-accent) text-(--color-accent-contrast) before:bg-(--color-text)/20 ${glare}`,
   secondary: 'border border-(--color-border-strong) text-(--color-text) before:bg-(--color-text)/8',
   ghost: 'text-(--color-muted) hover:text-(--color-text) before:bg-(--color-text)/6',
   star: 'p-px text-(--color-text) before:hidden',

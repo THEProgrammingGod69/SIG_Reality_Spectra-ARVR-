@@ -1,5 +1,6 @@
 import { gsap } from 'gsap';
 import { CustomEase } from 'gsap/CustomEase';
+import { Flip } from 'gsap/Flip';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
 import { type Bezier, type EaseToken, type MotionTokens } from './tokens';
@@ -7,7 +8,7 @@ import { type Bezier, type EaseToken, type MotionTokens } from './tokens';
 /**
  * The one place GSAP plugins are registered.
  *
- * Client components import `gsap` and `ScrollTrigger` from here rather than
+ * Client components import `gsap`, `ScrollTrigger` and `Flip` from here rather than
  * from the package, so registration happens exactly once and never on the
  * server (where there is no window to register against).
  */
@@ -16,7 +17,7 @@ let registered = false;
 
 function register() {
   if (registered || typeof window === 'undefined') return;
-  gsap.registerPlugin(ScrollTrigger, CustomEase);
+  gsap.registerPlugin(ScrollTrigger, CustomEase, Flip);
   registered = true;
 }
 
@@ -45,4 +46,4 @@ function easeFor(bezier: Bezier): gsap.EaseFunction {
   return ease;
 }
 
-export { gsap, ScrollTrigger };
+export { Flip, gsap, ScrollTrigger };

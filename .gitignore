@@ -45,3 +45,7 @@ yarn-error.log*
 
 # local data mode (D-031): records and uploads on this computer only
 .data/
+
+# This project uses pnpm (CLAUDE.md §2): never commit another package manager's lockfile.
+package-lock.json
+yarn.lock

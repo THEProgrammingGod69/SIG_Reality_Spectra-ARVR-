@@ -35,8 +35,11 @@ export function turnstileMode(): TurnstileMode {
   return resolveTurnstileMode({
     siteKey: publicEnv.NEXT_PUBLIC_TURNSTILE_SITE_KEY,
     secretKey: env.TURNSTILE_SECRET_KEY,
-    // Netlify sets CONTEXT on every build and function (as in src/lib/auth/policy.ts).
-    onNetlify: env.CONTEXT !== undefined,
+    // Netlify sets CONTEXT, Vercel VERCEL_ENV, on every build and function (as
+    // in src/lib/auth/policy.ts): a deployed site never runs without the check.
+    onNetlify:
+      env.CONTEXT !== undefined ||
+      (env.VERCEL_ENV !== undefined && env.VERCEL_ENV !== 'development'),
   });
 }
 

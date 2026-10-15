@@ -1,5 +1,20 @@
 @import 'tailwindcss';
 
+/* Inside the Home domain rail once it runs horizontally (D-038). The rail sets
+   `data-rail="on"` only from `md` on screens at least 40rem tall, with
+   JavaScript and without reduced motion; everywhere else these styles never
+   apply and the domains are a plain grid. */
+@custom-variant rail (&:where([data-rail='on'] *));
+
+/* Inside the Home moments reel once it turns as a ring. Same contract as the
+   rail: `data-reel="on"` only from `md`, with JavaScript and without reduced
+   motion; everywhere else the moments are a scroll-snap strip. */
+@custom-variant reel (&:where([data-reel='on'] *));
+
+/* Where panels stack as the reader scrolls (D-038): from `md`, on screens tall
+   enough to hold a stacked panel, and only without reduced motion. */
+@custom-variant stack (@media (min-width: 48rem) and (min-height: 40rem) and (prefers-reduced-motion: no-preference));
+
 /* =============================================================================
    Design tokens
    =============================================================================
@@ -34,6 +49,12 @@
      Type scale. Display sizes are fluid (360px → 1440px) and carry their own
      line height, tracking and weight. Space Grotesk ships 500 and 700 only.
      --------------------------------------------------------------------------- */
+  /* The footer wordmark and the 404 numeral (D-037): sized so "Reality
+     Spectra" spans the content width from 360px to 1440px, never wider. */
+  --text-display-3xl: clamp(2.5rem, 0.25rem + 9.5vw, 9.5rem);
+  --text-display-3xl--line-height: 0.9;
+  --text-display-3xl--letter-spacing: -0.04em;
+  --text-display-3xl--font-weight: 700;
   --text-display-2xl: clamp(3rem, 1.75rem + 5vw, 6rem); /* the hero name */
   --text-display-2xl--line-height: 1;
   --text-display-2xl--letter-spacing: -0.03em;
@@ -50,6 +71,8 @@
   --text-display-md--line-height: 1.2;
   --text-display-md--letter-spacing: -0.015em;
   --text-display-md--font-weight: 500;
+  --text-numeral: clamp(7rem, 12vw, 11rem); /* a rail panel's hollow numeral (D-038) */
+  --text-numeral--line-height: 1;
   --text-display-sm: 1.25rem; /* card titles */
   --text-display-sm--line-height: 1.3;
   --text-display-sm--letter-spacing: -0.01em;
@@ -72,6 +95,21 @@
   --spacing-header: 4.5rem; /* fixed site header height */
   --container-content: 75rem; /* 1200px content width */
   --container-prose: 42rem; /* comfortable reading measure (≤ 68ch) */
+  --grid-cell: 4rem; /* the lab-floor grid behind page intros (D-037) */
+  --spotlight-size: 26rem; /* the pointer light on cards (Spotlight, D-037) */
+  --grain-strength: 0.04; /* film grain opacity: felt, not seen (D-037) */
+  --scanline-gap: 0.25rem; /* the HUD's display lines: one hairline per gap (D-038) */
+  --reticle-size: 0.625rem; /* one arm of a targeting-reticle corner (D-038) */
+  --reticle-reach: 0.375rem; /* how far the reticle locks outside its target */
+  --rail-panel: clamp(17rem, 24vw, 23rem); /* a domain panel on the Home rail */
+  --rail-panel-height: min(28rem, 56svh);
+  --reel-card: clamp(11rem, 16vw, 15rem); /* a card on the Home moments ring */
+  --reel-strip-card: min(16rem, 72vw); /* a card in the strip (phones, reduced motion) */
+  --reel-gap: 1.25rem; /* the space between neighbouring cards around the ring */
+  --reel-perspective: 110rem; /* how far the viewer stands from the ring */
+  --reel-lean: 5deg; /* the most the ring leans toward the pointer */
+  --stack-step: 1.5rem; /* how much lower each stacked panel sticks than the last */
+  --stack-hold: 25svh; /* how long the finished stack holds before the page moves on */
 
   /* Shape */
   --radius-control: 0.75rem; /* buttons, inputs */
@@ -99,10 +137,13 @@
   /* Layers: one scale, so nothing fights over z-index. Used as z-(--z-header).
      The mobile menu panel lives inside the header's layer, under its top row;
      Modal uses the native <dialog> top layer, which sits above every z-index. */
+  --z-grain: 30; /* the film grain, over the page and under the header (D-037) */
+  --z-shutter: 35; /* the page-change shutter: over the page, under the header (D-038) */
   --z-header: 40;
   --z-overlay: 50; /* admin sheets and dialogs */
   --z-skip: 60;
   --z-toast: 70; /* admin notifications, above dialogs */
+  --z-cursor: 80; /* the targeting reticle: decoration over everything (D-038) */
 
   /* Base — the lab darkness */
   --color-void: #000000;
@@ -155,6 +196,15 @@
   --motion-rise: 1.5rem; /* how far an entering element travels */
   --dur-ambient: 6s; /* slow decorative loops (StarBorder, skeleton shimmer) */
   --dur-toast: 6s; /* how long an admin notification stays (not motion: kept under reduced motion) */
+  /* The lab settling into place: the backdrop's rings and light, and how long
+     a status light pings. Never more than 5 s, so nothing moves on its own
+     for longer than WCAG 2.2.2 allows without a pause control (D-037). */
+  --dur-settle: 4.8s;
+  --motion-word-drop: 110%; /* how far below its line mask a heading word starts */
+  --motion-word-tilt: 3deg; /* and its lean as it rises (SplitText, D-037) */
+  /* A ScrollWords word before the reader reaches it: still ≥ 3:1 for its large
+     type on the page background, so even the dimmed state is readable (D-037). */
+  --motion-dim: 0.45;
 
   /* Ambient animations — transform and opacity only (rule 4). The global
      reduced-motion rule below stops them. */
@@ -248,6 +298,232 @@
       transform: translateX(-100%);
     }
   }
+
+  /* Premium pass (D-037) — transform and opacity only, every duration and
+     delay on a token, so reduced motion stops all of them (the global rule
+     below; delays are stagger multiples, and the stagger collapses too).
+     Every one of them ends: nothing here loops forever (WCAG 2.2.2). */
+
+  /* Page titles: each word rises out of its own line mask (SplitHeading). */
+  --animate-word-rise: word-rise var(--dur-long) var(--ease-out-expo) both;
+  /* What follows a page title: the lead and actions arrive a beat later. */
+  --animate-intro-in: rise-in var(--dur-long) var(--ease-out-expo) both;
+  /* Items arriving in an open list (gallery tiles after a filter or "Show
+     more"): `both`, so a staggered item waits unseen, never flashes. */
+  --animate-enter: rise-in var(--dur-medium) var(--ease-out-expo) both;
+  /* The backdrop's rings turn into place as a page opens. */
+  --animate-orbit: orbit-settle var(--dur-settle) var(--ease-out-expo) both;
+  /* A status light: twice, a ring grows from the dot and fades (2 × 2.4 s). */
+  --animate-ping-soft: ping-soft calc(var(--dur-long) * 2) var(--ease-out-expo) 2 forwards;
+  /* The hero's scroll cue: twice, a light runs down its track, then rests. */
+  --animate-scroll-cue: scroll-cue calc(var(--dur-long) * 2) var(--ease-in-out) 2;
+  /* The backdrop's light rises and spreads into place as a page opens. */
+  --animate-drift: drift-settle var(--dur-settle) var(--ease-out-expo) both;
+
+  @keyframes word-rise {
+    from {
+      transform: translateY(var(--motion-word-drop)) rotate(var(--motion-word-tilt));
+    }
+  }
+  @keyframes ping-soft {
+    from {
+      transform: scale(1);
+      opacity: 0.7;
+    }
+    to {
+      transform: scale(3);
+      opacity: 0;
+    }
+  }
+  @keyframes scroll-cue {
+    from {
+      transform: translateY(-100%);
+    }
+    to {
+      transform: translateY(250%);
+    }
+  }
+  @keyframes orbit-settle {
+    from {
+      transform: rotate(-24deg);
+    }
+  }
+  @keyframes drift-settle {
+    from {
+      transform: translate3d(-6%, 4%, 0) scale(0.85);
+      opacity: 0;
+    }
+  }
+
+  /* The XR HUD (D-038). Same contract as above: transform and opacity only,
+     durations and delays on tokens, every animation ends. Distances a scroll
+     drives (parallax, the orbit's turn, the portal, the stack) are tokens too,
+     read by the scroll primitives through `readCssVar`. */
+  --motion-depth: 4rem; /* how far a decorative layer drifts as its section scrolls by */
+  --motion-turn: 32deg; /* how far a backdrop orbit turns as its section scrolls by */
+  --motion-portal: 2.2; /* how wide the closing orbit opens as the reader arrives */
+  --motion-shelve: 0.92; /* a stacked panel's scale once the next one covers it */
+  --motion-lean: 4deg; /* the most the Home rail's panels lean while it moves */
+  /* The other tiles while one is in focus: dim, and still ≥ 4.5:1 for any
+     text on them (the "+N more" count). */
+  --motion-focus-dim: 0.6;
+
+  /* Page change: shutter slats lift off the new page, one stagger apart.
+     `backwards`: the slats and the name rest invisible (scaleY(0), opacity 0
+     inline), so a shutter whose animation never runs never covers the page. */
+  --animate-shutter: shutter-open var(--dur-medium) var(--ease-in-out) backwards;
+  /* …while the destination's name shows through and fades with them. */
+  --animate-shutter-label: shutter-label var(--dur-long) var(--ease-out-expo) backwards;
+  /* A HUD scan: one line of light crosses its layer once, then is gone. */
+  --animate-scan: scan-sweep calc(var(--dur-long) * 2) var(--ease-in-out) both;
+  /* HUD corners converge on their frame — the lock-on. */
+  --animate-lock-on: lock-on var(--dur-long) var(--ease-out-expo) both;
+
+  @keyframes shutter-open {
+    from {
+      transform: scaleY(1);
+    }
+    to {
+      transform: scaleY(0);
+    }
+  }
+  @keyframes shutter-label {
+    0% {
+      opacity: 0;
+      transform: translateY(var(--motion-rise));
+    }
+    30%,
+    55% {
+      opacity: 1;
+      transform: none;
+    }
+    100% {
+      opacity: 0;
+      transform: translateY(calc(var(--motion-rise) * -1));
+    }
+  }
+  @keyframes scan-sweep {
+    from {
+      transform: translateY(0);
+      opacity: 0;
+    }
+    15%,
+    85% {
+      opacity: 1;
+    }
+    to {
+      transform: translateY(100%);
+      opacity: 0;
+    }
+  }
+  @keyframes lock-on {
+    from {
+      transform: scale(1.12);
+      opacity: 0;
+    }
+  }
+}
+
+/* =============================================================================
+   Premium pass utilities (D-037)
+   =============================================================================
+   Static treatments — nothing here animates. Colours and sizes are tokens. */
+
+/* A word's line mask for SplitHeading / WordsReveal: clips the word while it
+   rises, with room below the baseline so descenders (g, p, y) are not cut. */
+@utility word-mask {
+  display: inline-block;
+  /* `hidden` first for browsers without `clip` (Safari < 16); the top
+     alignment below keeps either from moving the word off the baseline. */
+  overflow: hidden;
+  overflow: clip;
+  padding-block-end: 0.14em;
+  margin-block-end: -0.14em;
+  vertical-align: top;
+}
+
+/* Spectrum-filled text for one highlighted word per heading (≤ 10% rule). */
+@utility text-spectra {
+  background-image: var(--gradient-spectra);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Hollow display type: a hairline outline in the caption colour, which keeps
+   ≥ 4.5:1 on every surface — axe measures a stroke as the text's colour once
+   it is 0.03em or more, as it is on numerals set small on phones. */
+@utility text-outline {
+  color: transparent;
+  -webkit-text-stroke: 1px var(--color-subtle);
+}
+
+/* The lab floor: hairline grid in the border colour, one cell per token. */
+@utility bg-lab-grid {
+  background-image:
+    linear-gradient(to right, var(--color-border) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--color-border) 1px, transparent 1px);
+  background-size: var(--grid-cell) var(--grid-cell);
+}
+
+/* Keeps only a 1px ring at the element's edge: the Spotlight's rim light. */
+@utility mask-rim {
+  padding: 1px;
+  -webkit-mask:
+    linear-gradient(var(--color-void) 0 0) content-box,
+    linear-gradient(var(--color-void) 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(var(--color-void) 0 0) content-box exclude,
+    linear-gradient(var(--color-void) 0 0);
+}
+
+/* HUD display lines (D-038): a hairline every `--scanline-gap`, faint. Static. */
+@utility bg-scanlines {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    color-mix(in oklab, var(--color-text) 5%, transparent) 0 1px,
+    transparent 1px var(--scanline-gap)
+  );
+}
+
+/* Holographic foil (D-038): a diagonal band of spectrum light for the team's
+   access passes. Static — the pass moves the band with `transform`. */
+@utility bg-holo {
+  background-image: linear-gradient(
+    115deg,
+    transparent 30%,
+    color-mix(in oklab, var(--color-spectra-cyan) 16%, transparent) 42%,
+    color-mix(in oklab, var(--color-spectra-orchid) 18%, transparent) 50%,
+    color-mix(in oklab, var(--color-spectra-azure) 16%, transparent) 58%,
+    transparent 70%
+  );
+}
+
+/* Focus within a grid (D-038): while one child is hovered or keyboard-focused,
+   its siblings dim to `--motion-focus-dim`, so the eye lands on one photo.
+   Opacity only; under reduced motion the change is instant. */
+@utility focus-dim {
+  & > * {
+    transition: opacity var(--dur-short) var(--ease-out-expo);
+  }
+  &:has(> * :is(:hover, :focus-visible)) > :not(:has(:hover, :focus-visible)) {
+    opacity: var(--motion-focus-dim);
+  }
+}
+
+/* A HUD corner bracket's two arms, in the current colour. Pick the corner
+   with `border-*` sides; size from `--reticle-size`. */
+@utility hud-corner {
+  position: absolute;
+  width: var(--reticle-size);
+  height: var(--reticle-size);
+  border-color: currentColor;
+}
+
+/* Film grain: a 160px fractal-noise tile, drawn once and repeated. */
+@utility bg-grain {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
 /* =============================================================================

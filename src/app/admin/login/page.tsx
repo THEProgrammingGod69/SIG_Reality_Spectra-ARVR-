@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { Suspense } from 'react';
 
+import { DecodeText } from '@/components/motion/decode-text';
 import { Button } from '@/components/admin/ui/button';
 import {
   Card,
@@ -14,48 +15,78 @@ import {
 import { Input } from '@/components/admin/ui/input';
 import { Label } from '@/components/admin/ui/label';
 import { Separator } from '@/components/admin/ui/separator';
+import { HudCorners } from '@/components/ui/hud-corners';
 import { Icon } from '@/components/ui/icon';
 import { BrandMark } from '@/components/ui/logo';
 import { Skeleton } from '@/components/ui/skeleton';
-import { signInForDevelopment, signInWithGoogle } from '@/lib/auth/actions';
+import { signInForDevelopment, signInWithGoogle, signInWithPassword } from '@/lib/auth/actions';
 import { setup } from '@/lib/auth/config';
 import { safeCallbackPath } from '@/lib/auth/policy';
 import { getAdminSession } from '@/lib/auth/session';
 import { isDevelopment } from '@/lib/env';
 import { siteConfig } from '@/lib/site';
 
+import { SubmitButton } from './submit-button';
+
 export const metadata: Metadata = { title: 'Sign in' };
 
-/** Auth.js error codes, said plainly. */
+/** Auth.js error codes (and our own), said plainly. */
 const ERRORS: Record<string, string> = {
   AccessDenied: 'That account is not on the admin list. Use an allowed account, or ask an admin.',
-  CredentialsSignin: 'That account is not on the admin list.',
+  // One message for a wrong password and an unknown email: never say which.
+  CredentialsSignin: 'Wrong email or password.',
+  TooManyAttempts: 'Too many sign-in attempts. Wait 15 minutes, then try again.',
   Configuration: 'Sign-in is not configured correctly on this site.',
   Verification: 'That sign-in link has expired. Try again.',
 };
 
+/**
+ * The one admin page anyone can open. The card sits in the HUD's lock-on
+ * frame (D-038), which settles once as the page opens — `transform` and
+ * `opacity` only, instant under reduced motion — and the mono eyebrow decodes
+ * like the site's readouts. Admin UI otherwise (D-030).
+ */
 export default function LoginPage({ searchParams }: PageProps<'/admin/login'>) {
   return (
     <main
       id="main-content"
       className="flex flex-1 items-center justify-center bg-background px-gutter py-16"
     >
-      <Card className="w-full max-w-sm">
-        <CardHeader className="justify-items-center text-center">
-          <BrandMark className="size-12" preload />
-          <CardTitle>
-            <h1 className="text-display-sm">Admin sign-in</h1>
-          </CardTitle>
-          <CardDescription>{siteConfig.name}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Suspense fallback={<Skeleton className="h-9 w-full" />}>
-            <SignInOptions searchParams={searchParams} />
-          </Suspense>
-        </CardContent>
-      </Card>
+      <div className="relative w-full max-w-sm">
+        <HudCorners
+          className="-inset-2 animate-lock-on text-primary sm:-inset-3"
+          cornerClassName="size-5"
+        />
+        <Card>
+          <CardHeader className="justify-items-center text-center">
+            <BrandMark className="size-12" preload />
+            <p className="font-mono text-label text-muted-foreground uppercase">
+              <DecodeText text="Restricted · Lab access" />
+            </p>
+            <CardTitle>
+              <h1 className="text-display-sm">Admin sign-in</h1>
+            </CardTitle>
+            <CardDescription>{siteConfig.name}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Suspense fallback={<Skeleton className="h-9 w-full" />}>
+              <SignInOptions searchParams={searchParams} />
+            </Suspense>
+          </CardContent>
+        </Card>
+      </div>
     </main>
   );
+}
+
+/** The error to explain, from our redirect (`error`) or Auth.js's own (`error` + `code`). */
+function errorMessage(params: Record<string, string | string[] | undefined>): string | null {
+  const code = typeof params.error === 'string' ? params.error : null;
+  if (code === null) return null;
+  if (code === 'CredentialsSignin' && params.code === 'too_many_attempts') {
+    return ERRORS.TooManyAttempts ?? null;
+  }
+  return ERRORS[code] ?? 'Sign-in failed. Try again.';
 }
 
 async function SignInOptions({ searchParams }: Pick<PageProps<'/admin/login'>, 'searchParams'>) {
@@ -63,8 +94,7 @@ async function SignInOptions({ searchParams }: Pick<PageProps<'/admin/login'>, '
   const callbackUrl = safeCallbackPath(params.callbackUrl);
   if ((await getAdminSession()) !== null) redirect(callbackUrl);
 
-  const errorCode = typeof params.error === 'string' ? params.error : null;
-  const error = errorCode ? (ERRORS[errorCode] ?? 'Sign-in failed. Try again.') : null;
+  const error = errorMessage(params);
 
   return (
     <div className="flex flex-col gap-6">
@@ -78,23 +108,67 @@ async function SignInOptions({ searchParams }: Pick<PageProps<'/admin/login'>, '
         </p>
       ) : null}
 
+      {setup.password ? <PasswordSignIn callbackUrl={callbackUrl} /> : null}
+
+      {setup.password && setup.google ? <Separator /> : null}
+
       {setup.google ? (
         <form action={signInWithGoogle}>
           <input type="hidden" name="callbackUrl" value={callbackUrl} />
-          <Button type="submit" className="w-full">
+          <Button type="submit" variant={setup.password ? 'outline' : 'default'} className="w-full">
             Sign in with Google
           </Button>
         </form>
-      ) : (
+      ) : null}
+
+      {!setup.password && !setup.google ? (
         <p className="text-body-sm text-muted-foreground">
           {isDevelopment
-            ? 'Google sign-in is off until AUTH_GOOGLE_ID and AUTH_GOOGLE_SECRET are set (docs/SETUP_AUTH.md).'
+            ? 'The password sign-in is off until ADMIN_PASSWORD is set, and Google sign-in until AUTH_GOOGLE_ID and AUTH_GOOGLE_SECRET are (docs/SETUP_AUTH.md).'
             : 'Sign-in is not set up on this site yet. Ask the site maintainer.'}
         </p>
-      )}
+      ) : null}
 
       {setup.devSignIn ? <DevelopmentSignIn callbackUrl={callbackUrl} /> : null}
     </div>
+  );
+}
+
+/**
+ * Email + password: any allowlisted email with ADMIN_PASSWORD. The fields keep
+ * the browser's password manager working (`username`, `current-password`).
+ */
+function PasswordSignIn({ callbackUrl }: { callbackUrl: string }) {
+  return (
+    <form action={signInWithPassword} className="flex flex-col gap-4">
+      <input type="hidden" name="callbackUrl" value={callbackUrl} />
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="sign-in-email">Email</Label>
+        <Input
+          id="sign-in-email"
+          name="email"
+          type="email"
+          required
+          autoComplete="username"
+          autoCapitalize="none"
+          spellCheck={false}
+        />
+      </div>
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="sign-in-password">Password</Label>
+        <Input
+          id="sign-in-password"
+          name="password"
+          type="password"
+          required
+          maxLength={200}
+          autoComplete="current-password"
+        />
+      </div>
+      <SubmitButton pending="Checking…" className="w-full">
+        Sign in
+      </SubmitButton>
+    </form>
   );
 }
 

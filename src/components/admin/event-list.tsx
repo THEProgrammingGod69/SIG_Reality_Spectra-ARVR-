@@ -29,7 +29,9 @@ export function EventRow({ event, phase }: { event: Event; phase: EventPhase }) 
         </span>
         <span className="text-xs text-muted-foreground">
           {formatDateTime(event.startsAt)} · {categoryLabel(event.category)}
-          {event.photos.length > 0 ? ` · ${event.photos.length} photos` : ''}
+          {event.photos.length > 0
+            ? ` · ${event.photos.length} photo${event.photos.length === 1 ? '' : 's'}`
+            : ''}
         </span>
       </span>
       <EventPhaseBadge phase={phase} />

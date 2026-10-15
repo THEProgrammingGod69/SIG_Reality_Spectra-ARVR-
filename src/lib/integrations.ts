@@ -16,16 +16,24 @@ const INTEGRATIONS = [
     variables: ['AUTH_SECRET'],
   },
   {
-    id: 'google',
-    label: 'Google sign-in',
-    purpose: 'How admins sign in on the live site (docs/SETUP_AUTH.md).',
-    variables: ['AUTH_GOOGLE_ID', 'AUTH_GOOGLE_SECRET'],
-  },
-  {
     id: 'admins',
     label: 'Admin allowlist',
-    purpose: 'The Google accounts allowed into this panel.',
+    purpose: 'The emails allowed into this panel, with the password or their Google account.',
     variables: ['ADMIN_EMAILS'],
+  },
+  {
+    id: 'password',
+    label: 'Password sign-in',
+    purpose: 'Admins sign in with their allowlisted email and this shared password.',
+    variables: ['ADMIN_PASSWORD'],
+  },
+  {
+    id: 'google',
+    label: 'Google sign-in',
+    purpose:
+      'Admins sign in with their Google account (docs/SETUP_AUTH.md). Optional while the password sign-in is set.',
+    variables: ['AUTH_GOOGLE_ID', 'AUTH_GOOGLE_SECRET'],
+    optionalWith: 'password',
   },
   {
     id: 'redis',
@@ -69,6 +77,8 @@ const INTEGRATIONS = [
   label: string;
   purpose: string;
   variables: readonly (keyof ServerEnv | `NEXT_PUBLIC_${string}`)[];
+  /** Not needed once this other integration is configured: another way to the same end. */
+  optionalWith?: string;
 }[];
 
 export type IntegrationId = (typeof INTEGRATIONS)[number]['id'];
@@ -79,9 +89,17 @@ function isSet(name: string): boolean {
   return value !== undefined && value !== '';
 }
 
+const configured = (variables: readonly string[]) => variables.every(isSet);
+
 export const integrations = INTEGRATIONS.map((integration) => ({
   ...integration,
-  configured: integration.variables.every(isSet),
+  configured: configured(integration.variables),
+  /** Unset, but not missing: what it offers is already covered (Google, with the password set). */
+  optional:
+    'optionalWith' in integration &&
+    INTEGRATIONS.some(
+      (other) => other.id === integration.optionalWith && configured(other.variables),
+    ),
 }));
 
 export function isConfigured(id: IntegrationId): boolean {

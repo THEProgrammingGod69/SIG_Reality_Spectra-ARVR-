@@ -26,6 +26,8 @@ export const SiteInfoSchema = z.object({
   about: z.object({
     /** Home page "who we are". */
     short: text(40, 400),
+    /** Home page: the lit card beside "who we are" (D-039, from the "Who we are" section on main). */
+    card: z.object({ title: text(3, 60), body: text(40, 300) }),
     /** About page, one string per paragraph. */
     long: z.array(text(40, 1200)).min(1).max(6),
   }),

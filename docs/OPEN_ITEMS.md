@@ -17,11 +17,12 @@ then confirm the dashboard's **Setup** card shows everything configured.
 
 | What                        | Placeholder now                                              | Replace with                                           | Guide                             |
 | --------------------------- | ------------------------------------------------------------ | ------------------------------------------------------ | --------------------------------- |
-| `ADMIN_EMAILS`              | `dryerisdry@gmail.com` (temporary, Arnav)                    | The club's 2–3 admin Google accounts (#14)             | `SETUP_AUTH.md`                   |
+| `ADMIN_EMAILS`              | `dryerisdry@gmail.com`, `mohan.arnav24@vit.edu` (D-039)      | The club's 2–3 admin accounts (#14)                    | `SETUP_AUTH.md`                   |
+| `ADMIN_PASSWORD`            | the short password the club chose — the Setup card says weak | A long passphrase (≥ 12 characters), set in Netlify    | `SETUP_AUTH.md`, D-039            |
 | `AUTH_GOOGLE_ID`, `_SECRET` | empty — Google sign-in off, dev sign-in only locally         | OAuth client on the club Google account (#13)          | `SETUP_AUTH.md`                   |
 | `AUTH_SECRET`               | generated in your `.env.local` only                          | A fresh secret per Netlify deploy context              | `SETUP_AUTH.md`                   |
-| Upstash Redis variables     | empty — dashboard says "Data store not connected"            | Club Upstash database (#9)                             | `SETUP_STORAGE.md`                |
-| R2 variables                | empty — uploads answer 503                                   | Club R2 bucket and token (#10)                         | `SETUP_STORAGE.md`                |
+| Upstash Redis variables     | empty — on Netlify, Netlify Blobs stores the data (D-039)    | Club Upstash database (#9)                             | `SETUP_STORAGE.md`                |
+| R2 variables                | empty — on Netlify, uploads go to Netlify Blobs (D-039)      | Club R2 bucket and token (#10)                         | `SETUP_STORAGE.md`                |
 | Turnstile keys              | empty — check off locally; the form is hidden on Netlify     | Club Cloudflare Turnstile site (#22)                   | D-032                             |
 | Analytics token             | empty — no analytics script loads                            | Cloudflare Web Analytics site token (club account)     | `.env.example`, D-033             |
 | `CRON_SECRET`               | empty                                                        | A generated secret (Production context only)           | `GO_LIVE.md`, D-034               |
@@ -65,19 +66,19 @@ later stage needs them. Step-by-step setup: [`SETUP_STORAGE.md`](./SETUP_STORAGE
 
 ## Admin sign-in (Stage 6 built with placeholders)
 
-| #   | Item                                                                                                     | Status                                                               |
-| --- | -------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| 13  | Google Cloud OAuth client under the **club** Google account, with localhost and production callback URLs | Open — Google sign-in is built and switches on with the keys (D-030) |
-| 14  | `ADMIN_EMAILS` — the 2–3 accounts that get admin access                                                  | Placeholder: `dryerisdry@gmail.com` until the club accounts exist    |
+| #   | Item                                                                                                     | Status                                                                               |
+| --- | -------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| 13  | Google Cloud OAuth client under the **club** Google account, with localhost and production callback URLs | Open — Google sign-in is built and switches on with the keys (D-030)                 |
+| 14  | `ADMIN_EMAILS` — the 2–3 accounts that get admin access                                                  | Set: `dryerisdry@gmail.com`, `mohan.arnav24@vit.edu` with the admin password (D-039) |
 
 ## Events and gallery content (Stage 7 built with placeholders)
 
-| #   | Item                                                                                      | Status                                                                           |
-| --- | ----------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| 15  | 3–5 **past events** with dates, details and photos (consent checked) to seed the timeline | Open — `[Demo]` placeholders until supplied; add them in `/admin/events` (D-031) |
-| 16  | One example **registration link** (typically VIERP)                                       | Placeholder: the recruitment form link, in demo events only (D-031)              |
-| 17  | Preferred **poster aspect ratio**                                                         | Resolved: any ratio, shown whole in a 4:5 frame (D-031)                          |
-| 18  | A first batch of **standalone club photos** (consent checked), with a category for each   | Open — the drive is not finalised; `[Demo]` photos until then (D-031)            |
+| #   | Item                                                                                      | Status                                                                                          |
+| --- | ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| 15  | 3–5 **past events** with dates, details and photos (consent checked) to seed the timeline | Open — `[Demo]` placeholders until supplied; add them in `/admin/events` (D-031)                |
+| 16  | One example **registration link** (typically VIERP)                                       | Placeholder: the recruitment form link, in demo events only (D-031)                             |
+| 17  | Preferred **poster aspect ratio**                                                         | Resolved: any ratio, shown whole in a 4:5 frame (D-031)                                         |
+| 18  | A first batch of **standalone club photos** (consent checked), with a category for each   | Partly done — the Tesseract'26 and Unity workshop archive is in Git (D-039); more via the panel |
 
 ## Team, recruitment and sponsorships (Stage 8 built with placeholders)
 

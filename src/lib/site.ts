@@ -18,6 +18,8 @@ export const siteConfig = {
   parentOrganisation: 'VIT Pune',
   /** What the club is, in the words used for titles and structured data. */
   kind: 'Special Interest Group',
+  /** The realities the club works in — the hero's HUD readout (D-038). */
+  realities: ['AR', 'VR', 'XR'],
 } as const;
 
 /** "Special Interest Group · VIT Pune" — the subtle club credit (hero, menu, footer). */
@@ -82,7 +84,7 @@ export const siteRoutes = [
   {
     href: '/gallery',
     label: 'Gallery',
-    description: 'Photos from our hackathons, competitions, workshops and club life.',
+    description: 'Photos and clips from our hackathons, competitions, workshops and club life.',
     placement: 'primary',
     group: 'explore',
     priority: 0.7,
@@ -110,9 +112,9 @@ export const siteRoutes = [
 export type SiteRouteHref = (typeof siteRoutes)[number]['href'];
 
 /**
- * Admin routes: the panel's navigation and page headings. Never linked from
- * the public site and always `noindex`. `/admin/login` is not listed: it is
- * outside the panel.
+ * Admin routes: the panel's navigation and page headings, always `noindex`.
+ * The public site links only to `/admin/login`, once, from the footer (rule 6);
+ * it is not listed here because it is outside the panel.
  */
 export const adminRoutes = [
   {

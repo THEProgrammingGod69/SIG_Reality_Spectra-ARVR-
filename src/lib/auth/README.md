@@ -1,21 +1,25 @@
 # `src/lib/auth`
 
 Admin sign-in and the session checks (D-030). Auth.js (`next-auth@5.0.0-beta.32`,
-pinned): Google provider, JWT sessions for 8 hours, no database adapter.
+pinned): email + password and Google providers, JWT sessions for 8 hours, no
+database adapter.
 
-Access control is the `ADMIN_EMAILS` environment variable and nothing else —
-there is no user table and no password is ever stored. It is re-checked on
-every request, so removing an address locks that admin out at once. Yearly
-handover is done by editing that one variable. Setup: `docs/SETUP_AUTH.md`.
+Access control is the `ADMIN_EMAILS` environment variable — there is no user
+table. The password sign-in adds one shared `ADMIN_PASSWORD`, kept only in the
+environment (never in the code, a test or `.env.example`) and never stored
+anywhere else. Both are re-checked on every request, so removing an address
+locks that admin out at once, and changing the password signs every password
+session out. Yearly handover is done by editing those variables. Setup:
+`docs/SETUP_AUTH.md`.
 
-| File              | Does                                                                                                                    |
-| ----------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| `policy.ts`       | The pure rules: allowlist match, development sign-in switch, `authSetup()`, safe callback paths, `cookieRemovalsOnly()` |
-| `config.ts`       | Auth.js: providers, callbacks, `setup` (what sign-in can do in this environment)                                        |
-| `session.ts`      | `getAdminSession()` (cached per request), `requireAdmin()`, `adminFromSession()`                                        |
-| `admin-action.ts` | `adminAction()` — the wrapper every admin Server Action uses                                                            |
-| `actions.ts`      | Server Actions: Google sign-in, development sign-in, sign-out                                                           |
-| `errors.ts`       | `NotSignedInError` (client-safe)                                                                                        |
+| File              | Does                                                                                                                                                                                           |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `policy.ts`       | The pure rules: allowlist match, development sign-in switch, `authSetup()`, safe callback paths, `cookieRemovalsOnly()`, the password match, fingerprint and weakness check, `admittedEmail()` |
+| `config.ts`       | Auth.js: providers, callbacks, `setup` (what sign-in can do in this environment), the attempt limit in the password `authorize()`                                                              |
+| `session.ts`      | `getAdminSession()` (cached per request), `requireAdmin()`, `adminFromSession()`                                                                                                               |
+| `admin-action.ts` | `adminAction()` — the wrapper every admin Server Action uses                                                                                                                                   |
+| `actions.ts`      | Server Actions: password sign-in, Google sign-in, development sign-in, sign-out                                                                                                                |
+| `errors.ts`       | `NotSignedInError` (client-safe)                                                                                                                                                               |
 
 ## Three locks (rule 8)
 
@@ -40,7 +44,33 @@ export async function saveEvent(input: EventInput, expectedUpdatedAt: string) {
 
 `adminAction()` returns an `ActionResult` (`src/lib/action-result.ts`): data on
 success, or a message, a reason (`conflict`, `invalid`, `signed-out`, …) and
-per-field issues. On the client, `useToast().notify(result, 'Saved')` reports it.
+per-field issues. On the client, `useToast().notify(result, 'Saved')` reports it;
+a `signed-out` failure's notification offers "Sign in again" in a new tab.
+
+## The email + password sign-in
+
+An allowlisted email plus `ADMIN_PASSWORD` (provider id `password`). On wherever
+`AUTH_SECRET`, `ADMIN_EMAILS` and `ADMIN_PASSWORD` are all set — including
+Netlify, where it is the way in until Google sign-in is configured.
+
+- **Comparison**: SHA-256 of both sides, compared with `timingSafeEqual`, so
+  timing reveals neither the password nor its length. A wrong password and an
+  email not on the allowlist get the same answer, "Wrong email or password."
+- **Attempt limit**: inside `authorize()`, so it covers the sign-in page's
+  Server Action and a direct POST to `/api/auth/callback/password` alike. At
+  most 10 attempts per 15 minutes per client address
+  (`x-nf-client-connection-ip`, else the first `x-forwarded-for` entry) and 20
+  per email (`allowSignInAttempt()` in `src/lib/data`: the store's `hit()`
+  counters, hashed keys; in memory when there is no store or it fails). Over
+  the limit Auth.js gets `TooManyAttempts` (`code: 'too_many_attempts'`) and
+  the page says to wait 15 minutes.
+- **Password changes**: a password session carries `passwordFingerprint()` (an
+  HMAC of the password under `AUTH_SECRET`, never the password). Every request
+  compares it with the current password's, so changing or removing
+  `ADMIN_PASSWORD` ends those sessions at once.
+- **Weak passwords** still work — a deploy must never lock the club out — but
+  the dashboard's Setup card warns while it is shorter than 12 characters or a
+  well-known password (`isWeakPassword()`). The password itself is never shown.
 
 ## The development sign-in
 

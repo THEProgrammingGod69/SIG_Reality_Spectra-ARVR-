@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { fitWithin } from '@/components/admin/upload-file';
+import { fitWithin, uploadParts } from '@/components/admin/upload-file';
 import { formatDate, formatDateTime, fromClubLocalInput, toClubLocalInput } from '@/lib/dates';
 import { instant } from '@/lib/schemas/fields';
 
@@ -31,5 +31,24 @@ describe('fitWithin', () => {
 
   it('never scales up', () => {
     expect(fitWithin(800, 600, 2400)).toEqual({ width: 800, height: 600 });
+  });
+});
+
+describe('uploadParts', () => {
+  it('sends a file whole unless the ticket asks for parts and the file is larger', () => {
+    expect(uploadParts(10, null)).toEqual([[0, 10]]);
+    expect(uploadParts(10, 10)).toEqual([[0, 10]]);
+  });
+
+  it('splits a larger file into consecutive parts of at most partBytes', () => {
+    expect(uploadParts(25, 10)).toEqual([
+      [0, 10],
+      [10, 20],
+      [20, 25],
+    ]);
+    expect(uploadParts(20, 10)).toEqual([
+      [0, 10],
+      [10, 20],
+    ]);
   });
 });

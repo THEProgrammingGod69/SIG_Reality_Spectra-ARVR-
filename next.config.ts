@@ -1,6 +1,11 @@
 import type { NextConfig } from 'next';
 
-import { NOINDEX_HEADERS, type SecurityOptions, securityHeaders } from './src/lib/security-headers';
+import {
+  MEDIA_FILE_HEADERS,
+  NOINDEX_HEADERS,
+  type SecurityOptions,
+  securityHeaders,
+} from './src/lib/security-headers';
 
 /**
  * The public origin of the club's R2 bucket (custom domain or r2.dev URL).
@@ -27,6 +32,7 @@ const security: SecurityOptions = {
   https: (process.env.NEXT_PUBLIC_SITE_URL ?? '').startsWith('https://'),
   mediaOrigin: mediaHost ? `https://${mediaHost}` : null,
   uploadOrigin,
+  netlifyPreview: ['deploy-preview', 'branch-deploy'].includes(process.env.CONTEXT ?? ''),
 };
 
 const nextConfig: NextConfig = {
@@ -76,13 +82,16 @@ const nextConfig: NextConfig = {
   /**
    * Security headers on every response (Stage 9, D-033): CSP, HSTS, framing,
    * sniffing, referrer and permissions policies (src/lib/security-headers.ts),
-   * plus `X-Robots-Tag: noindex` on the admin panel and the API (rule 7).
+   * plus `X-Robots-Tag: noindex` on the admin panel and the API (rule 7), and
+   * a sandboxing CSP on uploaded files the site serves itself.
    */
   async headers() {
     return [
       { source: '/:path*', headers: securityHeaders(security) },
       { source: '/admin/:path*', headers: NOINDEX_HEADERS },
       { source: '/api/:path*', headers: NOINDEX_HEADERS },
+      // Last, so its CSP replaces the page one for uploaded files.
+      { source: '/api/local-media/:path*', headers: MEDIA_FILE_HEADERS },
     ];
   },
 

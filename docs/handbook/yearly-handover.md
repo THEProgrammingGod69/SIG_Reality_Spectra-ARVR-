@@ -18,8 +18,9 @@ Hand over each login (and its two-factor recovery) to the new committee:
 
 ## Access
 
-- [ ] Update `ADMIN_EMAILS` on Netlify to the new admins, and redeploy
-      ([admins.md](./admins.md)). Remove the outgoing ones.
+- [ ] Update `ADMIN_EMAILS` on Netlify to the new admins, set a new
+      `ADMIN_PASSWORD`, and redeploy ([admins.md](./admins.md)). Remove the
+      outgoing ones.
 - [ ] Each new admin signs in once to check.
 - [ ] Generate a new `CRON_SECRET` and `AUTH_SECRET` on Netlify
       (`openssl rand -base64 32` each), so departing people's copies stop
