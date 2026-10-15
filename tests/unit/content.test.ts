@@ -1,7 +1,15 @@
+import { existsSync } from 'node:fs';
+import path from 'node:path';
+
+import sharp from 'sharp';
 import { describe, expect, it } from 'vitest';
 
+import archiveJson from '@/content/archive.json';
 import siteJson from '@/content/site.json';
 import {
+  archive,
+  archiveGallery,
+  archiveGalleryItem,
   contactInfo,
   domainGroups,
   domainNames,
@@ -14,6 +22,7 @@ import {
   siteInfo,
   socialLinks,
 } from '@/lib/content';
+import { type ArchiveEntry, ArchiveSchema } from '@/lib/schemas/archive';
 import { ContactInfoSchema, DomainsSchema, SiteInfoSchema } from '@/lib/schemas/content';
 
 /**
@@ -146,6 +155,66 @@ describe('contact', () => {
           : contactInfo[field as 'email' | 'phone' | 'address'];
       expect(pendingContent().includes(`contact.json: ${field}`)).toBe(value === null);
     }
+  });
+});
+
+type Clip = Extract<ArchiveEntry, { kind: 'video' }>;
+
+describe('archive', () => {
+  const file = (servedPath: string) => path.join(process.cwd(), 'public', servedPath);
+
+  it('parses, with photos and clips under the gallery categories', () => {
+    expect(archive.length).toBe(archiveJson.length);
+    expect(archive.some((entry) => entry.kind === 'photo')).toBe(true);
+    expect(archive.some((entry) => entry.kind === 'video')).toBe(true);
+  });
+
+  it('a broken entry fails with the file and field named', () => {
+    const broken = [{ ...archiveJson[1]!, caption: '' }, ...archiveJson.slice(2)];
+    expect(() => parseContent(ArchiveSchema, broken, 'archive.json')).toThrowError(
+      /Invalid content in src\/content\/archive\.json:\n {2}- 0\.caption: /,
+    );
+  });
+
+  it('names only files that exist under public/', () => {
+    for (const entry of archive) {
+      expect(existsSync(file(entry.src)), entry.src).toBe(true);
+      if (entry.kind === 'video') expect(existsSync(file(entry.poster)), entry.poster).toBe(true);
+    }
+  });
+
+  it('gives every clip a poster and a length', () => {
+    for (const entry of archive.filter((item) => item.kind === 'video')) {
+      expect(entry.poster, entry.src).toMatch(/\.(webp|jpg|png|avif)$/);
+      expect(entry.duration, entry.src).toBeGreaterThan(0);
+    }
+  });
+
+  it('records each photo’s (and each poster’s) real size, so the viewer reserves the right space', async () => {
+    for (const entry of archive) {
+      const still = entry.kind === 'video' ? entry.poster : entry.src;
+      const { width, height } = await sharp(file(still)).metadata();
+      expect({ width, height }, still).toEqual({ width: entry.width, height: entry.height });
+    }
+  });
+
+  it('becomes gallery items keyed by file, a clip shown by its poster', () => {
+    expect(archiveGallery).toHaveLength(archive.length);
+    const clip = archive.find((entry): entry is Clip => entry.kind === 'video')!;
+    expect(archiveGalleryItem(clip)).toMatchObject({
+      key: `archive:${clip.src}`,
+      image: { url: clip.poster, alt: clip.alt },
+      video: { src: clip.src, duration: clip.duration },
+      source: { kind: 'archive' },
+    });
+    const photo = archive.find((entry) => entry.kind === 'photo')!;
+    expect(archiveGalleryItem(photo)).toMatchObject({
+      image: { url: photo.src },
+      video: null,
+      album: photo.album ?? null,
+      credit: photo.credit ?? null,
+    });
+    expect(new Set(archiveGallery.map((item) => item.key)).size).toBe(archive.length);
   });
 });
 

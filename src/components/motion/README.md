@@ -50,8 +50,9 @@ Rules:
   `'top 85%'` string.
 - Clean up only what you created: wrap tweens in `gsap.context(..., element)` and
   `revert()` it. Never `ScrollTrigger.getAll().forEach(kill)`.
-- Import `gsap` / `ScrollTrigger` from `@/lib/motion/gsap`, not the package, so
-  plugins are registered once.
+- Import `gsap` / `ScrollTrigger` / `Flip` from `@/lib/motion/gsap`, not the
+  package, so plugins are registered once. Flip (layout changes, e.g. the
+  gallery's filters) is used with `scale: true`, so it moves with `transform`.
 - Text that changes (`DecodeText`) keeps the real text in the DOM at every
   moment; the changing copy is `aria-hidden`. Mono labels only (D-038).
 - Scroll-driven distances are tokens too (`--motion-depth`, `--motion-turn`,

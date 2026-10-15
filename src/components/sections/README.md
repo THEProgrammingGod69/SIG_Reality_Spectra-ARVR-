@@ -34,16 +34,32 @@ Built in **Stage 2** (Hero) and **Stages 4, 7 and 8** (the rest).
 | `event-timeline.tsx`  | Events          | Timeline of past events: date, category, recap, first photos ("+N" for the rest)      |
 | `gallery-browser.tsx` | Gallery         | Category filters (categories passed in) with counts, photo grid, "Show more" (client) |
 | `photo-grid.tsx`      | Events, Gallery | Square centre-cropped tiles and the full-size viewer (Modal, arrow keys)              |
-| `paragraphs.tsx`      | Events          | Admin-written text as paragraphs, never HTML (D-031)                                  |
+
+The gallery shows the store's photos and the club archive (Git,
+`src/content/archive.json`) together; the page merges them, so the archive
+shows without a data store, and with a one-line `LoadFailed inline` note when
+the store fails. Filtering rearranges the grid with GSAP Flip (`scale: true`,
+so `transform` only): staying tiles glide, new ones fade and grow in, leaving
+ones (kept in the list, hidden and inert, for their exit) fade out; nothing
+moves under reduced motion. The lead double tile is the newest photo, never a
+clip.
+
+Clips (archive only) are tiles like photos — the poster, a decorative play
+badge with the length, and "(video, 0:07)" for screen readers. A mouse hovering
+one previews it muted and looping (mounted on hover, removed on leave; never
+under reduced motion or on touch). The viewer plays it with native controls
+(`preload="metadata"`, never autoplay); the arrow keys leave the player's own
+seek keys alone. The viewer also shows an item's album and credit.
+| `paragraphs.tsx` | Events | Admin-written text as paragraphs, never HTML (D-031) |
 
 ## Stage 8
 
-| File                      | Used on                             | What it renders                                                                              |
-| ------------------------- | ----------------------------------- | -------------------------------------------------------------------------------------------- |
-| `team-section.tsx`        | About                               | The team, by tier: square photo or initials, name, position, domain; `<Tilt>` cards          |
-| `sponsorship-section.tsx` | Contact                             | The request form, or the club's channels where the form cannot work (D-032)                  |
-| `sponsorship-form.tsx`    | Contact                             | The form (client): validation loaded on first focus, honeypot, Turnstile, sent/failed states |
-| `load-failed.tsx`         | Events, Gallery, About, Recruitment | What a section shows when `publicRead()` failed: a calm note, never an error page            |
+| File                      | Used on                             | What it renders                                                                                        |
+| ------------------------- | ----------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `team-section.tsx`        | About                               | The team, by tier: square photo or initials, name, position, domain; `<Tilt>` cards                    |
+| `sponsorship-section.tsx` | Contact                             | The request form, or the club's channels where the form cannot work (D-032)                            |
+| `sponsorship-form.tsx`    | Contact                             | The form (client): validation loaded on first focus, honeypot, Turnstile, sent/failed states           |
+| `load-failed.tsx`         | Events, Gallery, About, Recruitment | What a section shows when `publicRead()` failed: a calm note (`inline`: one line), never an error page |
 
 ## `hero/` (Stage 2)
 

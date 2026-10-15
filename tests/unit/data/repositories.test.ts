@@ -6,7 +6,7 @@ import {
   InvalidDataError,
   RateLimitedError,
 } from '@/lib/data/errors';
-import { buildGallery } from '@/lib/data/gallery';
+import { buildGallery, type GalleryItem, mergeGallery, sortGallery } from '@/lib/data/gallery';
 import { SUBMISSION_LIMIT } from '@/lib/data/sponsorships';
 import { groupTeam } from '@/lib/data/team';
 import type { TeamMemberInput } from '@/lib/schemas/team';
@@ -97,6 +97,74 @@ describe('gallery', () => {
     };
     expect(buildGallery([{ ...event, inTimeline: true }], [])).toHaveLength(1);
     expect(buildGallery([{ ...event, inTimeline: false }], [])).toHaveLength(0);
+  });
+
+  it('gives store items no clip, album or credit', () => {
+    const photo = { url: 'https://media.example.org/x.webp', alt: 'A photo', width: 4, height: 3 };
+    const items = buildGallery(
+      [
+        {
+          id: id(1),
+          title: 'Talk',
+          category: 'other',
+          startsAt: '2026-01-01T00:00:00.000Z',
+          photos: [photo],
+          inTimeline: true,
+        },
+      ],
+      [
+        {
+          id: id(2),
+          image: photo,
+          category: 'other',
+          caption: null,
+          createdAt: '2026-01-02T00:00:00.000Z',
+        },
+      ],
+    );
+    for (const item of items)
+      expect(item).toMatchObject({ video: null, album: null, credit: null });
+  });
+
+  it('merges the Git archive with the store’s photos, newest first, whatever the order given', () => {
+    const image = { url: '/archive/hackathons/x.webp', alt: 'A photo', width: 4, height: 3 };
+    const item = (key: string, date: string, source: GalleryItem['source']): GalleryItem => ({
+      key,
+      image,
+      category: 'hackathon',
+      caption: null,
+      date,
+      video: null,
+      album: null,
+      credit: null,
+      source,
+    });
+    const archive = [
+      item('archive:old', '2025-10-29T11:04:34.000Z', { kind: 'archive' }),
+      item('archive:new', '2026-10-11T04:30:00.000Z', { kind: 'archive' }),
+    ];
+    const store = [
+      item(id(1), '2026-01-01T00:00:00.000Z', { kind: 'club' }),
+      item(`${id(2)}:x`, '2027-01-01T00:00:00.000Z', {
+        kind: 'event',
+        eventId: id(2),
+        eventTitle: 'Next year',
+      }),
+    ];
+
+    const merged = mergeGallery(archive, store);
+    expect(merged.map((entry) => [entry.key, entry.source.kind])).toEqual([
+      [`${id(2)}:x`, 'event'],
+      ['archive:new', 'archive'],
+      [id(1), 'club'],
+      ['archive:old', 'archive'],
+    ]);
+    expect(mergeGallery(store, archive)).toEqual(merged);
+    // The store's absence (or failure) leaves the archive, still sorted.
+    expect(mergeGallery(archive).map((entry) => entry.key)).toEqual(['archive:new', 'archive:old']);
+    // Sorting never mutates what it was given.
+    expect(sortGallery(archive)).not.toBe(archive);
+    expect(archive[0]?.key).toBe('archive:old');
   });
 });
 

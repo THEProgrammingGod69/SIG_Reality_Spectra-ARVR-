@@ -121,7 +121,9 @@ export async function getPublicEvents() {
 
 /**
  * /gallery: photos of timeline events and standalone club photos, newest
- * first. Tagged with both sources.
+ * first. Tagged with both sources. The club archive is Git content, not
+ * store data: the page merges it in (`mergeGallery`), so it shows even when
+ * this read returns nothing or fails.
  */
 export async function getGallery() {
   'use cache';
@@ -167,7 +169,7 @@ export {
   NotFoundError,
   RateLimitedError,
 } from './errors';
-export type { GalleryItem } from './gallery';
+export { mergeGallery, type GalleryItem } from './gallery';
 export { SIGN_IN_LIMITS, type SignInAttempt } from './sign-in-limit';
 export { groupTeam } from './team';
 export { dataAvailability, localMediaFiles } from './runtime';
