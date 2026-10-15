@@ -23,4 +23,5 @@ How to edit:
 
 Everything the committee changes week to week — events, event photos, team
 members, recruitment settings and sponsorship requests — is **not** here. It
-lives in Upstash Redis and Cloudflare R2 and is edited at `/admin` (D-025).
+lives in the data store (Netlify Blobs, or Upstash Redis and Cloudflare R2;
+`src/lib/data/README.md`) and is edited at `/admin` (D-025).

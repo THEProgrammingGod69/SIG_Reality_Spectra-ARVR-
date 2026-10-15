@@ -54,6 +54,45 @@ describe('serverEnvSchema', () => {
       expect(serverEnvSchema.parse({}).DATA_BACKEND).toBe('upstash');
     });
 
+    it('uses Netlify Blobs on a Netlify deploy without Upstash, and Upstash otherwise', () => {
+      const deploy = { CONTEXT: 'production' };
+      expect(serverEnvSchema.parse(deploy).DATA_BACKEND).toBe('netlify-blobs');
+      expect(
+        serverEnvSchema.parse({ ...deploy, UPSTASH_REDIS_REST_URL: 'https://db.upstash.io' })
+          .DATA_BACKEND,
+      ).toBe('upstash');
+      expect(serverEnvSchema.parse({ ...deploy, DATA_BACKEND: 'upstash' }).DATA_BACKEND).toBe(
+        'upstash',
+      );
+      expect(serverEnvSchema.parse({ DATA_BACKEND: 'netlify-blobs' }).DATA_BACKEND).toBe(
+        'netlify-blobs',
+      );
+    });
+
+    it('allows Netlify Blobs on every deploy context, with the usual namespaces', () => {
+      for (const CONTEXT of ['production', 'deploy-preview', 'branch-deploy']) {
+        const parsed = serverEnvSchema.parse({ CONTEXT, DATA_BACKEND: 'netlify-blobs' });
+        expect(parsed.DATA_NAMESPACE).toBe(CONTEXT === 'production' ? 'prod' : 'preview');
+      }
+      expect(
+        serverEnvSchema.safeParse({
+          CONTEXT: 'deploy-preview',
+          DATA_BACKEND: 'netlify-blobs',
+          DATA_NAMESPACE: 'prod',
+        }).success,
+      ).toBe(false);
+    });
+
+    it('shape-checks the command-line Netlify credentials', () => {
+      const site = '3970e0fe-8564-4903-9a55-c5f8de49fb8b';
+      expect(serverEnvSchema.safeParse({ NETLIFY_SITE_ID: site }).success).toBe(true);
+      expect(serverEnvSchema.safeParse({ NETLIFY_SITE_ID: 'my-site' }).success).toBe(false);
+      expect(
+        serverEnvSchema.safeParse({ NETLIFY_AUTH_TOKEN: 'nfp_' + 'a'.repeat(36) }).success,
+      ).toBe(true);
+      expect(serverEnvSchema.safeParse({ NETLIFY_AUTH_TOKEN: 'short' }).success).toBe(false);
+    });
+
     it('fails a Netlify deploy that turns the development sign-in on', () => {
       const deploy = { CONTEXT: 'deploy-preview', DATA_NAMESPACE: 'preview' };
       expect(serverEnvSchema.safeParse({ ...deploy, AUTH_DEV_SIGN_IN: 'true' }).success).toBe(

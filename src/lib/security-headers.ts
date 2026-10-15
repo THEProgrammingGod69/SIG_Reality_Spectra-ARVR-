@@ -100,3 +100,12 @@ export function securityHeaders(options: SecurityOptions): { key: string; value:
 
 /** Admin pages and the API: never indexed, whatever the response is (rule 7). */
 export const NOINDEX_HEADERS = [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }];
+
+/**
+ * Uploaded files served by the site itself (`/api/local-media`: Netlify Blobs,
+ * local data mode). Replaces the page CSP: a file is never a document that may
+ * run anything, even if a wrong type ever slipped past the upload checks.
+ */
+export const MEDIA_FILE_HEADERS = [
+  { key: 'Content-Security-Policy', value: "default-src 'none'; sandbox" },
+];

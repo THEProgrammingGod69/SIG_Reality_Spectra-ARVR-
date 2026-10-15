@@ -7,7 +7,8 @@ import {
 
 /**
  * The browser half of the upload flow (rule 11): prepare a file, ask
- * `/api/admin/upload` for a presigned URL, PUT the file straight to storage.
+ * `/api/admin/upload` for a presigned URL, PUT the file straight to storage
+ * (in parts, when the storage receives uploads through a size-capped function).
  * The record is saved separately, by a Server Action that verifies the URL.
  */
 
@@ -61,6 +62,42 @@ export async function prepareFile(file: File, target: UploadTarget): Promise<Pre
   throw new Error(`${file.name}: this browser cannot convert the image. Try a JPEG or PNG.`);
 }
 
+/**
+ * The byte ranges a file of `size` is sent in: one PUT, or consecutive parts
+ * of at most `partBytes` when the ticket asks for them (storage the site
+ * receives itself, through a size-capped function).
+ */
+export function uploadParts(size: number, partBytes: number | null): [number, number][] {
+  if (partBytes === null || partBytes <= 0 || size <= partBytes) return [[0, size]];
+  return Array.from({ length: Math.ceil(size / partBytes) }, (_, index) => [
+    index * partBytes,
+    Math.min(size, (index + 1) * partBytes),
+  ]);
+}
+
+/** One PUT with progress. XMLHttpRequest, not fetch: it reports upload progress. */
+function put(
+  url: string,
+  body: Blob,
+  headers: Record<string, string>,
+  onProgress: (loaded: number) => void,
+): Promise<void> {
+  return new Promise<void>((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('PUT', url);
+    for (const [name, value] of Object.entries(headers)) xhr.setRequestHeader(name, value);
+    xhr.upload.onprogress = (event) => {
+      if (event.lengthComputable) onProgress(event.loaded);
+    };
+    xhr.onload = () =>
+      xhr.status >= 200 && xhr.status < 300
+        ? resolve()
+        : reject(new Error(`The upload failed (${xhr.status}). Try again.`));
+    xhr.onerror = () => reject(new Error('The connection dropped during the upload. Try again.'));
+    xhr.send(body);
+  });
+}
+
 /** Ask for a presigned URL and PUT the file there; resolves to its public URL. */
 export async function uploadPrepared(
   prepared: PreparedFile,
@@ -85,21 +122,20 @@ export async function uploadPrepared(
     throw new Error(reply.error ?? 'The upload could not be started.');
   }
 
-  // XMLHttpRequest, not fetch: it reports upload progress.
-  await new Promise<void>((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-    xhr.open('PUT', reply.uploadUrl!);
-    for (const [name, value] of Object.entries(reply.headers!)) xhr.setRequestHeader(name, value);
-    xhr.upload.onprogress = (event) => {
-      if (event.lengthComputable) onProgress(event.loaded / event.total);
-    };
-    xhr.onload = () =>
-      xhr.status >= 200 && xhr.status < 300
-        ? resolve()
-        : reject(new Error(`The upload failed (${xhr.status}). Try again.`));
-    xhr.onerror = () => reject(new Error('The connection dropped during the upload. Try again.'));
-    xhr.send(prepared.body);
-  });
+  // Parts go one after another: the last one assembles the file on the server.
+  const total = prepared.body.size;
+  const parts = uploadParts(total, reply.partBytes ?? null);
+  for (const [index, [start, end]] of parts.entries()) {
+    let url = reply.uploadUrl;
+    if (parts.length > 1) {
+      const signed = new URL(reply.uploadUrl, window.location.href);
+      signed.searchParams.set('part', String(index));
+      signed.searchParams.set('parts', String(parts.length));
+      url = signed.toString();
+    }
+    const body = parts.length > 1 ? prepared.body.slice(start, end) : prepared.body;
+    await put(url, body, reply.headers, (loaded) => onProgress((start + loaded) / total));
+  }
   onProgress(1);
   return reply.url;
 }
