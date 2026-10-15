@@ -17,6 +17,9 @@ export const THIRD_PARTY = {
   /** Public R2 buckets (r2.dev) and R2's upload endpoint (presigned PUTs). */
   r2Public: 'https://*.r2.dev',
   r2Upload: 'https://*.r2.cloudflarestorage.com',
+  /** Netlify's review drawer on deploy previews: its loader script and its frame. */
+  netlifyDrawerScript: 'https://netlify-cdp-loader.netlify.app',
+  netlifyDrawerApp: 'https://app.netlify.com',
 } as const;
 
 export type SecurityOptions = {
@@ -28,6 +31,11 @@ export type SecurityOptions = {
   mediaOrigin: string | null;
   /** The account's R2 upload endpoint, when R2_ACCOUNT_ID is set. */
   uploadOrigin: string | null;
+  /**
+   * A Netlify deploy preview or branch deploy, where Netlify injects its review
+   * drawer; blocked, it shows as an empty grey frame. Never production.
+   */
+  netlifyPreview?: boolean;
 };
 
 /**
@@ -43,6 +51,7 @@ export function contentSecurityPolicy({
   https,
   mediaOrigin,
   uploadOrigin,
+  netlifyPreview = false,
 }: SecurityOptions): string {
   const directives: Record<string, (string | null | false)[]> = {
     'default-src': ["'self'"],
@@ -52,6 +61,7 @@ export function contentSecurityPolicy({
       development && "'unsafe-eval'",
       THIRD_PARTY.turnstile,
       THIRD_PARTY.analyticsScript,
+      netlifyPreview && THIRD_PARTY.netlifyDrawerScript,
     ],
     'style-src': ["'self'", "'unsafe-inline'"],
     'img-src': ["'self'", 'data:', 'blob:', THIRD_PARTY.r2Public, mediaOrigin],
@@ -61,8 +71,13 @@ export function contentSecurityPolicy({
       uploadOrigin ?? THIRD_PARTY.r2Upload,
       THIRD_PARTY.analyticsReport,
       development && 'ws:',
+      netlifyPreview && THIRD_PARTY.netlifyDrawerApp,
     ],
-    'frame-src': [THIRD_PARTY.turnstile, THIRD_PARTY.maps],
+    'frame-src': [
+      THIRD_PARTY.turnstile,
+      THIRD_PARTY.maps,
+      netlifyPreview && THIRD_PARTY.netlifyDrawerApp,
+    ],
     'worker-src': ["'self'", 'blob:'],
     'object-src': ["'none'"],
     'base-uri': ["'self'"],

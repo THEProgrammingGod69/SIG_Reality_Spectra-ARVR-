@@ -25,6 +25,15 @@ const directive = (csp: string, name: string) =>
 describe('Content-Security-Policy', () => {
   const csp = contentSecurityPolicy(live);
 
+  it("allows Netlify's review drawer on previews only, never in production", () => {
+    expect(directive(csp, 'frame-src')).not.toContain(THIRD_PARTY.netlifyDrawerApp);
+    expect(directive(csp, 'script-src')).not.toContain(THIRD_PARTY.netlifyDrawerScript);
+    const preview = contentSecurityPolicy({ ...live, netlifyPreview: true });
+    expect(directive(preview, 'frame-src')).toContain(THIRD_PARTY.netlifyDrawerApp);
+    expect(directive(preview, 'script-src')).toContain(THIRD_PARTY.netlifyDrawerScript);
+    expect(directive(preview, 'frame-ancestors')).toEqual(["'none'"]);
+  });
+
   it('locks plugins, framing, the base URL and form targets', () => {
     expect(directive(csp, 'object-src')).toEqual(["'none'"]);
     expect(directive(csp, 'frame-ancestors')).toEqual(["'none'"]);

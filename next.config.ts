@@ -32,6 +32,7 @@ const security: SecurityOptions = {
   https: (process.env.NEXT_PUBLIC_SITE_URL ?? '').startsWith('https://'),
   mediaOrigin: mediaHost ? `https://${mediaHost}` : null,
   uploadOrigin,
+  netlifyPreview: ['deploy-preview', 'branch-deploy'].includes(process.env.CONTEXT ?? ''),
 };
 
 const nextConfig: NextConfig = {
