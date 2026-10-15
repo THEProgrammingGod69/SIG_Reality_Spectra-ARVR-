@@ -16,6 +16,7 @@ import { Stagger } from '@/components/motion/stagger';
 import { TimelineMarker, TimelineRail } from '@/components/motion/timeline-rail';
 import { useMotionTokens } from '@/components/motion/use-motion-tokens';
 import { useReducedMotion } from '@/components/motion/use-reduced-motion';
+import { MomentsReel, type Moment } from '@/components/sections/moments-reel';
 import { useHeroTier } from '@/components/three/use-hero-tier';
 import { Button, ButtonLink } from '@/components/ui/button';
 import { Card, CardBody } from '@/components/ui/card';
@@ -24,8 +25,34 @@ import { HudCorners } from '@/components/ui/hud-corners';
 import { Text } from '@/components/ui/text';
 import { readHeroTierSignals, type HeroTier } from '@/lib/motion/hero-tier';
 import { DURATION_TOKENS } from '@/lib/motion/tokens';
+import archive from '@/content/archive.json';
 
 import { DevPageHeader, DevPanel } from '../_components/dev-panel';
+
+/** The archive's labels, without the category schema (it would pull in zod). */
+const ARCHIVE_LABELS: Record<string, string> = { hackathon: 'Hackathon', workshop: 'Workshop' };
+
+/** The club archive as moments: a clip shows its poster frame. */
+const ARCHIVE_MOMENTS: readonly Moment[] = archive.map((item) => ({
+  key: item.src,
+  src: item.kind === 'video' && item.poster ? item.poster : item.src,
+  alt: item.alt,
+  caption: item.caption,
+  categoryLabel: ARCHIVE_LABELS[item.category] ?? item.category,
+  width: item.width,
+  height: item.height,
+}));
+
+/** Counts to try the reel at (rule 9): none, one, a few, a full ring, far too many. */
+const REEL_COUNTS = [0, 1, 3, 12, 40] as const;
+
+/** `count` moments, repeating the archive (with fresh keys) past its end. */
+function archiveMoments(count: number): Moment[] {
+  return Array.from({ length: count }, (_, index) => {
+    const moment = ARCHIVE_MOMENTS[index % ARCHIVE_MOMENTS.length]!;
+    return { ...moment, key: `${moment.key}#${index}` };
+  });
+}
 
 const TIER_LINKS: readonly HeroTier[] = ['high', 'low', 'static'];
 
@@ -276,6 +303,10 @@ export function MotionPlayground() {
         </div>
       </DevPanel>
 
+      <DevPanel title="MomentsReel (Home)" className="overflow-x-clip">
+        <MomentsPlayground />
+      </DevPanel>
+
       <DevPanel title="ScrollFloat (D-038)">
         <ScrollFloat
           text="Reality Spectra"
@@ -305,6 +336,41 @@ export function MotionPlayground() {
           ))}
         </Stagger>
       </DevPanel>
+    </div>
+  );
+}
+
+/**
+ * The Home moments reel on the club archive, at any count: a ring that turns
+ * with the scroll from `md`, a scroll-snap strip on phones and under reduced
+ * motion, nothing at all for 0.
+ */
+function MomentsPlayground() {
+  const [count, setCount] = useState<number>(12);
+  return (
+    <div className="flex flex-col gap-6">
+      <div className="flex flex-wrap items-center gap-2">
+        <Text size="sm" tone="muted">
+          Moments:
+        </Text>
+        {REEL_COUNTS.map((option) => (
+          <Button
+            key={option}
+            size="sm"
+            variant={option === count ? 'primary' : 'secondary'}
+            aria-pressed={option === count}
+            onClick={() => setCount(option)}
+          >
+            {option}
+          </Button>
+        ))}
+      </div>
+      <MomentsReel moments={archiveMoments(count)} label="Moments demo" />
+      {count === 0 ? (
+        <Text size="sm" tone="muted">
+          No moments: the reel renders nothing, and Home omits the section.
+        </Text>
+      ) : null}
     </div>
   );
 }

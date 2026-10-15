@@ -69,6 +69,21 @@ D-018.
 | `domain-ticker.tsx`   | Home                  | The domains as two scroll-linked bands, opposite ways — decorative, the overview lists them as text |
 | `home-cta.tsx`        | Home                  | The closing call to action in the lab: find your domain, or work with the club                      |
 
+| `moments.tsx` | Home | "Moments from the lab": heading, the reel, "Open the gallery"; omitted when there are no moments |
+| `moments-reel.tsx` | Home | The moments as a ring in CSS 3D that turns with the scroll (client); a scroll-snap strip elsewhere |
+
+`Moments` takes `moments: readonly { key, src, alt, caption, categoryLabel,
+width, height }[]` — photos, and clips as their poster frame — and shows at most
+`REEL_SLOTS` (12) of them. The reel is our CircularGallery: React Bits' one draws
+with `ogl` (D-011), so this one stands the cards around a ring in CSS 3D. From
+`md`, with JavaScript and without reduced motion (`data-reel="on"`, the `reel:`
+variant) the ring turns as the reel scrolls through the viewport (scrubbed,
+`reachablePoint()`, no pinning) and leans toward a mouse pointer; transform and
+opacity only. Phones, no JavaScript and reduced motion get a keyboard-scrollable
+strip (a named, focusable region) with no 3D. Its geometry is tokens:
+`--reel-card`, `--reel-strip-card`, `--reel-gap`, `--reel-perspective`,
+`--reel-lean`; the radius is derived from them in CSS. Demo: `/dev/motion`.
+
 `PageIntro` now runs under the header (`data-full-bleed`) over a `LabBackdrop`,
 with its title in `SplitText play="load"`. Cards that should feel lit pass
 `spotlight`. The events timeline wraps its list in `TimelineRail`; its heading

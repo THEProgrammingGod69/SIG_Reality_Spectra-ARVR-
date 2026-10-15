@@ -6,6 +6,11 @@
    apply and the domains are a plain grid. */
 @custom-variant rail (&:where([data-rail='on'] *));
 
+/* Inside the Home moments reel once it turns as a ring. Same contract as the
+   rail: `data-reel="on"` only from `md`, with JavaScript and without reduced
+   motion; everywhere else the moments are a scroll-snap strip. */
+@custom-variant reel (&:where([data-reel='on'] *));
+
 /* Where panels stack as the reader scrolls (D-038): from `md`, on screens tall
    enough to hold a stacked panel, and only without reduced motion. */
 @custom-variant stack (@media (min-width: 48rem) and (min-height: 40rem) and (prefers-reduced-motion: no-preference));
@@ -98,6 +103,11 @@
   --reticle-reach: 0.375rem; /* how far the reticle locks outside its target */
   --rail-panel: clamp(17rem, 24vw, 23rem); /* a domain panel on the Home rail */
   --rail-panel-height: min(28rem, 56svh);
+  --reel-card: clamp(11rem, 16vw, 15rem); /* a card on the Home moments ring */
+  --reel-strip-card: min(16rem, 72vw); /* a card in the strip (phones, reduced motion) */
+  --reel-gap: 1.25rem; /* the space between neighbouring cards around the ring */
+  --reel-perspective: 110rem; /* how far the viewer stands from the ring */
+  --reel-lean: 5deg; /* the most the ring leans toward the pointer */
   --stack-step: 1.5rem; /* how much lower each stacked panel sticks than the last */
   --stack-hold: 25svh; /* how long the finished stack holds before the page moves on */
 
