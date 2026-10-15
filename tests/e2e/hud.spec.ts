@@ -175,3 +175,78 @@ test.describe('phones', () => {
     }
   });
 });
+
+/**
+ * The Home moments reel, on the motion playground's archive demo (the /dev
+ * playgrounds are 404 in the production build CI runs, dev.spec.ts): a ring
+ * that turns with the scroll from `md`, a plain scroll-snap strip on phones
+ * and under reduced motion.
+ */
+test.describe('the moments reel', () => {
+  test.skip(Boolean(process.env.CI), 'The /dev playgrounds are 404 in production');
+
+  /** Every card's computed transform. */
+  const cardTransforms = (page: Page) =>
+    page
+      .locator('[data-moments-reel] li')
+      .evaluateAll((cards) => cards.map((card) => getComputedStyle(card).transform));
+
+  test.describe('desktop', () => {
+    test.use({ viewport: { width: 1280, height: 860 } });
+    test.skip(({ isMobile }) => isMobile, 'Desktop only');
+
+    test('the cards stand around a ring that turns as the page scrolls', async ({ page }) => {
+      await page.goto('/dev/motion');
+      const reel = page.locator('[data-moments-reel]');
+      await expect(reel).toHaveAttribute('data-reel', 'on');
+      expect((await cardTransforms(page)).every((transform) => transform !== 'none')).toBe(true);
+
+      const ring = reel.locator('ul');
+      await reel.scrollIntoViewIfNeeded();
+      await expect
+        .poll(() => ring.evaluate((el) => getComputedStyle(el).transform))
+        .not.toBe('none');
+      const before = await ring.evaluate((el) => getComputedStyle(el).transform);
+      await page.mouse.wheel(0, 400);
+      await expect
+        .poll(() => ring.evaluate((el) => getComputedStyle(el).transform))
+        .not.toBe(before);
+    });
+  });
+
+  test.describe('reduced motion', () => {
+    test.use({ reducedMotion: 'reduce', viewport: { width: 1280, height: 860 } });
+    test.skip(({ isMobile }) => isMobile, 'Desktop only');
+
+    test('a keyboard-scrollable strip, with no 3D on any card', async ({ page }) => {
+      await page.goto('/dev/motion');
+      // Hydrated: the playground reports the preference it read.
+      await expect(page.getByText('reduce', { exact: true })).toBeVisible();
+      const reel = page.locator('[data-moments-reel]');
+      await expect(reel).toHaveAttribute('data-reel', 'off');
+      const transforms = await cardTransforms(page);
+      expect(transforms.length).toBeGreaterThan(1);
+      expect(transforms.every((transform) => transform === 'none')).toBe(true);
+
+      const strip = page.getByRole('region', { name: 'Moments demo' });
+      await expect(strip).toHaveAttribute('tabindex', '0');
+      await strip.focus();
+      await page.keyboard.press('ArrowRight');
+      await expect.poll(() => strip.evaluate((el) => el.scrollLeft)).toBeGreaterThan(0);
+    });
+  });
+
+  test.describe('at 360 px', () => {
+    test.use({ viewport: { width: 360, height: 760 } });
+
+    test('the strip never widens the page', async ({ page }) => {
+      await page.goto('/dev/motion');
+      await page.waitForLoadState('networkidle');
+      await expect(page.locator('[data-moments-reel]')).toHaveAttribute('data-reel', 'off');
+      const overflow = await page.evaluate(
+        () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      );
+      expect(overflow).toBeLessThanOrEqual(0);
+    });
+  });
+});

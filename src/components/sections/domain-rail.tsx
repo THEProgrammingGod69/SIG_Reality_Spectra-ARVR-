@@ -50,7 +50,8 @@ const LEAN_SPEED = 2400;
  * and its inner frame is `position: sticky` — no pinning, so nothing in the
  * DOM is moved. Only `transform` changes (rule 4): the track's `x`, the
  * numerals' `xPercent`, the panels' `skewX`, the readout's `scaleX`. Keyboard
- * focus on a panel scrolls the page to the point where that panel is in view.
+ * focus on a panel that is out of sight — the section off screen, or the
+ * panel out of the frame — scrolls the page to where that panel is centred.
  *
  * Below `md`, without JavaScript, and under reduced motion the rail is never
  * switched on (`data-rail`): the same links are a two-column grid, at rest.
@@ -147,31 +148,58 @@ export function DomainRail({
       }
     }, root);
 
-    // A panel reached by keyboard: scroll the page to where it is in view. Only
-    // keyboard focus (`:focus-visible`): a click focuses the link on mousedown,
-    // and moving the rail then would pull the panel out from under the pointer.
-    const onFocus = (event: FocusEvent) => {
-      const target = event.target as Element | null;
-      const panel = target?.closest<HTMLElement>('[data-rail-panel]');
-      if (!panel || !trigger || !target?.matches(':focus-visible')) return;
+    // A panel reached by keyboard: scroll the page to where that panel sits
+    // centred in the frame. It can be out of sight two ways: the page is
+    // outside the rail's scroll range (the whole section above or below the
+    // screen, even with the panel horizontally inside the frame), or the panel
+    // is outside the frame. Only keyboard focus (`:focus-visible`): a click
+    // focuses the link on mousedown, and moving the rail then would pull the
+    // panel out from under the pointer.
+    let placed: { panel: HTMLElement; top: number } | null = null;
+    const bringIntoView = (panel: HTMLElement) => {
+      if (!trigger) return;
+      const scroll = window.scrollY;
+      const inRange = scroll >= trigger.start - 1 && scroll <= trigger.end + 1;
       const box = panel.getBoundingClientRect();
       const frame = viewport.getBoundingClientRect();
-      if (box.left >= frame.left && box.right <= frame.right) return;
+      if (inRange && box.left >= frame.left && box.right <= frame.right) return;
       const travel = distance();
-      if (travel <= 0) return;
       const centre = panel.offsetLeft + panel.offsetWidth / 2 - viewport.clientWidth / 2;
-      const progress = Math.min(1, Math.max(0, centre / travel));
-      window.scrollTo({
-        top: trigger.start + progress * (trigger.end - trigger.start),
-        behavior: 'instant',
-      });
+      const progress = travel > 0 ? Math.min(1, Math.max(0, centre / travel)) : 0;
+      const top = Math.round(trigger.start + progress * (trigger.end - trigger.start));
+      window.scrollTo({ top, behavior: 'instant' });
+      placed = { panel, top: window.scrollY };
+    };
+    const focusedPanel = () => {
+      const target = document.activeElement;
+      if (!target || !track.contains(target) || !target.matches(':focus-visible')) return null;
+      return target.closest<HTMLElement>('[data-rail-panel]');
+    };
+    const onFocus = () => {
+      const panel = focusedPanel();
+      if (panel) bringIntoView(panel);
     };
     track.addEventListener('focusin', onFocus);
+    // Anything above that changes height later (fonts, images, another
+    // section's spacing) re-measures the triggers and leaves the page at the
+    // same pixel, now beside the panel: place it again — unless the reader has
+    // scrolled on since, or moved focus.
+    const onRefresh = () => {
+      const last = placed;
+      placed = null;
+      if (!last || Math.abs(window.scrollY - last.top) > 1) return;
+      if (focusedPanel() === last.panel) bringIntoView(last.panel);
+    };
+    ScrollTrigger.addEventListener('refresh', onRefresh);
 
     ScrollTrigger.refresh();
+    // Focus that arrived before the rail switched on (during hydration) was
+    // scrolled to by the browser in the grid layout, which is now gone.
+    onFocus();
 
     return () => {
       track.removeEventListener('focusin', onFocus);
+      ScrollTrigger.removeEventListener('refresh', onRefresh);
       ScrollTrigger.removeEventListener('refreshInit', size);
       context.revert();
       root.style.height = '';
