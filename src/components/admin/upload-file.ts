@@ -15,6 +15,48 @@ import {
 export const MAX_IMAGE_EDGE = 2400;
 const WEBP_QUALITY = 0.85;
 
+/**
+ * How many files are decoded, re-encoded and uploaded at once. Each one holds
+ * a full-size bitmap while it is converted, so a folder of phone photos
+ * dropped in one go would otherwise exhaust a laptop's memory and time out.
+ */
+export const MAX_CONCURRENT_UPLOADS = 3;
+
+/**
+ * Runs tasks at most `limit` at a time, the rest waiting in the order they
+ * were queued. A finishing task hands its slot straight to the next waiting
+ * one, so a task queued meanwhile can never squeeze in over the limit.
+ */
+export function createTaskQueue(limit: number) {
+  let running = 0;
+  const waiting: (() => void)[] = [];
+
+  const acquire = async () => {
+    if (running < limit) {
+      running += 1;
+      return;
+    }
+    await new Promise<void>((resolve) => waiting.push(resolve));
+  };
+  const release = () => {
+    const next = waiting.shift();
+    if (next) next();
+    else running -= 1;
+  };
+
+  return async function run<T>(task: () => Promise<T>): Promise<T> {
+    await acquire();
+    try {
+      return await task();
+    } finally {
+      release();
+    }
+  };
+}
+
+/** Every upload on the page shares these slots, whichever field started it. */
+export const queueUpload = createTaskQueue(MAX_CONCURRENT_UPLOADS);
+
 export type PreparedFile = {
   body: Blob;
   contentType: string;

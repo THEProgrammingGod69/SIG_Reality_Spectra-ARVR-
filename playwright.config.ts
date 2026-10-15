@@ -8,14 +8,18 @@ const isCI = Boolean(process.env.CI);
 
 /*
  * The admin tests sign in with the development sign-in as the first address in
- * ADMIN_EMAILS (D-030). Locally the tests and the dev server read the same
- * .env.local; where there is none (CI), a throwaway secret and test admin are
- * set here and inherited by the server. The production-build run switches the
+ * ADMIN_EMAILS (D-030), and test the password sign-in with ADMIN_PASSWORD.
+ * Locally the tests and the dev server read the same .env.local; where there
+ * is none (CI), a throwaway secret, test admin and password are set here and
+ * inherited by the server. The production-build run switches the
  * development sign-in on explicitly — something no Netlify deploy accepts.
  */
 if (existsSync('.env.local')) process.loadEnvFile('.env.local');
 process.env.AUTH_SECRET ||= 'e2e-only-secret-never-used-outside-the-test-run';
 process.env.ADMIN_EMAILS ||= 'e2e-admin@example.org';
+// The password sign-in's tests type whatever this resolves to: .env.local's
+// ADMIN_PASSWORD when it sets one, otherwise this throwaway value.
+process.env.ADMIN_PASSWORD ||= 'e2e-only-password-never-used-outside-tests';
 // The nightly job's route needs a secret to be callable at all (D-034).
 process.env.CRON_SECRET ||= 'e2e-only-cron-secret-never-used-outside-tests';
 // Without Upstash, records and uploads go to the local data mode (D-031).

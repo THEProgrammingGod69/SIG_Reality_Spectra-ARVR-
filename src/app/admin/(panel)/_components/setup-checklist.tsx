@@ -1,3 +1,5 @@
+import { ShieldAlert } from 'lucide-react';
+
 import { Badge } from '@/components/admin/ui/badge';
 import {
   Card,
@@ -6,7 +8,9 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/admin/ui/card';
+import { Icon } from '@/components/ui/icon';
 import { setup } from '@/lib/auth/config';
+import { MIN_STRONG_PASSWORD_LENGTH } from '@/lib/auth/policy';
 import { dataAvailability } from '@/lib/data';
 import { integrations } from '@/lib/integrations';
 
@@ -17,7 +21,9 @@ import { integrations } from '@/lib/integrations';
  * list).
  */
 export function SetupChecklist() {
-  const missing = integrations.filter((integration) => !integration.configured).length;
+  const missing = integrations.filter(
+    (integration) => !integration.configured && !integration.optional,
+  ).length;
   return (
     <Card>
       <CardHeader>
@@ -29,6 +35,20 @@ export function SetupChecklist() {
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
+        {setup.weakPassword ? (
+          // Never the password itself: only that it needs changing.
+          <div className="flex flex-col gap-1 rounded-control border border-destructive/40 p-3 text-body-sm text-foreground">
+            <p className="flex items-center gap-2 font-medium">
+              <Icon icon={ShieldAlert} size="sm" className="text-destructive" />
+              Weak admin password — set a longer ADMIN_PASSWORD in Netlify
+            </p>
+            <p className="text-xs text-muted-foreground">
+              It is shorter than {MIN_STRONG_PASSWORD_LENGTH} characters or a well-known password,
+              so it is easy to guess. A long passphrase works best; changing it signs every admin
+              out.
+            </p>
+          </div>
+        ) : null}
         {dataAvailability().backend === 'local' ? (
           <p className="rounded-control border border-warning/40 p-3 text-body-sm text-foreground">
             <Badge variant="warning" className="me-2">
@@ -57,9 +77,13 @@ export function SetupChecklist() {
                   </p>
                 ) : null}
               </div>
-              <Badge variant={integration.configured ? 'success' : 'warning'}>
-                {integration.configured ? 'Configured' : 'Not set'}
-              </Badge>
+              {integration.configured ? (
+                <Badge variant="success">Configured</Badge>
+              ) : integration.optional ? (
+                <Badge variant="outline">Optional</Badge>
+              ) : (
+                <Badge variant="warning">Not set</Badge>
+              )}
             </li>
           ))}
         </ul>

@@ -17,12 +17,12 @@ import { useToast } from './toaster';
 export function reportFailure<Values extends FieldValues>(
   failure: ActionFailure,
   setError: UseFormSetError<Values>,
-  toast: (message: string, tone: 'error') => void,
+  fail: (failure: ActionFailure) => void,
 ) {
   for (const issue of failure.issues) {
     if (issue.path) setError(issue.path as Path<Values>, { message: issue.message });
   }
-  toast(failure.message, 'error');
+  fail(failure);
 }
 
 /**
@@ -32,7 +32,7 @@ export function reportFailure<Values extends FieldValues>(
  * was refused for exactly that reason.
  */
 export function useRecordVersion(initial: string | null) {
-  const { toast, notify } = useToast();
+  const { fail, notify } = useToast();
   const [version, setVersion] = useState(initial);
   const [conflict, setConflict] = useState(false);
 
@@ -53,8 +53,8 @@ export function useRecordVersion(initial: string | null) {
     ): T | null {
       setConflict(!result.ok && result.reason === 'conflict');
       if (!result.ok) {
-        if (setError) reportFailure(result, setError, toast);
-        else toast(result.message, 'error');
+        if (setError) reportFailure(result, setError, fail);
+        else fail(result);
         return null;
       }
       notify(result, success);

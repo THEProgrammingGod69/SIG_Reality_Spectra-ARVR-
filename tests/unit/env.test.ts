@@ -21,6 +21,19 @@ describe('serverEnvSchema', () => {
     expect(parsed.UPSTASH_REDIS_REST_URL).toBeUndefined();
     expect(parsed.AUTH_SECRET).toBeUndefined();
     expect(parsed.TURNSTILE_SECRET_KEY).toBeUndefined();
+    expect(parsed.ADMIN_PASSWORD).toBeUndefined();
+  });
+
+  it('takes ADMIN_PASSWORD as any string of 1 to 200 characters, kept exactly', () => {
+    // Weak passwords still parse: the dashboard warns, a deploy never fails on it.
+    expect(serverEnvSchema.parse({ ADMIN_PASSWORD: 'admin' }).ADMIN_PASSWORD).toBe('admin');
+    expect(serverEnvSchema.parse({ ADMIN_PASSWORD: ' two words ' }).ADMIN_PASSWORD).toBe(
+      ' two words ',
+    );
+    expect(serverEnvSchema.safeParse({ ADMIN_PASSWORD: 'x'.repeat(200) }).success).toBe(true);
+    expect(serverEnvSchema.safeParse({ ADMIN_PASSWORD: 'x'.repeat(201) }).success).toBe(false);
+    // Blank is "not set": parseEnv drops empty variables before this schema sees them.
+    expect(serverEnvSchema.safeParse({ ADMIN_PASSWORD: '' }).success).toBe(false);
   });
 
   describe('DATA_NAMESPACE and the Netlify deploy context', () => {

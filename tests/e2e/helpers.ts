@@ -14,17 +14,45 @@ export const hasFiles = process.env.DATA_BACKEND === 'local' || Boolean(process.
 /** A deployed site under test (`pnpm test:deployed`), not a local server. */
 export const deployed = Boolean(process.env.PLAYWRIGHT_BASE_URL);
 
+/**
+ * The admin password this run's server has: .env.local's, or the throwaway
+ * one playwright.config.ts sets. Never written into a test.
+ */
+export const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD!;
+
+/** Waits for a sign-in form's answer: the page asked for, or the sign-in page with an error. */
+async function signInSettled(page: Page) {
+  // The first sign-in compiles the action on the dev server, so allow time.
+  await page.waitForURL((url) => url.pathname !== '/admin/login' || url.searchParams.has('error'), {
+    timeout: 30_000,
+  });
+}
+
 export async function signIn(page: Page, path = '/admin', email = ADMIN) {
-  // Deployed sites have only Google sign-in (D-030); admin flows are tested locally.
+  // Deployed sites have no development sign-in (D-030); admin flows are tested locally.
   test.skip(deployed, 'The development sign-in is off on deployed sites');
   await page.goto(path);
   await expect(page).toHaveURL(/\/admin\/login/);
   await page.getByLabel('Admin email').fill(email);
   await page.getByRole('button', { name: 'Sign in (development)' }).click();
-  // The first sign-in compiles the action on the dev server, so allow time.
-  await page.waitForURL((url) => url.pathname !== '/admin/login' || url.searchParams.has('error'), {
-    timeout: 30_000,
-  });
+  await signInSettled(page);
+}
+
+/** The email + password sign-in, from `path` (which redirects to the sign-in page). */
+export async function signInWithPassword(
+  page: Page,
+  email: string,
+  password: string,
+  path = '/admin',
+) {
+  test.skip(deployed, "A deployed site's password is not this run's to know");
+  await page.goto(path);
+  await expect(page).toHaveURL(/\/admin\/login/);
+  // `exact`: "Email" is also part of the development form's "Admin email".
+  await page.getByLabel('Email', { exact: true }).fill(email);
+  await page.getByLabel('Password', { exact: true }).fill(password);
+  await page.getByRole('button', { name: 'Sign in', exact: true }).click();
+  await signInSettled(page);
 }
 
 /** A 1×1 PNG, as a file the uploader converts to WebP like any photo. */

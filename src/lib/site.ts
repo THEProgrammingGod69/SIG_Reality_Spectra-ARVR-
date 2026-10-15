@@ -112,9 +112,9 @@ export const siteRoutes = [
 export type SiteRouteHref = (typeof siteRoutes)[number]['href'];
 
 /**
- * Admin routes: the panel's navigation and page headings. Never linked from
- * the public site and always `noindex`. `/admin/login` is not listed: it is
- * outside the panel.
+ * Admin routes: the panel's navigation and page headings, always `noindex`.
+ * The public site links only to `/admin/login`, once, from the footer (rule 6);
+ * it is not listed here because it is outside the panel.
  */
 export const adminRoutes = [
   {

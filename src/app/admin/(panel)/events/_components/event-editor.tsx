@@ -93,12 +93,16 @@ export function EventEditor({
   useUnsavedChanges(isDirty);
 
   const id = form.getValues('id');
-  const [title, startsAt, endsAt, photos] = useWatch({
+  const [title, startsAt, endsAt, photos, inTimeline] = useWatch({
     control,
-    name: ['title', 'startsAt', 'endsAt', 'photos'],
+    name: ['title', 'startsAt', 'endsAt', 'photos', 'inTimeline'],
   });
   const ended = Boolean(startsAt) && hasEnded({ startsAt, endsAt: endsAt ?? null }, openedAt);
   const canTimeline = ended && (photos?.length ?? 0) > 0;
+  // A ticked box is never disabled: an admin who removes the last photo, or
+  // moves the end into the future, must be able to untick it — a disabled,
+  // ticked box would make every save fail.
+  const timelineLocked = !canTimeline && !inTimeline;
   const defaultAlt = `Photo from ${title || 'the event'}`;
 
   const save = handleSubmit(async (values) => {
@@ -338,12 +342,14 @@ export function EventEditor({
           />
           <CheckboxField
             {...checkboxProps(form, 'inTimeline')}
-            disabled={!canTimeline}
+            disabled={timelineLocked}
             label="On the timeline"
             hint={
               canTimeline
                 ? 'Shown in the /events timeline, with its photos in /gallery.'
-                : 'Available once the event has ended and has at least one photo.'
+                : inTimeline
+                  ? 'Untick this to save: an event stays on the timeline only once it has ended and has at least one photo.'
+                  : 'Available once the event has ended and has at least one photo.'
             }
             error={errors.inTimeline?.message}
           />

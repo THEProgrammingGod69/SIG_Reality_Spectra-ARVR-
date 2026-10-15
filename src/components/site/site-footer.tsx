@@ -1,4 +1,4 @@
-import { ArrowUp } from 'lucide-react';
+import { ArrowUp, LockKeyhole, LockKeyholeOpen } from 'lucide-react';
 import Link from 'next/link';
 
 import { ScrollFloat } from '@/components/motion/scroll-float';
@@ -30,7 +30,8 @@ const wordmark = siteConfig.name.replace(/^SIG\s+/, '');
  * It closes on the club's name as a wordmark across the full width (D-037),
  * lit from above and fading into the floor, its letters floating up into
  * place as the reader arrives (`ScrollFloat`, D-038) — decorative
- * (`aria-hidden`), the badge already names the club — and a way back to the top.
+ * (`aria-hidden`), the badge already names the club — a way back to the top,
+ * and the admins' small way in (`AdminLink`).
  */
 export function SiteFooter() {
   return (
@@ -96,7 +97,7 @@ export function SiteFooter() {
       <div className="border-t border-(--color-border)">
         <Container className="flex flex-col gap-4 py-6 sm:flex-row sm:items-center sm:justify-between">
           <Eyebrow>{clubCredit}</Eyebrow>
-          <div className="flex items-center gap-6">
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
             <Eyebrow>© {siteConfig.name}</Eyebrow>
             <a
               href="#main-content"
@@ -109,9 +110,42 @@ export function SiteFooter() {
                 className="transition-transform duration-(--dur-short) ease-out-expo group-hover/top:-translate-y-0.5"
               />
             </a>
+            <AdminLink />
           </div>
         </Container>
       </div>
     </footer>
+  );
+}
+
+/**
+ * The quiet way into the admin panel, for the club's admins: one small mono
+ * label in the footer's last row, never in the header or menu, and not in
+ * `siteRoutes` (so not in the sitemap). `rel="nofollow"` keeps crawlers
+ * out — the panel is `noindex` and disallowed in robots.txt anyway — and
+ * `prefetch={false}` spares every visitor a request through the admin guard.
+ *
+ * On hover or focus the lock opens: the closed glyph fades out as the open one
+ * fades in and lifts, `opacity` and `transform` only — instant under reduced
+ * motion. `min-h-6` keeps the target at least 24px tall (WCAG 2.5.8).
+ */
+function AdminLink() {
+  const lock =
+    'transition-[translate,opacity] duration-(--dur-short) ease-out-expo group-focus-visible/admin:opacity-0 group-hover/admin:opacity-0';
+  const open =
+    'absolute inset-0 opacity-0 transition-[translate,opacity] duration-(--dur-short) ease-out-expo group-focus-visible/admin:-translate-y-0.5 group-focus-visible/admin:opacity-100 group-hover/admin:-translate-y-0.5 group-hover/admin:opacity-100';
+  return (
+    <Link
+      href="/admin/login"
+      prefetch={false}
+      rel="nofollow"
+      className="group/admin inline-flex min-h-6 items-center gap-2 font-mono text-label text-(--color-muted) uppercase hover:text-(--color-text)"
+    >
+      <span className="relative inline-flex">
+        <Icon icon={LockKeyhole} size="sm" className={lock} />
+        <Icon icon={LockKeyholeOpen} size="sm" className={open} />
+      </span>
+      Admin
+    </Link>
   );
 }

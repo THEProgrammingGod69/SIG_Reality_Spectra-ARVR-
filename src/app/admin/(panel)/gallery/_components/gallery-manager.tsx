@@ -89,7 +89,7 @@ export function GalleryManager({ photos }: { photos: GalleryPhoto[] }) {
 
 function NewPhotos() {
   const router = useRouter();
-  const { toast } = useToast();
+  const { toast, fail } = useToast();
   const [category, setCategory] = useState<Category>(CATEGORIES[0].id);
   const form = useForm<BatchValues, unknown, z.output<typeof BatchSchema>>({
     resolver: zodResolver(BatchSchema),
@@ -102,7 +102,7 @@ function NewPhotos() {
   const save = handleSubmit(async ({ photos }) => {
     const result = await createGalleryPhotos(photos);
     if (!result.ok) {
-      toast(result.message, 'error');
+      fail(result);
       return;
     }
     const { saved, failed } = result.data;

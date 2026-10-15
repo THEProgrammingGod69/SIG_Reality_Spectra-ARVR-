@@ -112,6 +112,14 @@ export const serverEnvSchema = z
     /** Comma-separated allowlist. These accounts, and only these, can reach /admin. */
     ADMIN_EMAILS: commaSeparatedEmails.optional(),
     /**
+     * The shared password for the email + password sign-in: an allowlisted
+     * email plus this password lets an admin in. Never committed; set it in
+     * Netlify. Any length is accepted so a deploy never fails on it, but the
+     * dashboard's Setup card warns while it is short or well known. Changing it
+     * signs every password session out.
+     */
+    ADMIN_PASSWORD: z.string().min(1).max(200).optional(),
+    /**
      * "true" turns the development sign-in on in a production build (the
      * end-to-end tests' CI run). `next dev` has it on anyway. Refused on Netlify
      * by the guard below, so it can never reach a deployed site (D-030).
