@@ -14,6 +14,16 @@ import { MIN_STRONG_PASSWORD_LENGTH } from '@/lib/auth/policy';
 import { dataAvailability } from '@/lib/data';
 import { integrations } from '@/lib/integrations';
 
+/** Where this deployment keeps records and files, in words for the dashboard. */
+const BACKEND_LABELS = {
+  'netlify-blobs': 'Netlify Blobs (built into Netlify)',
+  upstash: 'Upstash Redis and Cloudflare R2',
+  local: 'This computer (the .data folder)',
+} as const;
+
+/** Integrations the Netlify Blobs backend replaces: shown as not needed, not as missing. */
+const REPLACED_BY_BLOBS: readonly string[] = ['redis', 'r2'];
+
 /**
  * Which outside services this deployment has credentials for. Placeholders
  * are expected while the club's accounts are being set up; this list is the
@@ -21,7 +31,10 @@ import { integrations } from '@/lib/integrations';
  * list).
  */
 export function SetupChecklist() {
-  const missing = integrations.filter(
+  const { backend } = dataAvailability();
+  const notNeeded = (id: string) => backend === 'netlify-blobs' && REPLACED_BY_BLOBS.includes(id);
+  const relevant = integrations.filter((integration) => !notNeeded(integration.id));
+  const missing = relevant.filter(
     (integration) => !integration.configured && !integration.optional,
   ).length;
   return (
@@ -31,7 +44,7 @@ export function SetupChecklist() {
         <CardDescription>
           {missing === 0
             ? 'Every service this site uses is configured.'
-            : `${missing} of ${integrations.length} services still use placeholder (empty) credentials.`}
+            : `${missing} of ${relevant.length} services still use placeholder (empty) credentials.`}
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
@@ -49,7 +62,11 @@ export function SetupChecklist() {
             </p>
           </div>
         ) : null}
-        {dataAvailability().backend === 'local' ? (
+        <p className="text-body-sm text-foreground">
+          <span className="text-muted-foreground">Data is stored in: </span>
+          {BACKEND_LABELS[backend]}
+        </p>
+        {backend === 'local' ? (
           <p className="rounded-control border border-warning/40 p-3 text-body-sm text-foreground">
             <Badge variant="warning" className="me-2">
               Local data
@@ -77,7 +94,9 @@ export function SetupChecklist() {
                   </p>
                 ) : null}
               </div>
-              {integration.configured ? (
+              {notNeeded(integration.id) ? (
+                <Badge variant="outline">Not needed</Badge>
+              ) : integration.configured ? (
                 <Badge variant="success">Configured</Badge>
               ) : integration.optional ? (
                 <Badge variant="outline">Optional</Badge>

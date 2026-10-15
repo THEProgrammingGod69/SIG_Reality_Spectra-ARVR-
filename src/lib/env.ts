@@ -49,13 +49,19 @@ export const serverEnvSchema = z
       .default('http://localhost:3000'),
 
     // ---- Stage 5: data layer (Upstash Redis + Cloudflare R2) ----------------
-    /** Upstash REST endpoint and token, from the database page on upstash.com. */
     /**
-     * Where data lives. `upstash` (records) + R2 (files) is the real thing.
-     * `local` keeps both in the gitignored `.data/` folder, for working before
-     * the accounts exist (D-031); refused on Netlify by the guard below.
+     * Where data lives.
+     * - `netlify-blobs`: records and files in the Netlify site's own Blobs
+     *   storage; no other account needed.
+     * - `upstash`: records in Upstash Redis, files in Cloudflare R2.
+     * - `local`: both in the gitignored `.data/` folder, for working before
+     *   the accounts exist (D-031); refused on Netlify by the guard below.
+     *
+     * Left unset, a Netlify deploy without Upstash variables uses
+     * `netlify-blobs`, and everything else `upstash` (see `defaultBackend`).
      */
-    DATA_BACKEND: z.enum(['upstash', 'local']).default('upstash'),
+    DATA_BACKEND: z.enum(['netlify-blobs', 'upstash', 'local']).optional(),
+    /** Upstash REST endpoint and token, from the database page on upstash.com. */
     UPSTASH_REDIS_REST_URL: z.url({ protocol: /^https$/ }).optional(),
     UPSTASH_REDIS_REST_TOKEN: z.string().min(1).optional(),
     /**
@@ -96,6 +102,21 @@ export const serverEnvSchema = z
       .refine((url) => new URL(url).pathname === '/' && !url.endsWith('/'), {
         message: 'An origin only, with no path or trailing slash',
       })
+      .optional(),
+
+    /**
+     * Netlify Blobs from outside Netlify, for the command-line tools only
+     * (`pnpm seed`, `pnpm data`): the site's id (Site configuration → Site
+     * details) and a personal access token (User settings → Applications).
+     * Never set them on the Netlify site itself, which reaches its Blobs
+     * without them. The token belongs to one person: revoke it at handover.
+     */
+    NETLIFY_SITE_ID: z
+      .guid({ error: 'The site id from Site configuration → Site details' })
+      .optional(),
+    NETLIFY_AUTH_TOKEN: z
+      .string()
+      .regex(/^\S{16,}$/, 'A Netlify personal access token')
       .optional(),
 
     /**
@@ -155,7 +176,8 @@ export const serverEnvSchema = z
       ctx.addIssue({
         code: 'custom',
         path: ['DATA_BACKEND'],
-        message: 'Local data lives on one computer; a Netlify deploy must use "upstash"',
+        message:
+          'Local data lives on one computer; a Netlify deploy must use "netlify-blobs" or "upstash"',
       });
     }
     // An unset namespace is derived from CONTEXT below, so only an explicit
@@ -172,10 +194,28 @@ export const serverEnvSchema = z
       });
     }
   })
-  .transform(({ DATA_NAMESPACE, ...value }) => ({
+  .transform(({ DATA_NAMESPACE, DATA_BACKEND, ...value }) => ({
     ...value,
+    DATA_BACKEND: DATA_BACKEND ?? defaultBackend(value),
     DATA_NAMESPACE: DATA_NAMESPACE ?? defaultNamespace(value.CONTEXT),
   }));
+
+/**
+ * The backend when DATA_BACKEND is not set: on Netlify, its built-in Blobs
+ * unless Upstash has been configured; elsewhere Upstash, as before Blobs
+ * existed here (a developer's computer sets `local`).
+ */
+function defaultBackend({
+  CONTEXT,
+  UPSTASH_REDIS_REST_URL,
+}: {
+  CONTEXT?: string;
+  UPSTASH_REDIS_REST_URL?: string;
+}): 'netlify-blobs' | 'upstash' {
+  return CONTEXT !== undefined && UPSTASH_REDIS_REST_URL === undefined
+    ? 'netlify-blobs'
+    : 'upstash';
+}
 
 /** The namespace for a deploy that does not set one: see DATA_NAMESPACE above. */
 function defaultNamespace(context: string | undefined): string {

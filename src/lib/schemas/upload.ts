@@ -111,6 +111,13 @@ export type UploadTicket = {
   /** The public URL to attach to the record once the upload succeeds. */
   url: string;
   expiresAt: string;
+  /**
+   * Null: PUT the whole file once. A number: the upload goes through a
+   * size-capped function (Netlify Blobs, local data mode), so a larger file
+   * is sent as consecutive parts of at most this many bytes, each to
+   * `uploadUrl` plus `&part=<i>&parts=<n>`, in order.
+   */
+  partBytes: number | null;
 };
 
 /** A file a record refers to, with the place it was uploaded for. */

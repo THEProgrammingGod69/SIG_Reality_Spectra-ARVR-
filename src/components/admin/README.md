@@ -4,24 +4,24 @@ The admin panel's components (D-030). shadcn/ui is used **here only** (in
 `ui/`); the public site uses the primitives in `src/components/ui`, and the
 admin may reuse those too (`EmptyState`, `Skeleton`, `Icon`, `BrandMark`).
 
-| File                    | Does                                                                                                                                                |
-| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `admin-shell.tsx`       | The panel frame: sidebar or top bar, the page, toasts, the unsaved-changes guard                                                                    |
-| `admin-navigation.tsx`  | Navigation, signed-in email, sign-out — the sidebar (`lg`+) and the mobile sheet                                                                    |
-| `admin-page.tsx`        | `AdminPageHeader` (title and description from `adminRoutes`)                                                                                        |
-| `toaster.tsx`           | `ToastProvider`, `useToast()`: `toast(message)`, `notify(actionResult, success)`, `fail(failure)` (signed out: a "Sign in again" link in a new tab) |
-| `unsaved-changes.tsx`   | `useUnsavedChanges(isDirty)`, `GuardedLink`, `useLeaveGuard()`                                                                                      |
-| `form-field.tsx`        | `FormField`, `CheckboxField` (label, hint, error wiring); `inputProps`/`checkboxProps`                                                              |
-| `form-feedback.tsx`     | `useRecordVersion()` (version, save/delete reporting), `ConflictNotice`, `SaveBar`                                                                  |
-| `confirm-delete.tsx`    | `ConfirmDelete`: the one delete button, which asks first                                                                                            |
-| `upload-file.ts`        | Browser half of uploads: WebP conversion (≤ 2400 px), ticket, PUT with progress; `queueUpload` (3 files at a time)                                  |
-| `upload-dropzone.tsx`   | Drop or pick files (a whole folder is fine: 3 at a time, the rest "Waiting"); progress bars, retry; one record or a new id per file                 |
-| `image-fields.tsx`      | `ImageField` (one image + alt: posters, team photos), `PhotoListField` (event photos)                                                               |
-| `pdf-field.tsx`         | `PdfField`: open, replace or remove one PDF (the roles PDF)                                                                                         |
-| `event-list.tsx`        | `EventRow`/`EventList`: events linking to their editor (dashboard, events tool)                                                                     |
-| `event-phase-badge.tsx` | The panel's name for each event phase                                                                                                               |
-| `data-unavailable.tsx`  | "Data store not connected" / "could not reach the data store"                                                                                       |
-| `ui/`                   | Reviewed shadcn/ui primitives (see its README)                                                                                                      |
+| File                    | Does                                                                                                                                                       |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `admin-shell.tsx`       | The panel frame: sidebar or top bar, the page, toasts, the unsaved-changes guard                                                                           |
+| `admin-navigation.tsx`  | Navigation, signed-in email, sign-out — the sidebar (`lg`+) and the mobile sheet                                                                           |
+| `admin-page.tsx`        | `AdminPageHeader` (title and description from `adminRoutes`)                                                                                               |
+| `toaster.tsx`           | `ToastProvider`, `useToast()`: `toast(message)`, `notify(actionResult, success)`, `fail(failure)` (signed out: a "Sign in again" link in a new tab)        |
+| `unsaved-changes.tsx`   | `useUnsavedChanges(isDirty)`, `GuardedLink`, `useLeaveGuard()`                                                                                             |
+| `form-field.tsx`        | `FormField`, `CheckboxField` (label, hint, error wiring); `inputProps`/`checkboxProps`                                                                     |
+| `form-feedback.tsx`     | `useRecordVersion()` (version, save/delete reporting), `ConflictNotice`, `SaveBar`                                                                         |
+| `confirm-delete.tsx`    | `ConfirmDelete`: the one delete button, which asks first                                                                                                   |
+| `upload-file.ts`        | Browser half of uploads: WebP conversion (≤ 2400 px), ticket, PUT with progress (in parts when the ticket's `partBytes` asks); `queueUpload` (3 at a time) |
+| `upload-dropzone.tsx`   | Drop or pick files (a whole folder is fine: 3 at a time, the rest "Waiting"); progress bars, retry; one record or a new id per file                        |
+| `image-fields.tsx`      | `ImageField` (one image + alt: posters, team photos), `PhotoListField` (event photos)                                                                      |
+| `pdf-field.tsx`         | `PdfField`: open, replace or remove one PDF (the roles PDF)                                                                                                |
+| `event-list.tsx`        | `EventRow`/`EventList`: events linking to their editor (dashboard, events tool)                                                                            |
+| `event-phase-badge.tsx` | The panel's name for each event phase                                                                                                                      |
+| `data-unavailable.tsx`  | "Data store not connected" / "could not reach the data store"                                                                                              |
+| `ui/`                   | Reviewed shadcn/ui primitives (see its README)                                                                                                             |
 
 ## Building a tool screen (Stages 7–8)
 

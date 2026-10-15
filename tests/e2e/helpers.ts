@@ -6,10 +6,12 @@ import { expect, type Page, test } from '@playwright/test';
  */
 export const ADMIN = process.env.ADMIN_EMAILS!.split(',')[0]!.trim().toLowerCase();
 
-/** Whether this run has somewhere to keep records and files (Upstash/R2, or local mode). */
-export const hasRecords =
-  process.env.DATA_BACKEND === 'local' || Boolean(process.env.UPSTASH_REDIS_REST_URL);
-export const hasFiles = process.env.DATA_BACKEND === 'local' || Boolean(process.env.R2_BUCKET);
+/** Backends the app hosts itself: records always work, files once AUTH_SECRET signs uploads. */
+const selfHosted = ['local', 'netlify-blobs'].includes(process.env.DATA_BACKEND ?? '');
+
+/** Whether this run has somewhere to keep records and files (Netlify Blobs, Upstash/R2, or local mode). */
+export const hasRecords = selfHosted || Boolean(process.env.UPSTASH_REDIS_REST_URL);
+export const hasFiles = selfHosted || Boolean(process.env.R2_BUCKET);
 
 /** A deployed site under test (`pnpm test:deployed`), not a local server. */
 export const deployed = Boolean(process.env.PLAYWRIGHT_BASE_URL);

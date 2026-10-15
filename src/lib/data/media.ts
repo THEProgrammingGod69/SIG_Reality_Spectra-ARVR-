@@ -17,8 +17,10 @@ import { objectKey } from './keys';
  *
  * 1. `createUpload` — the token route (`/api/admin/upload`) asks for a
  *    presigned PUT URL under the record the file belongs to.
- * 2. The browser PUTs the file straight to storage; it never passes through a
- *    function, whose request bodies are size-capped.
+ * 2. The browser PUTs the file straight to storage; with R2 it never passes
+ *    through a function, whose request bodies are size-capped. Storage the
+ *    app hosts itself receives it on its own route, in parts if the ticket
+ *    says so (`partBytes`).
  * 3. `verify` — when a Server Action saves the record, every newly attached
  *    URL is checked: ours, filed under this record and this purpose, actually
  *    uploaded, an allowed type, within the size limit. A presigned PUT cannot
@@ -43,6 +45,12 @@ export type MediaConfig = {
   namespace: string;
   /** The public origin of the storage, e.g. https://media.example.org. */
   publicBaseUrl: string;
+  /**
+   * For storage the app receives uploads for itself (local data mode, Netlify
+   * Blobs): the largest request body to send, so a bigger file goes in parts
+   * (`adapters/hosted-uploads.ts`). Null for a bucket the browser PUTs to.
+   */
+  partBytes?: number | null;
   now?: () => Date;
 };
 
@@ -50,6 +58,7 @@ export function createMedia({
   storage,
   namespace,
   publicBaseUrl,
+  partBytes = null,
   now = () => new Date(),
 }: MediaConfig) {
   const base = `${publicBaseUrl}/`;
@@ -85,6 +94,7 @@ export function createMedia({
         headers: { 'Content-Type': contentType },
         url: base + key,
         expiresAt: new Date(now().getTime() + UPLOAD_URL_TTL_SECONDS * 1000).toISOString(),
+        partBytes,
       };
     },
 

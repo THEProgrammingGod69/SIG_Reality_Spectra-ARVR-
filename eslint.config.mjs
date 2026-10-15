@@ -13,7 +13,12 @@ const objectStorageClient = {
   message:
     'File storage goes through src/lib/data/media.ts. Only the repository layer may sign R2 requests.',
 };
-const storageClients = [redisClient, objectStorageClient];
+const blobsClient = {
+  name: '@netlify/blobs',
+  message:
+    'Data access goes through src/lib/data/*. Only the repository layer may open Netlify Blobs stores.',
+};
+const storageClients = [redisClient, objectStorageClient, blobsClient];
 
 const eslintConfig = defineConfig([
   globalIgnores([
@@ -47,8 +52,9 @@ const eslintConfig = defineConfig([
   },
 
   {
-    // The repository layer is the one place allowed to talk to Redis/R2.
-    files: ['src/lib/data/**/*.ts'],
+    // The repository layer is the one place allowed to talk to Redis, R2 and
+    // Netlify Blobs; its own tests may start the SDK's local Blobs server.
+    files: ['src/lib/data/**/*.ts', 'tests/unit/data/**/*.ts'],
     rules: { 'no-restricted-imports': 'off' },
   },
 

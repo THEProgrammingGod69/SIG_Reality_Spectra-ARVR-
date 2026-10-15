@@ -172,5 +172,6 @@ export {
 export { mergeGallery, type GalleryItem } from './gallery';
 export { SIGN_IN_LIMITS, type SignInAttempt } from './sign-in-limit';
 export { groupTeam } from './team';
-export { dataAvailability, localMediaFiles } from './runtime';
+export { MAX_HOSTED_UPLOAD_BYTES } from './adapters/hosted-uploads';
+export { dataAvailability, hostedMediaFiles } from './runtime';
 export type { DataServices } from './runtime';
