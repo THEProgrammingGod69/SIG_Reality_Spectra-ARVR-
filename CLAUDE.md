@@ -23,13 +23,13 @@ group at **VIT Pune**.
 | `/recruitment` | The club's domains, always · roles PDF and Google Form link, **only while recruitment is open**             |
 | `/contact`     | Contact details · sponsorship/collaboration request form (goes to the admin panel)                          |
 
-**Admins** (2–3 allowlisted Google accounts) sign in at `/admin` to manage five
-things:
+**Admins** (2–3 allowlisted emails, with Google or the admin password — D-039)
+sign in at `/admin` to manage five things:
 
 | Admin page            | Does                                                                                                                                                                                           |
 | --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `/admin/events`       | Add the current event (details + registration link). Once it ends it is kept for later; the admin adds a recap and photos and puts it on the timeline. Past events can also be added directly. |
-| `/admin/gallery`      | Upload standalone club photos with a category. Photos of timeline events reach the gallery automatically.                                                                                      |
+| `/admin/gallery`      | Upload standalone club photos with a category. Photos of timeline events and the club archive (Git, D-039) reach the gallery automatically.                                                    |
 | `/admin/team`         | Add members with name, position and photo: the core team, and one secretary per domain (D-027). They appear on About.                                                                          |
 | `/admin/recruitment`  | Open/close recruitment, upload the roles and responsibilities PDF, set the Google Form link.                                                                                                   |
 | `/admin/sponsorships` | Read sponsorship requests submitted from `/contact` (admin inbox only — no email).                                                                                                             |     |
@@ -41,10 +41,14 @@ things:
   Cloudflare R2 (images and the recruitment PDF), behind a repository layer so
   Postgres can replace Redis later without touching a single UI file.
 - **Hosted on Netlify** (D-025). Upstash and R2 are used directly, not through a
-  hosting marketplace, so they move with the club, not with the host.
-- **The gallery has two sources.** The photos of timeline events (uploaded once,
-  in the event) and standalone club photos (uploaded in `/admin/gallery`), shown
-  together and grouped by one shared category list.
+  hosting marketplace, so they move with the club, not with the host. Until
+  they exist, Netlify's built-in Blobs storage backs the same ports
+  (`DATA_BACKEND=netlify-blobs`, the default on Netlify without Upstash, D-039).
+- **The gallery has three sources.** The photos of timeline events (uploaded
+  once, in the event), standalone club photos (uploaded in `/admin/gallery`) and
+  the club archive (photos and clips committed under `public/archive/`, described
+  by `src/content/archive.json`, D-039), shown together and grouped by one shared
+  category list.
 - **Registration and applications happen elsewhere.** Events link out to their
   registration page (typically VIERP); recruitment links out to a Google Form.
 - **Handover matters.** The club committee changes every year. A coordinator who
@@ -61,25 +65,25 @@ a lab that builds real things, or a gaming landing page?
 
 ## 2. Locked tech stack — do not substitute
 
-| Layer              | Choice                                                                                       |
-| ------------------ | -------------------------------------------------------------------------------------------- |
-| Framework          | Next.js 16 (App Router) + TypeScript strict                                                  |
-| Package manager    | pnpm                                                                                         |
-| Styling            | Tailwind CSS v4 + shadcn/ui (**admin only**); `cn()` = clsx + tailwind-merge (D-019)         |
-| Icons              | lucide-react, 1.5 stroke, via `<Icon>` (D-019)                                               |
-| 3D                 | React Three Fiber + `@react-three/drei`                                                      |
-| Scroll/timeline    | GSAP + ScrollTrigger                                                                         |
-| UI micro-animation | Motion (formerly Framer Motion)                                                              |
-| Smooth scroll      | Lenis                                                                                        |
-| Data               | Upstash Redis (serverless KV, created directly on upstash.com — D-025)                       |
-| Files              | Cloudflare R2 (S3-compatible), signed with `aws4fetch` — D-025                               |
-| Validation         | Zod (shared schemas)                                                                         |
-| Admin auth         | Auth.js (`next-auth@5.0.0-beta.32`, pinned) — Google, JWT sessions, allowlist in env (D-030) |
-| Forms              | react-hook-form + Zod                                                                        |
-| Spam protection    | Cloudflare Turnstile + honeypot                                                              |
-| Analytics          | Cloudflare Web Analytics, cookieless, public site only (D-033)                               |
-| Testing            | Playwright (E2E) + Vitest (schemas/utils) + axe-core (accessibility, D-033)                  |
-| Hosting            | Netlify + club-owned GitHub org (D-025)                                                      |
+| Layer              | Choice                                                                                                                  |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------------- |
+| Framework          | Next.js 16 (App Router) + TypeScript strict                                                                             |
+| Package manager    | pnpm                                                                                                                    |
+| Styling            | Tailwind CSS v4 + shadcn/ui (**admin only**); `cn()` = clsx + tailwind-merge (D-019)                                    |
+| Icons              | lucide-react, 1.5 stroke, via `<Icon>` (D-019)                                                                          |
+| 3D                 | React Three Fiber + `@react-three/drei`                                                                                 |
+| Scroll/timeline    | GSAP + ScrollTrigger                                                                                                    |
+| UI micro-animation | Motion (formerly Framer Motion)                                                                                         |
+| Smooth scroll      | Lenis                                                                                                                   |
+| Data               | Upstash Redis (serverless KV, created directly on upstash.com — D-025); Netlify Blobs until then (D-039)                |
+| Files              | Cloudflare R2 (S3-compatible), signed with `aws4fetch` — D-025                                                          |
+| Validation         | Zod (shared schemas)                                                                                                    |
+| Admin auth         | Auth.js (`next-auth@5.0.0-beta.32`, pinned) — Google or `ADMIN_PASSWORD`, JWT sessions, allowlist in env (D-030, D-039) |
+| Forms              | react-hook-form + Zod                                                                                                   |
+| Spam protection    | Cloudflare Turnstile + honeypot                                                                                         |
+| Analytics          | Cloudflare Web Analytics, cookieless, public site only (D-033)                                                          |
+| Testing            | Playwright (E2E) + Vitest (schemas/utils) + axe-core (accessibility, D-033)                                             |
+| Hosting            | Netlify + club-owned GitHub org (D-025)                                                                                 |
 
 If a library looks like a better fit mid-build, raise it — do not silently swap it.
 
@@ -111,8 +115,10 @@ These are not style preferences. Breaking one is a bug.
 
 ### Rules that follow from the product
 
-6. **The public site links to `/admin` from nowhere.** No login link, no footer
-   link. Admins navigate there directly. An e2e test enforces this.
+6. **The public site links to the admin in one place only:** a small "Admin"
+   link to `/admin/login` in the footer's bottom row, `rel="nofollow"`, never
+   prefetched, never in the header or the sitemap (D-039, superseding "from
+   nowhere"). An e2e test checks exactly one such link per page, in the footer.
 
 7. **Every admin route is `noindex, nofollow`** and disallowed in `robots.txt`.
 
@@ -286,9 +292,10 @@ upload flow in `src/lib/data/README.md`; diagrams in `docs/ARCHITECTURE.md`.
   ended; _awaiting timeline_ = ended but not on the timeline (admin-only, kept for
   later use); _timeline_ = `inTimeline`, which requires a past end and at least
   one photo. There is no manual ordering — the timeline is chronological.
-- **The gallery has two sources** and shows them together, newest first, grouped
-  by category: the photos of timeline events (category taken from the event) and
-  standalone `GalleryPhoto` records. Events and gallery photos share one
+- **The gallery has three sources** and shows them together, newest first,
+  grouped by category: the photos of timeline events (category taken from the
+  event), standalone `GalleryPhoto` records, and the club archive from Git
+  (photos and short clips; shown even when no data store is reachable, D-039). Events and gallery photos share one
   `Category` enum, so the filters mean the same thing everywhere. The gallery page
   carries both the `events` and `gallery` cache tags.
 - **Categories** are hackathon · competition · workshop · other (D-026).
@@ -372,8 +379,10 @@ updated to match; `docs/ARCHITECTURE.md` is the current design.
 
 **Temporary scaffolding, to delete as it is replaced:**
 
-- Placeholder credentials (temporary admin `dryerisdry@gmail.com`, no Google
-  keys, no Upstash/R2) — the swap list is at the top of `docs/OPEN_ITEMS.md`.
+- Placeholder credentials (admins `dryerisdry@gmail.com` and
+  `mohan.arnav24@vit.edu` with a short `ADMIN_PASSWORD`, no Google keys, Netlify
+  Blobs instead of Upstash/R2) — the swap list is at the top of
+  `docs/OPEN_ITEMS.md`.
 - Local data mode (`DATA_BACKEND=local`) and the `[Demo]` events, photos, team
   members and request from `pnpm seed --demo` — until the accounts and the real
   content exist (D-031, D-032).
@@ -421,9 +430,10 @@ contributor must know before writing UI:
 | Team               | Core team, then one secretary per domain; About only (D-027)                                                                                                    |
 | Recruitment PDF    | Optional: recruitment opens with the form link; "coming soon" until the PDF is uploaded (D-028)                                                                 |
 | Data layer         | One generic repository over `RecordStore` + `ObjectStorage` ports; atomic Lua writes; public reads `'use cache'` (D-029)                                        |
-| Admin access       | Google sign-in + allowlist re-checked per request; development sign-in locally only; three locks (D-030)                                                        |
+| Admin access       | Google or password sign-in + allowlist re-checked per request; development sign-in locally only; three locks (D-030, D-039)                                     |
 | Admin UI           | Reviewed shadcn subset on token aliases (no `accent`/`muted`); in-house toasts; `useUnsavedChanges` + `GuardedLink` (D-030)                                     |
 | Local data         | `DATA_BACKEND=local`: records + uploads in `.data/`, same upload flow as R2; refused on Netlify (D-031)                                                         |
+| Netlify Blobs      | `DATA_BACKEND=netlify-blobs`, default on Netlify without Upstash: CAS-on-etag JSON snapshots, files in ≤ 4 MiB parts through `/api/local-media` (D-039)         |
 | Images             | Any ratio: posters whole in a 4:5 frame, photos as square centre-cropped tiles, viewer shows them whole; WebP ≤ 2400 px (D-031)                                 |
 | Admin-written text | Plain text as paragraphs (`<Paragraphs>`), never HTML; no Markdown renderer (D-031)                                                                             |
 | Contact form       | Honeypot, Turnstile (fails closed on Netlify without keys), 3 requests/sender/hour in the data layer; no form where it cannot work (D-032)                      |
@@ -445,6 +455,10 @@ contributor must know before writing UI:
 | Decoding text      | Mono labels only; the real text stays in the DOM, the glyphs play in an `aria-hidden` copy; once per trigger (D-038)                                            |
 | Home rail / stack  | Domains ride a sticky horizontal rail from `md` (grid elsewhere); purpose panels stack (`stack:` variant); both off under reduced motion (D-038)                |
 | Inner-page WebGL   | The Spectral Field behind `PageIntro`, high tier only, one context per page, still unless the visitor moves (D-038)                                             |
+| Club archive       | `public/archive/` + `src/content/archive.json`: real photos and clips, a Git-managed third gallery source, read-only in the admin (D-039)                       |
+| Clips              | Square poster tile + play badge; muted preview on mouse hover only; native `<video controls>` in the viewer; nothing autoplays (D-039)                          |
+| Password sign-in   | `ADMIN_PASSWORD` (env only), constant-time, rate-limited, fingerprinted so a change signs everyone out; Setup card warns while weak (D-039)                     |
+| Moments reel       | Home's CSS-3D cylinder of archive moments turns with the scroll (CircularGallery without `ogl`); a snap strip on phones and reduced motion (D-039)              |
 
 ---
 

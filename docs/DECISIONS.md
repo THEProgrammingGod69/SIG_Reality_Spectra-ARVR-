@@ -47,6 +47,8 @@ the call and it was made on the reasoning shown).
 | D-035 | Final quality pass: Next.js security update, software-GPU detection, audits     | lead       |
 | D-036 | `DATA_NAMESPACE` follows the Netlify deploy context when unset                  | lead       |
 | D-037 | Premium pass: React Bits effects rebuilt, the lab on every page                 | lead       |
+| D-038 | The XR HUD: a motion language of its own, on every page                         | lead       |
+| D-039 | Club archive, password sign-in, footer admin link, Netlify Blobs                | team       |
 
 ---
 
@@ -1102,3 +1104,89 @@ contact form.
 **Not done, on purpose.** No new pages (the six-page sitemap is the contract),
 no preloader or boot screen in front of content, no hidden system cursor, no
 sound, no endless loops, no stat counters (D-007), and no new dependency.
+
+---
+
+## D-039 — The club's archive, password sign-in, a footer way in, and Netlify Blobs
+
+**Decided by:** team (the club asked for the archive, the password, the two
+admins and the footer link); lead for how each is built.
+
+**Context.** The club supplied its first real media — the Hackathons and
+Workshops folders (Tesseract'26, the club's 24-hour hackathon, and the Level 1
+Unity workshop of October–November 2025: 11 photos and 13 short clips) — and
+asked for four things at once: put them in the gallery, make the admin side
+fully functional, give two people admin access with a password, and put a small
+admin button in the footer. The live Netlify site (`sigarvr`) has no data store
+connected (OPEN_ITEMS #9, #10), so on the live site every admin save failed.
+Each answer below is the smallest change that makes that work without breaking
+an earlier decision silently; where one is broken, it says so.
+
+**1. The club archive is Git content, a third gallery source.** The media lives
+in `public/archive/` (photos as WebP ≤ 2000 px with EXIF and location stripped;
+clips as H.264 MP4 with fast start, baked-in letterbox bars cropped, ≤ 1280 px,
+each with a WebP poster at its best frame) and is described by
+`src/content/archive.json`, validated at build time like the other content files
+(D-023) by `schemas/archive.ts`. The gallery shows it with the admin's photos and
+the timeline events' photos, newest first, filtered by the same categories
+(D-026). Why Git and not records: the archive must show on every deploy —
+including the current one with no data store — and it is history, not news.
+Admins see it read-only in `/admin/gallery`; changing it is a Git change
+(handbook). Captions credit the photographer's watermark (VCLICK Multimedia
+Prod.). Dates are the files' own (EXIF, or the share date for WhatsApp copies),
+never invented. _Supersedes D-031's "photos only" for the archive; uploads
+stay photos._
+
+**2. Clips in the gallery.** A clip is a square poster tile like any photo
+(D-031) with a play badge and its length; the button reads "<alt> (video, 0:07)".
+A muted preview plays only while a mouse hovers it (user-initiated, WCAG 2.2.2)
+and never under reduced motion; nothing autoplays. The viewer plays it with
+native controls (no player library). The newest _photo_ leads the grid — a
+clip's small poster never fills the double tile.
+
+**3. Password sign-in.** An Auth.js Credentials provider (`password`) for the
+allowlisted emails with a password from `ADMIN_PASSWORD` — env only, never in
+code. Google and the development sign-in are unchanged; the allowlist is still
+re-checked on every request (D-030's three locks). Hardening: constant-time
+comparison; at most 10 attempts per 15 minutes per IP and 20 per email, counted
+in the data layer (hashed keys) with an in-memory fallback; one message for a
+wrong password and a non-admin; changing the password ends every password
+session (a fingerprint in the token). The Setup card warns while the password is
+weak. **The club chose a short password; it works, the dashboard says it is
+weak, and changing it is one Netlify variable.** _Amends D-030._
+
+**4. A footer link to the sign-in page.** A small "Admin" link in the footer's
+bottom row (`rel="nofollow"`, no prefetch, ≥ 24 px target). Admin routes stay
+`noindex, nofollow`, disallowed in `robots.txt` and out of the sitemap; the
+proxy and every action still guard them. _Supersedes rule 6's "links to /admin
+from nowhere"_: the e2e test now asserts exactly one admin link per page, in the
+footer, `nofollow`, never in the header.
+
+**5. Netlify Blobs as a data backend.** `DATA_BACKEND=netlify-blobs` implements
+the two ports (D-029) on Netlify's built-in Blobs storage, and is the default on
+Netlify when no Upstash variables are set — so the admin panel works on the
+club's existing site with no new account. Records: one JSON snapshot per
+namespace and collection, written with compare-and-swap on the blob's etag
+(every write is still all-or-nothing and version-checked). Files: blobs served
+through the same signed-upload route as local mode, uploaded in ≤ 4 MiB parts
+(Netlify Functions cap request bodies), type- and size-checked on arrival.
+Upstash + R2 stay the documented production backend (D-025) and switching is
+one variable. _Extends the locked stack; recorded here because CLAUDE.md §2 says
+to raise it, and the club asked for it to work now._
+
+**6. Integrating `main`.** Srushti's "Who we are" section (d3151b2) is merged:
+its "About Reality Spectra" card is a `Card spotlight` in `Tilt` with its copy in
+`site.json`; the split-flap heading maps to `DecodeText` on the eyebrow
+(headings stay real text, D-038); Magic Bento stays rejected (D-013); npm and
+yarn lockfiles are ignored (pnpm only).
+
+**7. More motion, same contract.** Home gains "Moments from the lab": the
+archive on a CSS-3D cylinder that turns with the scroll and leans toward the
+pointer (inspired by React Bits' CircularGallery, which needs `ogl`, D-011) —
+a scroll-snap strip on phones and under reduced motion. Gallery filters animate
+with GSAP Flip (transform only). Everything stays inside rule 4, the tokens and
+WCAG 2.2.2.
+
+**Not done, on purpose.** No new pages; no autoplaying video; no password in
+the repository; the Upstash/R2 path is not removed; the club's Instagram was
+still unreadable by tools.

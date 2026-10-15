@@ -46,9 +46,24 @@ a light-through-haze shader behind each inner page's opening
 `tests/e2e/hud.spec.ts`. The club's Instagram could not be read by tools (login
 wall), so no content was taken from it.
 
+## Archive, password sign-in, Netlify Blobs (D-039) — after the XR HUD
+
+On the same branch, with `main` (Srushti's "Who we are" card) merged in. The
+club sent its first real media (the Tesseract'26 hackathon and the Unity
+workshop): 11 photos and 13 clips now live in `public/archive/`, described by
+`src/content/archive.json`, and show in the gallery as a third, Git-managed
+source, with clips (poster tiles, hover preview, native player) and GSAP Flip
+filtering. Home gained "Moments from the lab", a CSS-3D reel of the archive.
+The admin panel now works on the existing Netlify site: a Netlify Blobs
+backend (default on Netlify without Upstash), an email + password sign-in
+(`ADMIN_PASSWORD`, env only) for `dryerisdry@gmail.com` and
+`mohan.arnav24@vit.edu`, and a small "Admin" link in the footer (rule 6
+rewritten). Netlify needs `AUTH_SECRET`, `ADMIN_EMAILS` and `ADMIN_PASSWORD`
+set — `docs/GO_LIVE.md`, "Right now". Read D-039 for every call.
+
 ## Start of the next chat
 
-1. Read this file, then `CLAUDE.md`, `docs/DECISIONS.md` (D-001 – D-038),
+1. Read this file, then `CLAUDE.md`, `docs/DECISIONS.md` (D-001 – D-039),
    `docs/ARCHITECTURE.md`, `docs/OPEN_ITEMS.md`, and the READMEs in
    `src/lib/data`, `src/lib/schemas`, `src/lib/auth`, `src/components/admin`.
 2. Run `git status` (only the untracked `.claude/` launch config is expected).
@@ -56,8 +71,9 @@ wall), so no content was taken from it.
    Arnav's go to run `docs/GO_LIVE.md`.
 
 Working locally: `.env.local` (gitignored) has a generated `AUTH_SECRET`,
-`ADMIN_EMAILS="dryerisdry@gmail.com"` and `DATA_BACKEND="local"`. `pnpm dev` →
-`/admin` → "Sign in (development)". Local `dev` data in `.data/` has demo
+`ADMIN_EMAILS="dryerisdry@gmail.com,mohan.arnav24@vit.edu"`, an
+`ADMIN_PASSWORD` and `DATA_BACKEND="local"`. `pnpm dev` → footer "Admin" →
+email + password, or "Sign in (development)". Local `dev` data in `.data/` has demo
 events, photos, team, one request, and recruitment open.
 
 ## Working agreement with Arnav (applies to every stage)

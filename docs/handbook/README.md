@@ -6,9 +6,10 @@ the **admin panel**.
 
 ## Signing in
 
-1. Go to **`https://<club-domain>/admin`**. There is no link to it anywhere on
-   the site, on purpose; bookmark it.
-2. Click **Sign in with Google** and choose your club Google account.
+1. Go to **`https://<club-domain>/admin`**, or click the small **Admin** link
+   at the bottom of any page's footer.
+2. Type your email and the admin password, then **Sign in**. (Once the club's
+   Google sign-in is set up you can use **Sign in with Google** instead.)
 3. Only the accounts on the admin list can get in. If yours is refused, ask
    whoever looks after the website to add it ([admins.md](./admins.md)).
 

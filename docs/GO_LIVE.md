@@ -8,6 +8,25 @@ full list of placeholders is at the top of [`OPEN_ITEMS.md`](./OPEN_ITEMS.md).
 Every account below must be created on a **club-owned** login, never a
 personal one ([handbook/yearly-handover.md](./handbook/yearly-handover.md)).
 
+## Right now: the admin panel on the existing site (D-039)
+
+Before any of the accounts below exist, the club's current Netlify site
+(`sigarvr`) runs the admin panel on **Netlify Blobs** with the **password
+sign-in**. On Netlify → Site configuration → Environment variables, set for
+**all deploy contexts** (tick _Contains secret values_ for the secrets):
+
+| Variable         | Value                                                        |
+| ---------------- | ------------------------------------------------------------ |
+| `AUTH_SECRET`    | `openssl rand -base64 32` (a different one for production)   |
+| `ADMIN_EMAILS`   | `dryerisdry@gmail.com,mohan.arnav24@vit.edu`                 |
+| `ADMIN_PASSWORD` | the club's admin password (a long passphrase is recommended) |
+
+Leave `DATA_BACKEND` and the Upstash/R2 variables unset, then **Trigger
+deploy**. Check: the footer's **Admin** link opens the sign-in page, both
+admins can sign in, the dashboard's Setup card shows _Netlify Blobs_, and a
+saved event appears on `/events` without a redeploy. The steps below replace
+Blobs and add Google later; the password sign-in can stay.
+
 ## 0. Before you start
 
 - [ ] Confirmed with the club / VIT that hosting outside the college's systems
@@ -29,7 +48,7 @@ personal one ([handbook/yearly-handover.md](./handbook/yearly-handover.md)).
 
 - [ ] Google OAuth client on the club's Google Cloud project, with the
       production callback URL `https://<domain>/api/auth/callback/google` (#13).
-- [ ] The 2–3 admin Google accounts (#14).
+- [ ] The 2–3 admin accounts (#14) and a long `ADMIN_PASSWORD` (D-039).
 
 ## 3. The other services
 
@@ -51,12 +70,14 @@ Site configuration → Environment variables. Set **per deploy context**:
 | `AUTH_SECRET`                                                                                  | its own secret       | a different secret               |
 | `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`                                                         | the OAuth client     | the OAuth client                 |
 | `ADMIN_EMAILS`                                                                                 | the club admins      | the club admins                  |
+| `ADMIN_PASSWORD`                                                                               | a long passphrase    | the same, or a different one     |
 | `NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY`                                       | the widget           | the widget                       |
 | `NEXT_PUBLIC_CF_WEB_ANALYTICS_TOKEN`                                                           | the token            | leave unset                      |
 | `CRON_SECRET`                                                                                  | its own secret       | leave unset                      |
 
-**Never set** `DATA_BACKEND` or `AUTH_DEV_SIGN_IN` on Netlify: the build fails
-if you do, by design. `DATA_NAMESPACE` follows the deploy context when unset
+**Never set** `DATA_BACKEND=local` or `AUTH_DEV_SIGN_IN` on Netlify: the build
+fails if you do, by design. With the Upstash variables set, the site uses
+Upstash + R2; without them, Netlify Blobs (D-039). `DATA_NAMESPACE` follows the deploy context when unset
 (D-036); if it is set, the build fails unless production uses `prod` and
 previews do not.
 
@@ -73,8 +94,8 @@ previews do not.
   $env:PLAYWRIGHT_BASE_URL="https://deploy-preview-N--<site>.netlify.app"; pnpm test:deployed
   ```
 
-  Admin tests skip themselves there (deployed sites have only Google
-  sign-in). Then sign in with Google on the preview and add a test event,
+  Admin tests skip themselves there (deployed sites have no development
+  sign-in). Then sign in with the password or Google on the preview and add a test event,
   check it on /events, and delete it.
 
 ## 7. Production
