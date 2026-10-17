@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
 
-import { CurrentEvents } from '@/components/sections/current-events';
+import { OngoingEvents, UpcomingEvents } from '@/components/sections/current-events';
 import { EventTimeline } from '@/components/sections/event-timeline';
 import { LoadFailed } from '@/components/sections/load-failed';
 import { PageIntro } from '@/components/sections/page-intro';
@@ -44,12 +44,21 @@ async function Events() {
       </Section>
     );
   }
+
+  const now = new Date();
+  const nowMs = now.getTime();
+
+  // Split current events into Ongoing (started and not yet ended) and Upcoming (future start)
+  const ongoing = read.data.current.filter((event) => Date.parse(event.startsAt) <= nowMs);
+  const upcoming = read.data.current.filter((event) => Date.parse(event.startsAt) > nowMs);
+
   return (
     <>
       {read.data.current.length > 0 ? (
         <JsonLd data={eventsJsonLd(read.data.current, publicEnv.NEXT_PUBLIC_SITE_URL)} />
       ) : null}
-      <CurrentEvents events={read.data.current} socials={socialLinks} />
+      <OngoingEvents events={ongoing} />
+      <UpcomingEvents events={upcoming} socials={socialLinks} />
       <EventTimeline events={read.data.timeline} />
     </>
   );

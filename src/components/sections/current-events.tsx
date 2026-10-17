@@ -1,4 +1,4 @@
-import { CalendarDays, CalendarX2, MapPin } from 'lucide-react';
+import { CalendarDays, CalendarX2, ChevronDown, MapPin, Radio } from 'lucide-react';
 import Image from 'next/image';
 
 import { Stagger } from '@/components/motion/stagger';
@@ -16,9 +16,9 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { HudCorners } from '@/components/ui/hud-corners';
 import { Icon } from '@/components/ui/icon';
 import { Section } from '@/components/ui/section';
+import { cn } from '@/lib/cn';
 import type { LiveSocial } from '@/lib/content';
 import type { PublicEvents } from '@/lib/data';
-import { cn } from '@/lib/cn';
 import { formatDateTime } from '@/lib/dates';
 import { categoryLabel } from '@/lib/schemas/category';
 import { EVENT_MODES } from '@/lib/schemas/event';
@@ -30,15 +30,41 @@ import { SocialButtons } from './social-buttons';
 type PublicEvent = PublicEvents['current'][number];
 
 /**
- * /events, top: what is on now or next, soonest first, each with its
- * registration link. Posters of any shape sit whole in a 4:5 frame (D-031).
- *
- * The soonest event leads (D-037): from `lg` it spans the row as a wide card,
- * poster beside its details, lit by the spotlight and the star-bordered
- * Register button; the rest follow in the grid. With one event, that one
- * card fills the row instead of standing alone in a third of it.
+ * Section A: Ongoing Events — published events that have started and have not yet ended.
+ * Each event card retains the full detailed presentation with a visible "Ongoing" status.
  */
-export function CurrentEvents({
+export function OngoingEvents({ events }: { events: readonly PublicEvent[] }) {
+  return (
+    <Section labelledBy="ongoing-events">
+      <SectionHeading id="ongoing-events" eyebrow="In progress" title="Ongoing events" />
+      {events.length === 0 ? (
+        <EmptyState
+          icon={Radio}
+          title="No events in progress right now"
+          description="Check back during scheduled event hours or browse our upcoming schedule below."
+          className="mt-12"
+        />
+      ) : (
+        <Stagger
+          as="ul"
+          className="mt-12 grid grid-cols-[repeat(auto-fill,minmax(min(100%,20rem),1fr))] gap-6"
+        >
+          {events.map((event, index) => (
+            <li key={event.id} className={cn(index === 0 && 'lg:col-span-full')}>
+              <EventCard event={event} featured={index === 0} status="ongoing" />
+            </li>
+          ))}
+        </Stagger>
+      )}
+    </Section>
+  );
+}
+
+/**
+ * Section B: Upcoming Events — published events whose start time is in the future.
+ * Soonest start time first, retaining the featured leading card and full details.
+ */
+export function UpcomingEvents({
   events,
   socials,
 }: {
@@ -46,8 +72,8 @@ export function CurrentEvents({
   socials: readonly LiveSocial[];
 }) {
   return (
-    <Section labelledBy="current-events">
-      <SectionHeading id="current-events" eyebrow="Now and next" title="Happening next" />
+    <Section labelledBy="upcoming-events">
+      <SectionHeading id="upcoming-events" eyebrow="Now and next" title="Upcoming events" />
       {events.length === 0 ? (
         <EmptyState
           icon={CalendarX2}
@@ -63,7 +89,7 @@ export function CurrentEvents({
         >
           {events.map((event, index) => (
             <li key={event.id} className={cn(index === 0 && 'lg:col-span-full')}>
-              <EventCard event={event} featured={index === 0} />
+              <EventCard event={event} featured={index === 0} status="upcoming" />
             </li>
           ))}
         </Stagger>
@@ -72,7 +98,39 @@ export function CurrentEvents({
   );
 }
 
-function EventCard({ event, featured }: { event: PublicEvent; featured: boolean }) {
+/**
+ * Combined CurrentEvents component retained for backwards compatibility:
+ * splits the request-time current events into Ongoing and Upcoming sections.
+ */
+export function CurrentEvents({
+  events,
+  socials,
+  now,
+}: {
+  events: readonly PublicEvent[];
+  socials: readonly LiveSocial[];
+  now?: number;
+}) {
+  const ongoing = now !== undefined ? events.filter((e) => Date.parse(e.startsAt) <= now) : [];
+  const upcoming = now !== undefined ? events.filter((e) => Date.parse(e.startsAt) > now) : events;
+
+  return (
+    <>
+      <OngoingEvents events={ongoing} />
+      <UpcomingEvents events={upcoming} socials={socials} />
+    </>
+  );
+}
+
+function EventCard({
+  event,
+  featured,
+  status,
+}: {
+  event: PublicEvent;
+  featured: boolean;
+  status: 'ongoing' | 'upcoming';
+}) {
   const mode = EVENT_MODES.find((entry) => entry.id === event.mode)?.label;
   return (
     <Card featured={featured} spotlight className={cn('group/event', featured && 'lg:flex-row')}>
@@ -85,8 +143,6 @@ function EventCard({ event, featured }: { event: PublicEvent; featured: boolean 
             src={event.poster.url}
             alt={event.poster.alt}
             fill
-            // 20rem-minimum cards: two columns only once two fit beside each
-            // other; the leading card's poster is at most 26rem wide from lg.
             sizes={
               featured
                 ? '(min-width: 64rem) 26rem, (min-width: 44rem) 50vw, 100vw'
@@ -105,7 +161,18 @@ function EventCard({ event, featured }: { event: PublicEvent; featured: boolean 
         />
       </CardMedia>
       <CardBody className={cn(featured && 'lg:justify-center lg:gap-4 lg:p-10')}>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          {status === 'ongoing' ? (
+            <Badge tone="success" className="inline-flex items-center gap-1.5">
+              <span className="size-1.5 rounded-full bg-(--color-success) animate-pulse" />
+              Ongoing
+            </Badge>
+          ) : (
+            <Badge tone="neutral" className="inline-flex items-center gap-1.5">
+              <span className="size-1.5 rounded-full bg-(--color-muted)" />
+              Upcoming
+            </Badge>
+          )}
           <Badge tone="accent">{categoryLabel(event.category)}</Badge>
           {mode ? <Badge>{mode}</Badge> : null}
         </div>
@@ -127,11 +194,18 @@ function EventCard({ event, featured }: { event: PublicEvent; featured: boolean 
           {event.summary}
         </CardDescription>
         {event.description ? (
-          <details className="text-body-sm text-(--color-text-body)">
-            <summary className="cursor-pointer text-(--color-muted) hover:text-(--color-text)">
-              More about this event
+          <details className="group/details text-body-sm text-(--color-text-body)">
+            <summary className="inline-flex cursor-pointer select-none list-none items-center gap-2 rounded-full border border-(--color-accent)/40 bg-(--color-accent)/10 px-3.5 py-1.5 font-medium text-body-sm text-(--color-accent) transition-all duration-(--dur-short) ease-out-expo hover:border-(--color-accent) hover:bg-(--color-accent)/20 hover:shadow-[0_0_12px_var(--color-accent)] focus-visible:outline-2 focus-visible:outline-(--color-accent) active:scale-95">
+              <span>More about this event</span>
+              <Icon
+                icon={ChevronDown}
+                size="sm"
+                className="transition-transform duration-(--dur-short) ease-out-expo group-open/details:rotate-180"
+              />
             </summary>
-            <Paragraphs text={event.description} className="mt-3" />
+            <div className="mt-3.5 rounded-control border border-(--color-border) bg-(--color-surface-raised)/40 p-4">
+              <Paragraphs text={event.description} />
+            </div>
           </details>
         ) : null}
         <CardFooter className={cn(featured && 'lg:mt-4')}>

@@ -86,8 +86,9 @@ test.describe('events', () => {
     await page.goto(editor);
     await deleteEvent(page);
     await publicPage.reload();
-    // The events stream in after the page shell: wait for them first.
-    await expect(publicPage.getByRole('heading', { name: 'Happening next' })).toBeVisible();
+    await expect(
+      publicPage.getByRole('heading', { name: /Upcoming events|Happening next/ }),
+    ).toBeVisible();
     await expect(publicPage.getByText(title)).toHaveCount(0);
   });
 
@@ -113,8 +114,13 @@ test.describe('events', () => {
     const entry = page.locator('#event-timeline').locator('..').getByRole('listitem').filter({
       hasText: title,
     });
-    await expect(entry.getByText('A recap written by the end-to-end tests.')).toBeVisible();
-    await expect(entry.getByRole('button')).toHaveCount(2);
+    await expect(entry.getByText(title)).toBeVisible();
+    await entry.getByRole('button').click();
+    const modal = page.getByRole('dialog');
+    await expect(modal).toBeVisible();
+    await expect(modal.getByText('A recap written by the end-to-end tests.')).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(modal).toBeHidden();
 
     await page.goto('/gallery');
     await page.getByRole('button', { name: /^Workshops/ }).click();
