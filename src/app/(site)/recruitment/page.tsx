@@ -1,15 +1,16 @@
 import { Suspense } from 'react';
 
+import { RecruitmentHero } from '@/components/recruitment/recruitment-hero';
+import { RecruitmentTracks } from '@/components/recruitment/recruitment-tracks';
 import { DomainList } from '@/components/sections/domain-list';
 import { LoadFailed } from '@/components/sections/load-failed';
-import { PageIntro } from '@/components/sections/page-intro';
 import { RecruitmentStatus } from '@/components/sections/recruitment-status';
 import { Section } from '@/components/ui/section';
 import { Skeleton } from '@/components/ui/skeleton';
 import { domainGroups, socialLinks } from '@/lib/content';
 import { getRecruitment, publicRead } from '@/lib/data';
 import { pageMetadata } from '@/lib/metadata';
-import { getRoute, routeTitle } from '@/lib/site';
+import { getRoute } from '@/lib/site';
 
 const route = getRoute('/recruitment');
 
@@ -18,12 +19,7 @@ export const metadata = pageMetadata(route);
 export default function RecruitmentPage() {
   return (
     <>
-      <PageIntro
-        id="recruitment-title"
-        eyebrow="Join the club"
-        title={routeTitle(route)}
-        lead={route.description}
-      />
+      <RecruitmentHero />
       <Suspense
         fallback={
           <Section className="pb-0" aria-busy="true">
@@ -33,6 +29,7 @@ export default function RecruitmentPage() {
       >
         <Status />
       </Suspense>
+      <RecruitmentTracks />
       <DomainList groups={domainGroups} />
     </>
   );
