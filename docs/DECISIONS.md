@@ -667,7 +667,8 @@ built and tested on placeholders, as in D-031.
   keyed by a hash of the sender's address, so no IP address is stored. On
   Netlify the address comes from `x-nf-client-connection-ip`, which Netlify
   sets and a visitor cannot forge.
-- **Turnstile fails closed.** With both keys it is on; with neither, it is off
+- **Turnstile fails closed** (superseded by D-041: without both keys the form
+  runs on its honeypot and rate limit). With both keys it is on; with neither, it is off
   only off Netlify (a developer's computer, the tests); a Netlify deploy
   without both keys, or any environment with just one, does not offer the
   form — Contact shows the club's channels instead, as D-024 required of a
@@ -1294,6 +1295,19 @@ files too small for their crop.
    Suspense boundary, the phone menu could not be tapped until the data store
    answered. Footer links carry their spacing as padding, so each row is a
    full-height tap target.
+8. **The running site knows which deploy it is.** Netlify sets `CONTEXT` for
+   the build only; its functions never see it, so a live Netlify site took
+   itself for a developer's computer — it looked for Upstash ("Data store not
+   connected") and would have used the `dev` namespace for production and
+   previews alike. `next.config.ts` now bakes the build's context and address
+   in (`BUILD_CONTEXT`, `BUILD_SITE_URL`); `withBuildContext()` hands them to
+   the environment, so Netlify Blobs, `prod`/`preview` and the guards hold at
+   runtime too. `/api/health` was how this was found.
+9. **The contact form needs no Cloudflare account.** Turnstile is on when both
+   keys are set; otherwise the form runs with its honeypot and the per-sender
+   rate limit, and the Setup card lists Turnstile as not set. This supersedes
+   D-032's "fails closed": with the deploy context restored, a deploy without
+   keys would have hidden the club's only contact form.
 
 **Not done, on purpose.** No database outside the hosts' own blob stores: one
 fewer account to hand over each year, and Upstash + R2 remain one set of

@@ -84,6 +84,18 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
 
   /**
+   * Netlify sets CONTEXT and the site's addresses for the build only: the
+   * functions that serve the site never see them. They are baked in here, so
+   * the running site still knows whether it is production or a preview — and
+   * so uses Netlify Blobs, the right namespace and its own address (D-041).
+   * None of them is secret.
+   */
+  env: {
+    BUILD_CONTEXT: process.env.CONTEXT ?? '',
+    BUILD_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL?.trim() || hostSiteUrl(process.env) || '',
+  },
+
+  /**
    * Security headers on every response (Stage 9, D-033): CSP, HSTS, framing,
    * sniffing, referrer and permissions policies (src/lib/security-headers.ts),
    * plus `X-Robots-Tag: noindex` on the admin panel and the API (rule 7), and

@@ -4,7 +4,7 @@ import { hasRecords, signIn, unique } from './helpers';
 
 /**
  * Stage 8: the sponsorship form on /contact and the admin inbox (D-008,
- * D-032). Turnstile is off here (no keys, not on Netlify); the honeypot,
+ * D-032). Turnstile is off here (no keys); the honeypot,
  * validation and the rate limit are not. Each test sends from its own
  * address, so the per-sender limit never carries over between tests or runs.
  */

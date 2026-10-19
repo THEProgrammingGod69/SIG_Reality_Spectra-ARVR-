@@ -311,7 +311,7 @@ member or the recruitment settings as live.
 | Identity       | Password (`ADMIN_PASSWORD`, rate-limited) or Google sign-in via Auth.js · `ADMIN_EMAILS` allowlist, re-checked on every request · 8-hour JWT sessions · no user table · local-only development sign-in (D-030) |
 | Route guard    | `proxy.ts` sends `/admin/*` without a session to `/admin/login`, returning only to `/admin` paths; the panel layout checks again                                                                               |
 | Action guard   | Every admin Server Action runs inside `adminAction()`, which re-checks the session; the upload route checks it too (401) and refuses cross-site requests                                                       |
-| Public form    | Honeypot · Cloudflare Turnstile (fails closed on Netlify without keys) · Zod · 3 requests per sender per hour, hashed address, in the data layer (D-032)                                                       |
+| Public form    | Honeypot · Cloudflare Turnstile (when both keys are set, D-041) · Zod · 3 requests per sender per hour, hashed address, in the data layer (D-032)                                                              |
 | Data           | Zod on every write and read · stale-write rejection · server-only env module                                                                                                                                   |
 | Scheduled job  | `/api/cron/nightly` accepts only `Authorization: Bearer $CRON_SECRET`                                                                                                                                          |
 
@@ -428,7 +428,7 @@ Recorded in [`DECISIONS.md`](./DECISIONS.md) D-032:
   closed.
 - **The sponsorship form on /contact** sends to **/admin/sponsorships** (inbox
   newest first, status, delete). Spam checks, in order: honeypot, Turnstile
-  (fails closed on Netlify without keys), validation, then 3 requests per
+  (when both keys are set, D-041), validation, then 3 requests per
   sender per hour — a counter on the `RecordStore` port (`hit()`), keyed by a
   hash of the address. Where the form cannot work, Contact lists the channels.
 - Public reads go through `publicRead()` and show `<LoadFailed>` on an outage.

@@ -366,9 +366,23 @@ export function resolveEnv(raw: Record<string, string | undefined>): {
   }
 }
 
+/**
+ * The environment as the running site sees it, plus the deploy context the
+ * build baked in (`BUILD_CONTEXT`, next.config.ts): Netlify sets CONTEXT for
+ * the build but not for the functions that serve the site, which would
+ * otherwise take themselves for a developer's computer (D-041).
+ */
+export function withBuildContext(
+  raw: Record<string, string | undefined>,
+  builtFor: string | undefined,
+): Record<string, string | undefined> {
+  return raw.CONTEXT === undefined && builtFor ? { ...raw, CONTEXT: builtFor } : raw;
+}
+
 function parseEnv(): { env: ServerEnv; warnings: readonly string[] } {
   if (skipValidation) return { env: serverEnvSchema.parse({}), warnings: [] };
-  const resolved = resolveEnv(process.env);
+  // `process.env.BUILD_CONTEXT` is replaced with the build's value (next.config.ts env).
+  const resolved = resolveEnv(withBuildContext(process.env, process.env.BUILD_CONTEXT));
   for (const warning of resolved.warnings) console.warn(`[env] ${warning}`);
   return resolved;
 }

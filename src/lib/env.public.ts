@@ -72,7 +72,12 @@ export function hostSiteUrl(source: Record<string, string | undefined>): string 
  */
 function parsePublicEnv() {
   const raw = {
-    NEXT_PUBLIC_SITE_URL: clean(process.env.NEXT_PUBLIC_SITE_URL) ?? hostSiteUrl(process.env),
+    NEXT_PUBLIC_SITE_URL:
+      clean(process.env.NEXT_PUBLIC_SITE_URL) ??
+      // The address the build found (next.config.ts): Netlify's functions do
+      // not see the host's address variables at runtime (D-041).
+      clean(process.env.BUILD_SITE_URL) ??
+      hostSiteUrl(process.env),
     NEXT_PUBLIC_TURNSTILE_SITE_KEY: clean(process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY),
     NEXT_PUBLIC_CF_WEB_ANALYTICS_TOKEN: clean(process.env.NEXT_PUBLIC_CF_WEB_ANALYTICS_TOKEN),
   };

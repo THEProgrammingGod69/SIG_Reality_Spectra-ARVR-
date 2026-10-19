@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { cleanEnvValue, resolveEnv, serverEnvSchema } from '@/lib/env';
+import { cleanEnvValue, resolveEnv, serverEnvSchema, withBuildContext } from '@/lib/env';
 import { hostSiteUrl } from '@/lib/env.public';
 
 /**
@@ -306,5 +306,24 @@ describe('hostSiteUrl', () => {
       }),
     ).toBe('https://sig-reality-spectra.vercel.app');
     expect(hostSiteUrl({})).toBeUndefined();
+  });
+});
+
+describe('withBuildContext', () => {
+  it("gives Netlify's functions the deploy context their build ran in (D-041)", () => {
+    const runtime = { ADMIN_EMAILS: 'a@b.org' };
+    expect(withBuildContext(runtime, 'production')).toEqual({ ...runtime, CONTEXT: 'production' });
+    expect(resolveEnv(withBuildContext(runtime, 'deploy-preview')).env).toMatchObject({
+      DATA_BACKEND: 'netlify-blobs',
+      DATA_NAMESPACE: 'preview',
+    });
+  });
+
+  it('never overrides a context the runtime has, nor invents one locally', () => {
+    expect(withBuildContext({ CONTEXT: 'branch-deploy' }, 'production').CONTEXT).toBe(
+      'branch-deploy',
+    );
+    expect(withBuildContext({}, '')).toEqual({});
+    expect(withBuildContext({}, undefined)).toEqual({});
   });
 });

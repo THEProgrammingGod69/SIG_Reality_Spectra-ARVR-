@@ -87,7 +87,7 @@ later stage needs them. Step-by-step setup: [`SETUP_STORAGE.md`](./SETUP_STORAGE
 | 19  | **Team list**: name, position, photo; core team or secretary (and which domain) — D-027 | Open — `[Demo]` members until supplied; add them in `/admin/team` (D-032)                                                                |
 | 20  | **Roles and responsibilities PDF** and the current **Google Form** link                 | Form link supplied: `https://forms.gle/WoDyL1mwWHnnKFs38`. The PDF shows as "coming soon" until uploaded in `/admin/recruitment` (D-028) |
 | 21  | **Is recruitment open right now?**                                                      | Yes. It is now set only in `/admin/recruitment` (D-032): open it there with the form link when the live data store exists                |
-| 22  | Cloudflare Turnstile site key and secret                                                | Open — the check is off locally; a Netlify deploy without both keys hides the form and lists the channels (D-032)                        |
+| 22  | Cloudflare Turnstile site key and secret                                                | Open — recommended, not required: without both keys the form runs on its honeypot and rate limit (D-041)                                 |
 
 ## Go-live (Stage 10b) — step by step in [`GO_LIVE.md`](./GO_LIVE.md)
 

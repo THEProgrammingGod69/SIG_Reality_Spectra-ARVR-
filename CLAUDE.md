@@ -439,7 +439,7 @@ contributor must know before writing UI:
 | Vercel             | Second host: `DATA_BACKEND=vercel-blob` runs the same Blobs adapters on a private Vercel Blob store; `VERCEL_ENV` maps onto the deploy guards (D-040)           |
 | Images             | Any ratio: posters whole in a 4:5 frame, photos as square centre-cropped tiles, viewer shows them whole; WebP ≤ 2400 px (D-031)                                 |
 | Admin-written text | Plain text as paragraphs (`<Paragraphs>`), never HTML; no Markdown renderer (D-031)                                                                             |
-| Contact form       | Honeypot, Turnstile (fails closed on Netlify without keys), 3 requests/sender/hour in the data layer; no form where it cannot work (D-032)                      |
+| Contact form       | Honeypot, Turnstile when both keys are set, 3 requests/sender/hour in the data layer; no form only where no store exists (D-032, D-041)                         |
 | Recruitment status | Admin-managed only (`recruitment.json` deleted); header button + mobile-menu tag show "open"; no site-wide banner (D-032)                                       |
 | Overlay motion     | Admin sheet/dialogs enter and leave on keyframe tokens (`animate-fade-*`/`-rise-*`/`-slide-*`); `<Tilt>` on team cards (D-033)                                  |
 | Public JavaScript  | Client components never import a schema module (it pulls in zod): pass constants as props, load validation on demand (D-033)                                    |
@@ -467,6 +467,7 @@ contributor must know before writing UI:
 | Event rules        | Registration link optional, published by default, timeline needs only a past end; one-click Put on timeline (D-041)                                             |
 | Cropped images     | `coverSizes()` widens `sizes` by the photo's shape; gallery two columns on phones; Home reel only stills ≥ 960 px on the short side (D-041)                     |
 | Campus map         | Contact embeds VIT Bibwewadi from `contact.json` with an Open in Google Maps button (D-041)                                                                     |
+| Deploy context     | Netlify's CONTEXT exists at build time only; `next.config.ts` bakes it in (`BUILD_CONTEXT`) so the running site picks Blobs and `prod`/`preview` (D-041)        |
 | Header and store   | The header is in the static shell; recruitment's "open" marks stream from a promise (`WhenRecruitmentOpen`), so the menu never waits for data (D-041)           |
 
 ---
