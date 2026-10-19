@@ -13,8 +13,9 @@ test('refuses anyone without the secret', async ({ request }) => {
   expect((await request.post(PATH)).status()).toBe(401);
   const wrong = await request.post(PATH, { headers: { Authorization: 'Bearer not-the-secret' } });
   expect(wrong.status()).toBe(401);
-  // Only POST runs it: a crawler or prefetch can never trigger the job.
-  expect((await request.get(PATH)).status()).toBe(405);
+  // Vercel Cron calls with GET (D-040): a GET needs the same secret, so a
+  // crawler or prefetch can never trigger the job.
+  expect((await request.get(PATH)).status()).toBe(401);
 });
 
 test('backs up every record and sweeps, then reports both', async ({ request }) => {

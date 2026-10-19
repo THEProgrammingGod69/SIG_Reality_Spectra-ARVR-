@@ -3,22 +3,25 @@
 Design-system primitives, built in **Stage 3**. See every one, in every state, at
 `/dev/ui` (development only).
 
-| File              | Exports                                                                                                                   |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| `button.tsx`      | `Button`, `ButtonLink` — primary · secondary · ghost · star; sm · md · lg; icon, loading, external, magnetic              |
-| `card.tsx`        | `Card`, `CardMedia` (fixed ratio), `CardBody`, `CardTitle` (2-line clamp), `CardDescription` (3-line clamp), `CardFooter` |
-| `badge.tsx`       | `Badge` — neutral · accent · success · warning · danger                                                                   |
-| `container.tsx`   | `Container` — `content` (1200px) or `prose` width, page gutter                                                            |
-| `section.tsx`     | `Section` — `py-section` rhythm, labelled landmark, Container                                                             |
-| `heading.tsx`     | `Heading` — level 1–4, size `2xl`–`sm` on the display scale                                                               |
-| `text.tsx`        | `Text` (body sizes and tones), `Eyebrow` (mono uppercase label)                                                           |
-| `field.tsx`       | `Field` (label, hint, error, ARIA wiring), `Input`, `Textarea`, `Select`                                                  |
-| `modal.tsx`       | `Modal` — native `<dialog>`, focus trap, Escape, scroll lock                                                              |
-| `skeleton.tsx`    | `Skeleton` — loading placeholder with a 10% spectrum shimmer                                                              |
-| `empty-state.tsx` | `EmptyState` — every list's "nothing here yet" (rule 9)                                                                   |
-| `icon.tsx`        | `Icon` — Lucide at sm · md · lg, stroke 1.5, decorative unless labelled                                                   |
-| `logo.tsx`        | `BrandMark`, `BrandBadge` — the club logo via `next/image`                                                                |
-| `qr-code.tsx`     | `QrCode` — server-only SVG QR generated from a link, token colours (D-023)                                                |
+| File               | Exports                                                                                                                                                            |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `button.tsx`       | `Button`, `ButtonLink` — primary · secondary · ghost · star; sm · md · lg; icon, loading, external, magnetic                                                       |
+| `card.tsx`         | `Card` (`featured`, `interactive`, `spotlight`), `CardMedia` (fixed ratio), `CardBody`, `CardTitle` (2-line clamp), `CardDescription` (3-line clamp), `CardFooter` |
+| `badge.tsx`        | `Badge` — neutral · accent · success · warning · danger                                                                                                            |
+| `container.tsx`    | `Container` — `content` (1200px) or `prose` width, page gutter                                                                                                     |
+| `section.tsx`      | `Section` — `py-section` rhythm, labelled landmark, Container                                                                                                      |
+| `heading.tsx`      | `Heading` — level 1–4, size `2xl`–`sm` on the display scale                                                                                                        |
+| `text.tsx`         | `Text` (body sizes and tones), `Eyebrow` (mono uppercase label)                                                                                                    |
+| `field.tsx`        | `Field` (label, hint, error, ARIA wiring), `Input`, `Textarea`, `Select`                                                                                           |
+| `modal.tsx`        | `Modal` — native `<dialog>`, focus trap, Escape, scroll lock                                                                                                       |
+| `skeleton.tsx`     | `Skeleton` — loading placeholder with a 10% spectrum shimmer                                                                                                       |
+| `empty-state.tsx`  | `EmptyState` — every list's "nothing here yet" (rule 9)                                                                                                            |
+| `icon.tsx`         | `Icon` — Lucide at sm · md · lg, stroke 1.5, decorative unless labelled                                                                                            |
+| `logo.tsx`         | `BrandMark`, `BrandBadge` — the club logo via `next/image`                                                                                                         |
+| `qr-code.tsx`      | `QrCode` — server-only SVG QR generated from a link, token colours (D-023)                                                                                         |
+| `viewfinder.tsx`   | `Viewfinder` — accent corner brackets around a QR code; static, never over the code (D-037)                                                                        |
+| `lab-backdrop.tsx` | `LabBackdrop` — grid floor, violet light and orbit rings behind an opening; `end` or `center`; `drift` or `portal` with the scroll (D-037, D-038)                  |
+| `hud-corners.tsx`  | `HudCorners` — the HUD's four corner brackets: frames, ticks and lock-ons (D-038)                                                                                  |
 
 Rules:
 

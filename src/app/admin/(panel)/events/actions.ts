@@ -27,3 +27,11 @@ export async function deleteEvent(id: string, expectedUpdatedAt: string) {
     return null;
   });
 }
+
+/** One click from the events list: an ended event goes on the timeline as it is. */
+export async function putOnTimeline(id: string, expectedUpdatedAt: string) {
+  return adminAction(async (admin) => {
+    await repositories().events.update(id, expectedUpdatedAt, { inTimeline: true }, admin.email);
+    return null;
+  });
+}

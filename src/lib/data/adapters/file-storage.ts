@@ -1,7 +1,12 @@
-import { createHmac, timingSafeEqual } from 'node:crypto';
 import { mkdir, readdir, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import { dirname, join, relative, sep } from 'node:path';
 
+import {
+  createHostedUploads,
+  type HostedStorage,
+  isUploadKey,
+  uploadKindOf,
+} from './hosted-uploads';
 import type { ObjectInfo, ObjectStorage } from './types';
 
 /**
@@ -11,7 +16,8 @@ import type { ObjectInfo, ObjectStorage } from './types';
  * It mimics R2 closely enough that the upload flow is the same: `presignPut`
  * returns a signed, expiring URL on the development server's
  * `/api/local-media` route, the browser PUTs the file there, and the route
- * checks the signature before writing (`receive`).
+ * checks the signature, type and size before writing (`receive`, shared with
+ * Netlify Blobs in `hosted-uploads.ts`).
  */
 export function createFileStorage({
   root,
@@ -24,7 +30,7 @@ export function createFileStorage({
   routePath: string;
   /** Signs upload URLs; local mode uses AUTH_SECRET. */
   secret: string;
-}) {
+}): HostedStorage {
   const pathOf = (key: string) => {
     const path = join(root, ...key.split('/'));
     if (key.includes('..') || relative(root, path).startsWith('..')) {
@@ -32,8 +38,6 @@ export function createFileStorage({
     }
     return path;
   };
-  const sign = (key: string, expires: number) =>
-    createHmac('sha256', secret).update(`${key}\n${expires}`).digest('hex');
 
   async function head(key: string): Promise<ObjectInfo | null> {
     try {
@@ -52,27 +56,26 @@ export function createFileStorage({
     await writeFile(`${path}.type`, contentType);
   }
 
+  async function get(key: string): Promise<Uint8Array | null> {
+    return readFile(pathOf(key)).then(
+      (body) => new Uint8Array(body),
+      () => null,
+    );
+  }
+
+  async function remove(key: string) {
+    await rm(pathOf(key), { force: true });
+    await rm(`${pathOf(key)}.type`, { force: true });
+  }
+
+  const uploads = createHostedUploads({ secret, routePath, storage: { put, get, delete: remove } });
+
   const storage: ObjectStorage = {
-    async presignPut(key, expiresInSeconds) {
-      const expires = Date.now() + expiresInSeconds * 1000;
-      const query = new URLSearchParams({
-        expires: String(expires),
-        signature: sign(key, expires),
-      });
-      return `${routePath}/${key}?${query.toString()}`;
-    },
+    presignPut: uploads.presignPut,
     head,
-    async get(key) {
-      return readFile(pathOf(key)).then(
-        (body) => new Uint8Array(body),
-        () => null,
-      );
-    },
+    get,
     put,
-    async delete(key) {
-      await rm(pathOf(key), { force: true });
-      await rm(`${pathOf(key)}.type`, { force: true });
-    },
+    delete: remove,
     async list(prefix) {
       const entries = await readdir(root, { recursive: true, withFileTypes: true }).catch(() => []);
       return entries
@@ -84,28 +87,12 @@ export function createFileStorage({
   };
 
   return Object.assign(storage, {
-    /** An upload the browser PUT to a presigned URL: stored only if the signature holds. */
-    async receive(
-      key: string,
-      { expires, signature }: { expires: string | null; signature: string | null },
-      body: Uint8Array,
-      contentType: string,
-    ): Promise<boolean> {
-      const until = Number(expires);
-      if (!signature || !Number.isFinite(until) || until < Date.now()) return false;
-      const expected = Buffer.from(sign(key, until));
-      const given = Buffer.from(signature);
-      if (expected.length !== given.length || !timingSafeEqual(expected, given)) return false;
-      await put(key, body, contentType);
-      return true;
-    },
-    /** A stored file and its type, for the serving route. */
-    async read(key: string): Promise<{ body: Uint8Array; contentType: string } | null> {
-      const [info, body] = await Promise.all([head(key), storage.get(key)]);
-      if (!info || !body) return null;
-      return { body, contentType: info.contentType ?? 'application/octet-stream' };
+    receive: uploads.receive,
+    async read(key: string) {
+      if (!isUploadKey(key)) return null; // Backups and upload parts are never served.
+      const [info, body] = await Promise.all([head(key), get(key)]);
+      if (!info?.contentType || !body || uploadKindOf(key, info.contentType) === null) return null;
+      return { body, contentType: info.contentType };
     },
   });
 }
-
-export type FileStorage = ReturnType<typeof createFileStorage>;

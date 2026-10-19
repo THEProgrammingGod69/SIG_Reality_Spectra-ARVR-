@@ -8,44 +8,49 @@ bottom; never edit an old one — supersede it with a new entry.
 **Decided by** is either _team_ (the club decided) or _lead_ (the club delegated
 the call and it was made on the reasoning shown).
 
-| ID    | Decision                                                                        | Decided by |
-| ----- | ------------------------------------------------------------------------------- | ---------- |
-| D-001 | Hero direction: **Orbit Lab**                                                   | lead       |
-| D-002 | Fonts: **Space Grotesk · Inter · JetBrains Mono**                               | lead       |
-| D-003 | Caption colour `text-subtle` is **`#797F8D`**                                   | team       |
-| D-004 | Vendored components come from **React Bits only**                               | lead       |
-| D-005 | Gallery shows **event photos and standalone club photos**                       | team       |
-| D-006 | Contact and sponsorship are **one page**                                        | team       |
-| D-007 | No stat counters on Home in v1                                                  | lead       |
-| D-008 | No email: sponsorship requests live in the admin inbox                          | lead       |
-| D-009 | Rule 4 has **no exceptions**; blur/layout-animating effects are rewritten       | lead       |
-| D-010 | The hero has **one WebGL context**, and its name is real text at first paint    | lead       |
-| D-011 | No `ogl`, no second WebGL library                                               | lead       |
-| D-012 | Navigation: PillNav on desktop, StaggeredMenu on mobile                         | lead       |
-| D-013 | Component shortlist and rejections                                              | lead       |
-| D-014 | Repo stays private while vendored React Bits code is inside                     | lead       |
-| D-015 | Style Board colours adopted in Stage 2 ("tokens before hero")                   | lead       |
-| D-016 | MagicRings is ported into the R3F scene, not used as its own canvas             | lead       |
-| D-017 | The static hero still is an inline SVG drawn from tokens, not a WebP            | lead       |
-| D-018 | Hero scroll-out: pinned 150vh on 3D tiers only, handing over dimmed             | lead       |
-| D-019 | Stage 3 additions: Lucide icons and one `cn()` helper                           | lead       |
-| D-020 | Site shell: React Bits nav and effects rebuilt; header overlays the page        | lead       |
-| D-021 | Logo: the original badge ships as raster; the pack's dark badge is rejected     | lead       |
-| D-022 | Rule 4 covers colour: no colour or background transitions                       | lead       |
-| D-023 | Content layer in `src/content`; QR codes generated from the links               | lead       |
-| D-024 | Interim recruitment, honest placeholders, no fake sponsorship form              | team       |
-| D-025 | Hosting on **Netlify**; files in **Cloudflare R2**; Upstash used directly       | team, lead |
-| D-026 | Categories: hackathon · competition · workshop · other                          | team       |
-| D-027 | Team: core + domain secretaries only; no team section on Home                   | team       |
-| D-028 | Recruitment opens with the form alone; the roles PDF is optional                | team       |
-| D-029 | Data layer: one generic repository over two storage ports                       | lead       |
-| D-030 | Admin access: Auth.js beta pinned, development sign-in, reviewed shadcn subset  | team, lead |
-| D-031 | Stage 7: local data mode, any-ratio images, placeholders until real content     | team, lead |
-| D-032 | Stage 8: contact-form spam checks, recruitment moves to the admin panel         | lead       |
-| D-033 | Stage 9: motion polish, performance, accessibility, security headers, analytics | lead       |
-| D-034 | Stage 10a: nightly backup and orphan sweep, restore, WebKit tests, handbook     | lead       |
-| D-035 | Final quality pass: Next.js security update, software-GPU detection, audits     | lead       |
-| D-036 | `DATA_NAMESPACE` follows the Netlify deploy context when unset                  | lead       |
+| ID    | Decision                                                                          | Decided by |
+| ----- | --------------------------------------------------------------------------------- | ---------- |
+| D-001 | Hero direction: **Orbit Lab**                                                     | lead       |
+| D-002 | Fonts: **Space Grotesk · Inter · JetBrains Mono**                                 | lead       |
+| D-003 | Caption colour `text-subtle` is **`#797F8D`**                                     | team       |
+| D-004 | Vendored components come from **React Bits only**                                 | lead       |
+| D-005 | Gallery shows **event photos and standalone club photos**                         | team       |
+| D-006 | Contact and sponsorship are **one page**                                          | team       |
+| D-007 | No stat counters on Home in v1                                                    | lead       |
+| D-008 | No email: sponsorship requests live in the admin inbox                            | lead       |
+| D-009 | Rule 4 has **no exceptions**; blur/layout-animating effects are rewritten         | lead       |
+| D-010 | The hero has **one WebGL context**, and its name is real text at first paint      | lead       |
+| D-011 | No `ogl`, no second WebGL library                                                 | lead       |
+| D-012 | Navigation: PillNav on desktop, StaggeredMenu on mobile                           | lead       |
+| D-013 | Component shortlist and rejections                                                | lead       |
+| D-014 | Repo stays private while vendored React Bits code is inside                       | lead       |
+| D-015 | Style Board colours adopted in Stage 2 ("tokens before hero")                     | lead       |
+| D-016 | MagicRings is ported into the R3F scene, not used as its own canvas               | lead       |
+| D-017 | The static hero still is an inline SVG drawn from tokens, not a WebP              | lead       |
+| D-018 | Hero scroll-out: pinned 150vh on 3D tiers only, handing over dimmed               | lead       |
+| D-019 | Stage 3 additions: Lucide icons and one `cn()` helper                             | lead       |
+| D-020 | Site shell: React Bits nav and effects rebuilt; header overlays the page          | lead       |
+| D-021 | Logo: the original badge ships as raster; the pack's dark badge is rejected       | lead       |
+| D-022 | Rule 4 covers colour: no colour or background transitions                         | lead       |
+| D-023 | Content layer in `src/content`; QR codes generated from the links                 | lead       |
+| D-024 | Interim recruitment, honest placeholders, no fake sponsorship form                | team       |
+| D-025 | Hosting on **Netlify**; files in **Cloudflare R2**; Upstash used directly         | team, lead |
+| D-026 | Categories: hackathon · competition · workshop · other                            | team       |
+| D-027 | Team: core + domain secretaries only; no team section on Home                     | team       |
+| D-028 | Recruitment opens with the form alone; the roles PDF is optional                  | team       |
+| D-029 | Data layer: one generic repository over two storage ports                         | lead       |
+| D-030 | Admin access: Auth.js beta pinned, development sign-in, reviewed shadcn subset    | team, lead |
+| D-031 | Stage 7: local data mode, any-ratio images, placeholders until real content       | team, lead |
+| D-032 | Stage 8: contact-form spam checks, recruitment moves to the admin panel           | lead       |
+| D-033 | Stage 9: motion polish, performance, accessibility, security headers, analytics   | lead       |
+| D-034 | Stage 10a: nightly backup and orphan sweep, restore, WebKit tests, handbook       | lead       |
+| D-035 | Final quality pass: Next.js security update, software-GPU detection, audits       | lead       |
+| D-036 | `DATA_NAMESPACE` follows the Netlify deploy context when unset                    | lead       |
+| D-037 | Premium pass: React Bits effects rebuilt, the lab on every page                   | lead       |
+| D-038 | The XR HUD: a motion language of its own, on every page                           | lead       |
+| D-039 | Club archive, password sign-in, footer admin link, Netlify Blobs                  | team       |
+| D-040 | Vercel as a second host, on a private Vercel Blob store                           | team       |
+| D-041 | A site that sets itself up: forgiving settings, a lean proxy, simpler admin rules | team       |
 
 ---
 
@@ -204,6 +209,9 @@ lazy-loaded hero chunk. The same moods are achievable in the R3F scene. A future
 exception needs a new decision.
 
 ## D-012 — Navigation: PillNav on desktop, StaggeredMenu on mobile
+
+> **Superseded by D-038** (the HUD rail on desktop, the aperture menu on
+> mobile). Dock stays dropped, for the reason below.
 
 **Choice.** Desktop uses PillNav, patched to remove its `react-router-dom`
 dependency in favour of `next/link` and `usePathname`. Mobile uses StaggeredMenu.
@@ -659,7 +667,8 @@ built and tested on placeholders, as in D-031.
   keyed by a hash of the sender's address, so no IP address is stored. On
   Netlify the address comes from `x-nf-client-connection-ip`, which Netlify
   sets and a visitor cannot forge.
-- **Turnstile fails closed.** With both keys it is on; with neither, it is off
+- **Turnstile fails closed** (superseded by D-041: without both keys the form
+  runs on its honeypot and rate limit). With both keys it is on; with neither, it is off
   only off Netlify (a developer's computer, the tests); a Netlify deploy
   without both keys, or any environment with just one, does not offer the
   form — Contact shows the club's channels instead, as D-024 required of a
@@ -871,3 +880,436 @@ previews can never write live data and production never runs on a test copy.
 Upstash, R2, Google sign-in and Turnstile are set it is an honest shell: the
 data sections show their "could not load" state, the contact form is
 replaced by the channels list, and `/admin` cannot be signed into.
+
+## D-037 — Premium pass: React Bits effects rebuilt, the lab on every page
+
+**Context.** After Stage 10a a premium pass was requested: more motion and
+a stronger sense of place on every page, with React Bits as the inspiration.
+Its site, reactbits.dev, is not reachable from the build environment, so the
+components were read from React Bits' public GitHub repository instead.
+The permanent rules were kept exactly: nothing here is an exception to rule 4
+(D-009) or to the React Bits review rules (CLAUDE.md §12).
+
+**What was rebuilt from React Bits, and how it differs.**
+
+| React Bits     | Ours                                     | What changed                                                                                                                                                         |
+| -------------- | ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| SplitText      | `motion/split-text.tsx`                  | No GSAP SplitText plugin: words are real text in line masks, rising by `transform` only. `play="load"` is pure CSS (page titles); `play="scroll"` uses ScrollTrigger |
+| ScrollReveal   | `motion/scroll-words.tsx`                | `filter: blur()` dropped; `opacity` only; scrubbed by scroll; reverts only its own tween (ScrollReveal killed every ScrollTrigger)                                   |
+| SpotlightCard  | `motion/spotlight.tsx`, `Card spotlight` | Repainted a `radial-gradient` background per move; ours moves fixed-size lights with `transform`, fades with `opacity`; mouse only; adds a rim light on the edge     |
+| ScrollVelocity | `motion/marquee.tsx`                     | Scrubbed by the scroll position (`xPercent`), not a velocity-driven per-frame loop: nothing moves while the page is still (WCAG 2.2.2); still under reduced motion   |
+| GlareHover     | `Button` primary glare                   | A skewed band moved with `transform` behind the label, instead of an animated `background-position`                                                                  |
+
+**New in-house pieces.** `ScrollProgress` (header hairline, `scaleX`),
+`TimelineRail` (the events rail fills with `scaleY`, markers light with
+opacity/scale), `LabBackdrop` (grid floor, violet light, orbit rings — the hero
+motif on every page intro, the Home call to action, the map placeholder and the
+404), `FilmGrain` (a static noise tile from `md` up), `Viewfinder` (corner
+brackets around QR codes), `SectionHeading` (eyebrow + rising title + lead +
+action, one pattern for every section), `DomainTicker` and `HomeCta` on Home.
+
+**Lead calls.**
+
+- **Page titles rise in CSS, not JavaScript.** `SplitText play="load"` and the
+  `animate-intro-in` lead are keyframes that run from the first paint and on
+  every client navigation (the template remounts the page). Words are clipped by
+  their mask rather than faded, and the lead fades from the first frame with no
+  delay, so the largest paint is not held back. The hero name is untouched: it
+  keeps D-010.
+- **Delays are stagger multiples.** Every CSS delay is
+  `calc(var(--stagger) * n)`, so it collapses with the stagger under reduced
+  motion, where the global rule also ends every animation at once.
+- **Trigger points the reader can reach** (`lib/motion/scroll-point.ts`). A
+  `'top 85%'` start near the end of a short page can lie past the furthest the
+  page scrolls; the footer wordmark on a phone never appeared. Every
+  ScrollTrigger start/end in the motion primitives is now a scroll position
+  clamped to the page's maximum scroll. This also fixes the same latent issue
+  for `<Reveal>` and `<Stagger>`.
+- **Triggers are re-measured when the page changes under them**
+  (`motion/scroll-refresh.tsx`, in the site layout). ScrollTrigger measures on
+  load and resize only, but the footer's triggers outlive a client navigation
+  and Suspense sections stream in after the shell; either could leave a trigger
+  starting past the new page's end. `ScrollRefresh` re-measures after every
+  route change and whenever the document's height settles at a new value.
+- **Nothing on screen at load flashes**: timeline markers already in view when
+  the rail arms stay lit; only those below the fold wait for the reader.
+- **Marquee copies always outrun the band**: short lists repeat within each
+  copy (`minItems`) and a copy is at least a screen wide, so the band never
+  shows an empty stretch, even on a very wide display.
+- **Nothing moves on its own for more than 5 seconds (WCAG 2.2.2).** The
+  domain ticker first ran as an endless CSS loop, which needs a pause control;
+  it is scroll-linked instead (as React Bits' ScrollVelocity is), so it moves
+  only while the reader scrolls. The backdrop's rings and light settle into
+  place once as a page opens (`--dur-settle`, 4.8 s), and the recruitment
+  status light and the hero's scroll cue play twice, then rest. (The Stage 3
+  StarBorder on "Apply now" and the hero scene are older and unchanged.)
+- **The hero pin is measured first** (`refreshPriority: 1`). It is created
+  once the device tier is known — after every other trigger on Home — but its
+  150vh of spacing moves all of them; refreshed last, every Home entrance
+  fired about 150vh early for visitors who get the 3D hero, off screen.
+- **Only the upper end of a trigger point is clamped**: a point already
+  passed, or a page that no longer scrolls (a taller window), fires on the
+  next refresh instead of leaving content hidden.
+- **Contrast in every state.** The hollow numerals' stroke is the caption
+  colour (axe counts a stroke of 0.03em or more as the text colour, and phone
+  sizes reach it); a ScrollWords word waiting to be read is at 45% (≥ 3.9:1 for
+  its large type, even on the violet glow), and a paragraph seen whole is fully
+  lit; the spotlight is softer (10%) and captions inside lit cards use the muted
+  tone; the map placeholder's text is body tone over the backdrop's light.
+- **`HashTarget` tolerates a mangled link** (`#%` no longer throws) and clears
+  the mark when a same-page navigation drops the fragment (Navigation API's
+  `currententrychange`, where available).
+- **`:target` after a client navigation** (`site/hash-target.tsx`): Next.js
+  navigates with `pushState`, which never sets `:target`, so `HashTarget`
+  marks the element the fragment names with `data-targeted`.
+- **Inner page intros run under the header** (`data-full-bleed`, as the hero
+  does), so their backdrop reaches the top of the screen.
+- **Home** gains the domain ticker (decorative, `aria-hidden`: the overview
+  below lists every domain as linked text), and each domain name links to its
+  card on /recruitment, which is outlined on arrival. The closing call to action
+  says nothing about whether recruitment is open, so it is never wrong.
+- **Events**: the soonest event spans the row from `lg` (poster beside its
+  details), so one event no longer sits alone in a third of the row.
+- **Gallery**: the newest photo leads as a double tile from `md`
+  (`grid-flow-dense`, still square, D-031). Tiles enter after a filter change or
+  "Show more" only; the first load shows every tile at once (the first tile is
+  still the preloaded largest paint). Captions rise on hover and keyboard focus
+  and are `aria-hidden` (the button is named by the photo's alt text). The
+  lead tile takes four cells, so the first batch is 27 photos (D-035's 30
+  cells), keeping whole rows at 3, 5 and 6 columns; later batches stay 30.
+- **New tokens** in `globals.css`: `--text-display-3xl`, `--grid-cell`,
+  `--spotlight-size`, `--grain-strength`, `--z-grain`, `--dur-settle`,
+  `--motion-word-drop`, `--motion-word-tilt`, `--motion-dim`, the keyframe
+  tokens `animate-word-rise`, `-intro-in`, `-enter`, `-orbit`, `-ping-soft`,
+  `-scroll-cue`, `-drift`, and the
+  static utilities `word-mask`, `text-spectra`, `text-outline`, `bg-lab-grid`,
+  `bg-grain`, `mask-rim`.
+
+**Not done, on purpose.** No new pages (the six-page sitemap is the
+contract), no stat counters (D-007), no text scramble/decrypt effects (they
+change text every frame), no custom cursor, no second WebGL context, and no
+new dependency.
+
+## D-038 — The XR HUD: a motion language of its own, on every page
+
+**Context.** After D-037 the club asked for far more motion, and for it to stop
+looking like every other site: "generic animations and a generic navigation
+bar". The brief stays the club's own — _cinematic, realistic XR lab, not gaming
+neon_ — so the answer is one idea carried everywhere, not a pile of effects:
+**the site seen through the lab's headset.** A heads-up display marks what is
+in reach with corner brackets that lock on, readouts decode as they come
+online, a line of light scans a scene once, pages change behind a shutter, and
+the lab has depth that answers the scroll. The club's Instagram
+(`@sig_realityspectra`) could not be read — it shows only a login wall to
+tools, through a scraper too — so the tone comes from the club's existing copy
+and VIT's public description of the club (an AR/VR hub for immersive R&D).
+Every permanent rule holds exactly as before; nothing here is an exception to
+rule 4 (D-009), and React Bits remains the only source (D-004).
+
+**What was rebuilt from React Bits, and how it differs.**
+
+| React Bits              | Ours                                       | What changed                                                                                                                                                                                                    |
+| ----------------------- | ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| DecryptedText           | `motion/decode-text.tsx`                   | The real text never leaves the DOM (made transparent while a decode runs); glyphs play in an `aria-hidden` copy over it, written directly, no re-render per frame; once per trigger; never under reduced motion |
+| TargetCursor            | `site/reticle-cursor.tsx`                  | Keeps the system cursor; no endless spin (WCAG 2.2.2); corners eased toward their goal on `--dur-micro` and the loop stops when they arrive; mouse only; never under reduced motion                             |
+| ScrollFloat             | `motion/scroll-float.tsx`                  | Same pose (below, stretched tall and narrow); scrubbed between reachable trigger points; decorative only (the footer wordmark)                                                                                  |
+| ScrollStack             | `motion/stack.tsx`                         | CSS `position: sticky` does the stacking; one scrubbed tween per panel on the site's ScrollTrigger instead of its own per-frame loop and Lenis instance; a scrim darkens the panel behind (opacity, not filter) |
+| ProfileCard             | `motion/holo-foil.tsx` + the access pass   | One oversized foil band moved with `transform` and faded with `opacity`, instead of rewriting `background-position` and a dozen CSS variables per move                                                          |
+| LightRays / Beams (ogl) | `three/spectral-field/` + `IntroField`     | Written fresh for three.js (no `ogl`, D-011); time advances only while the page settles and while the visitor moves, so it is still otherwise; high device tier only                                            |
+| StaggeredMenu           | `site/mobile-menu.tsx` (the aperture)      | The sweeping colour layers became five shutter slats closing from the centre out; a line of light scans down once; every behaviour of D-012's rebuild kept (focus, trap, Escape, inert page, scroll lock)       |
+| PillNav                 | `site/hud-nav.tsx` (in-house, replaces it) | A HUD rail: numbered mono readouts, a lock-on frame of two bracket pairs that glides between links (`translateX`, the leading pair first) and a spectrum hairline (`scaleX`), and a live scroll readout         |
+
+**New in-house pieces.** `HudCorners` (the one bracket shape behind the hero
+frame, the rail's ticks, the menu toggle, the reticle and every lock-on),
+`Parallax` (decoration that drifts, turns or opens like a portal with the
+scroll), the page-change shutter (`site/page-transition.tsx`), `HeroHud` (the
+hero's display frame, depth ruler, one scan and two readouts), `DomainRail`
+(Home's domains as a horizontal rail), the team access passes, the gallery's
+`focus-dim` and curtain develop, and lock-on frames on the featured event
+poster, the recruitment domain cards, the open recruitment card and the
+contact form.
+
+**Lead calls.**
+
+- **Navigation is the HUD, not a pill.** Desktop links are numbered mono
+  readouts in a glass strip with its own corner ticks; a lock-on frame rests
+  on the current page and glides to whatever the pointer or keyboard is on.
+  Links keep plain names (the numbers and decoding copies are `aria-hidden`),
+  and the Recruitment button's text is still exactly "Recruitment".
+- **Text that decodes stays text.** D-037 left scramble effects out because
+  they change text every frame. `DecodeText` makes that safe: the real text is
+  always in the DOM and only made transparent while an `aria-hidden` copy plays
+  over it, on mono type (no reflow), once per trigger, never under reduced
+  motion. It is used on eyebrows, the rail's labels, panel labels and dates —
+  short labels only, never body copy or headings.
+- **A reticle, not a custom cursor.** The system cursor is never hidden; the
+  reticle only marks targets (links, buttons, fields) and folds away between
+  them. It never takes a click, is `aria-hidden`, and does not exist on touch
+  screens or under reduced motion.
+- **Pages change behind a shutter** of five surface-coloured slats under the
+  header, which stays put as a headset's display would. It plays only on client
+  navigations (the first paint is never covered, D-010), is CSS keyframes
+  (`animate-shutter`, `-shutter-label`; no animation library, D-033), never
+  takes a click, unmounts when done, and is absent under reduced motion. Its
+  slats and label rest invisible (`backwards` fill), so a stylesheet that
+  disables animations can never leave the page covered.
+- **The Home rail holds still with `position: sticky`, not a GSAP pin**: the
+  section is made as tall as the travel plus a screen, so nothing in the DOM
+  is moved and no pin competes with the hero's (`refreshPriority`, D-037).
+  The rail runs from `md` on screens at least 40rem tall, with JavaScript,
+  without reduced motion; elsewhere (a phone on its side included) the same
+  links are a grid. Its frame is `overflow-x: clip`, so the browser
+  can never scroll it sideways; a panel reached by keyboard scrolls the page
+  to where that panel is in view instead. Panels lean with the scroll's speed
+  and straighten when it stops (`skewX`, eased back on a token).
+- **Stacked panels compute their own trigger points.** A stuck element reports
+  where it is stuck, not where it sits in the flow, so `Stack` measures from
+  the list's top and the panels' heights, clamped to the maximum scroll like
+  `reachablePoint`. It stacks only from `md`, on screens at least 40rem tall,
+  without reduced motion (the `stack:` variant); elsewhere a plain list. A
+  panel steps back only once the next one starts to cover it, so a panel in
+  full view is never dimmed.
+- **One WebGL context per page still.** Home keeps the hero's; each inner page
+  may now have one — the Spectral Field behind its opening — loaded only for
+  the high device tier (`useHeroTier`), so phones, weaker devices, software
+  WebGL and reduced motion keep the static lab, which is always drawn beneath.
+  It renders below the device ratio, stops when off screen, and moves only
+  while the page settles or the visitor moves. The settle is counted from the
+  intro's mount, not the canvas's first frame, so a slow chunk shortens it and
+  never stretches the page's motion past `--dur-settle`.
+- **Nothing moves on its own for more than 5 seconds** (WCAG 2.2.2): the scan,
+  the lock-ons, the shutter and the field's settle all end; everything else
+  follows the reader's scroll or pointer.
+- **Decoration is decoration.** Every new layer is `aria-hidden` with no pointer
+  events, and none of them carries content: the motto and the realities in the
+  hero HUD are readouts of things the page says in words, and the pass's tier,
+  serial and barcode are ornaments around the member's real name, position and
+  domain.
+- **Gallery focus.** While one tile is hovered or focused, the others dim to
+  `--motion-focus-dim` (opacity, and still ≥ 4.5:1 for the "+N" count); tiles
+  below the fold develop from under a curtain (`scaleY`) as the reader reaches
+  them. Tiles on screen at load, tiles that arrive with their own entrance and
+  everything under reduced motion are never covered.
+- **Transitions never fight scripted transforms.** Where GSAP owns an
+  element's `transform` (the rail numerals, the developing photos), hover
+  zooms use the separate `scale` property with `transition-[scale]`, so the
+  scrub is not re-eased.
+- **New tokens** in `globals.css`: `--z-shutter`, `--z-cursor`,
+  `--scanline-gap`, `--reticle-size`, `--reticle-reach`, `--rail-panel`,
+  `--rail-panel-height`, `--stack-step`, `--stack-hold`, `--text-numeral`, `--motion-depth`,
+  `--motion-turn`, `--motion-portal`, `--motion-shelve`, `--motion-lean`,
+  `--motion-focus-dim`, the keyframe tokens `animate-shutter`,
+  `-shutter-label`, `-scan`, `-lock-on`, the static utilities `bg-scanlines`,
+  `bg-holo`, `hud-corner`, `focus-dim`, and the variants `rail:` and `stack:`.
+  `siteConfig.realities` (AR · VR · XR) and each team tier's `pass` label are
+  structural constants.
+
+**Not done, on purpose.** No new pages (the six-page sitemap is the contract),
+no preloader or boot screen in front of content, no hidden system cursor, no
+sound, no endless loops, no stat counters (D-007), and no new dependency.
+
+---
+
+## D-039 — The club's archive, password sign-in, a footer way in, and Netlify Blobs
+
+**Decided by:** team (the club asked for the archive, the password, the two
+admins and the footer link); lead for how each is built.
+
+**Context.** The club supplied its first real media — the Hackathons and
+Workshops folders (Tesseract'26, the club's 24-hour hackathon, and the Level 1
+Unity workshop of October–November 2025: 11 photos and 13 short clips) — and
+asked for four things at once: put them in the gallery, make the admin side
+fully functional, give two people admin access with a password, and put a small
+admin button in the footer. The live Netlify site (`sigarvr`) has no data store
+connected (OPEN_ITEMS #9, #10), so on the live site every admin save failed.
+Each answer below is the smallest change that makes that work without breaking
+an earlier decision silently; where one is broken, it says so.
+
+**1. The club archive is Git content, a third gallery source.** The media lives
+in `public/archive/` (photos as WebP ≤ 2000 px with EXIF and location stripped;
+clips as H.264 MP4 with fast start, baked-in letterbox bars cropped, ≤ 1280 px,
+each with a WebP poster at its best frame) and is described by
+`src/content/archive.json`, validated at build time like the other content files
+(D-023) by `schemas/archive.ts`. The gallery shows it with the admin's photos and
+the timeline events' photos, newest first, filtered by the same categories
+(D-026). Why Git and not records: the archive must show on every deploy —
+including the current one with no data store — and it is history, not news.
+Admins see it read-only in `/admin/gallery`; changing it is a Git change
+(handbook). Captions credit the photographer's watermark (VCLICK Multimedia
+Prod.). Dates are the files' own (EXIF, or the share date for WhatsApp copies),
+never invented. _Supersedes D-031's "photos only" for the archive; uploads
+stay photos._
+
+**2. Clips in the gallery.** A clip is a square poster tile like any photo
+(D-031) with a play badge and its length; the button reads "<alt> (video, 0:07)".
+A muted preview plays only while a mouse hovers it (user-initiated, WCAG 2.2.2)
+and never under reduced motion; nothing autoplays. The viewer plays it with
+native controls (no player library). The newest _photo_ leads the grid — a
+clip's small poster never fills the double tile.
+
+**3. Password sign-in.** An Auth.js Credentials provider (`password`) for the
+allowlisted emails with a password from `ADMIN_PASSWORD` — env only, never in
+code. Google and the development sign-in are unchanged; the allowlist is still
+re-checked on every request (D-030's three locks). Hardening: constant-time
+comparison; at most 10 attempts per 15 minutes per IP and 20 per email, counted
+in the data layer (hashed keys) with an in-memory fallback; one message for a
+wrong password and a non-admin; changing the password ends every password
+session (a fingerprint in the token). The Setup card warns while the password is
+weak. **The club chose a short password; it works, the dashboard says it is
+weak, and changing it is one Netlify variable.** _Amends D-030._
+
+**4. A footer link to the sign-in page.** A small "Admin" link in the footer's
+bottom row (`rel="nofollow"`, no prefetch, ≥ 24 px target). Admin routes stay
+`noindex, nofollow`, disallowed in `robots.txt` and out of the sitemap; the
+proxy and every action still guard them. _Supersedes rule 6's "links to /admin
+from nowhere"_: the e2e test now asserts exactly one admin link per page, in the
+footer, `nofollow`, never in the header.
+
+**5. Netlify Blobs as a data backend.** `DATA_BACKEND=netlify-blobs` implements
+the two ports (D-029) on Netlify's built-in Blobs storage, and is the default on
+Netlify when no Upstash variables are set — so the admin panel works on the
+club's existing site with no new account. Records: one JSON snapshot per
+namespace and collection, written with compare-and-swap on the blob's etag
+(every write is still all-or-nothing and version-checked). Files: blobs served
+through the same signed-upload route as local mode, uploaded in ≤ 4 MiB parts
+(Netlify Functions cap request bodies), type- and size-checked on arrival.
+Upstash + R2 stay the documented production backend (D-025) and switching is
+one variable. _Extends the locked stack; recorded here because CLAUDE.md §2 says
+to raise it, and the club asked for it to work now._
+
+**6. Integrating `main`.** Srushti's "Who we are" section (d3151b2) is merged:
+its "About Reality Spectra" card is a `Card spotlight` in `Tilt` with its copy in
+`site.json`; the split-flap heading maps to `DecodeText` on the eyebrow
+(headings stay real text, D-038); Magic Bento stays rejected (D-013); npm and
+yarn lockfiles are ignored (pnpm only).
+
+**7. More motion, same contract.** Home gains "Moments from the lab": the
+archive on a CSS-3D cylinder that turns with the scroll and leans toward the
+pointer (inspired by React Bits' CircularGallery, which needs `ogl`, D-011) —
+a scroll-snap strip on phones and under reduced motion. Gallery filters animate
+with GSAP Flip (transform only). Everything stays inside rule 4, the tokens and
+WCAG 2.2.2.
+
+**Not done, on purpose.** No new pages; no autoplaying video; no password in
+the repository; the Upstash/R2 path is not removed; the club's Instagram was
+still unreadable by tools.
+
+---
+
+## D-040 — Vercel as a second host, on a private Vercel Blob store
+
+**Decided by:** team (the club asked for a Vercel deployment with its
+variables); lead for how.
+
+**Context.** On Netlify the admin panel showed "Data store not connected": the
+check for Netlify Blobs read `process.env`, while Netlify passes the
+credentials through its own `Netlify.env`. Deploy previews also carry
+Netlify's review drawer. The club asked for the site on Vercel as well.
+
+**Decisions.**
+
+1. **Netlify Blobs is detected the SDK's way:** by opening a store, which
+   throws without credentials. Stores are opened per use, never kept past an
+   invocation. Public reads on Netlify Blobs wait for a request instead of
+   baking the build's empty state into the page; the header's recruitment
+   read has its own Suspense boundary for that.
+2. **`DATA_BACKEND=vercel-blob`** runs the same two Blobs adapters (D-039) on a
+   _private_ Vercel Blob store, through `adapters/vercel-blob.ts`: `ifMatch`
+   is the compare-and-swap, a create refuses an existing pathname, reads skip
+   the CDN (`useCache: false`), and files reach visitors through
+   `/api/local-media` like Netlify's. It is the default on a Vercel deploy
+   without Upstash, and needs only the store's `BLOB_READ_WRITE_TOKEN`, which
+   Vercel adds when the store is connected to the project.
+3. **One set of guards for both hosts.** `VERCEL_ENV` maps onto Netlify's
+   contexts (`preview` → `deploy-preview`), so the development sign-in and
+   local data stay refused, and `DATA_NAMESPACE` defaults to `prod` /
+   `preview` the same way. Vercel Cron calls the nightly job with GET and the
+   same Bearer secret (`vercel.json`).
+4. **Netlify stays the documented host** (D-025); Vercel is a second home the
+   club can use or drop. Switching to Upstash + R2 later is still one set of
+   variables on either host.
+
+**Not done, on purpose.** The Vercel project's preview toolbar and Vercel's
+login wall on the production URL are switched off; previews stay behind
+Vercel login. Netlify's drawer is a Netlify setting (Site configuration →
+Build & deploy → Deploy Previews → Netlify Drawer), not code.
+
+## D-041 — A site that sets itself up: forgiving settings, a lean proxy, simpler admin rules
+
+**Decided by:** team (the club asked for a data store that needs no manual
+work, admin tools without restrictions, sharp images on phones and a campus
+map); lead for how.
+
+**Context.** The Netlify deploy preview failed to build: the `/admin` proxy
+imported the full Auth.js setup, which pulled the whole data layer and the
+storage SDKs (`undici` among them) into Netlify's edge bundle. A setting typed
+with quotes or a stray space, or one left over from local development, failed
+the whole site instead of only the feature that needed it. On Vercel the
+admin said "Data store not connected" with no next step. Admins could not put
+an event on the timeline without photos, nor publish one without a
+registration link. On a phone, square gallery tiles and reel cards fetched
+files too small for their crop.
+
+**Decisions.**
+
+1. **The proxy reads the session and nothing else.** `auth/base.ts` holds the
+   session settings both sides share; `auth/proxy-auth.ts` is Auth.js with no
+   providers (it only decodes the JWT); `auth/session-check.ts` re-checks the
+   allowlist and password fingerprint. The full setup (`auth/config.ts`, with
+   the sign-in rate limit in the data layer) is reached only by the sign-in
+   routes and server code. `tests/unit/proxy-imports.test.ts` walks the
+   proxy's import graph and fails if the data layer or a storage SDK is ever
+   reachable from it again.
+2. **Settings correct themselves instead of failing the site.** `resolveEnv()`
+   trims values and strips one pair of surrounding quotes, keeps the valid
+   addresses in `ADMIN_EMAILS`, and drops what cannot apply on a deploy
+   (`AUTH_DEV_SIGN_IN`, `DATA_BACKEND=local`, a `DATA_NAMESPACE` that breaks
+   the production/preview split) or is malformed — each with a warning. The
+   warnings are logged and listed on the dashboard's Setup card; the login
+   page names the sign-in settings still missing. The strict schema and its
+   guards are unchanged: only what passes them is used.
+3. **The data store needs no setup on Netlify.** Netlify Blobs is built in.
+   Its compare-and-swap also works when a read reports no etag: it writes
+   without a condition, re-reads and checks its own write id, and retries on
+   a lost race. On Vercel one Blob store must be connected once (the API
+   refuses to create it on the club's behalf); the "not connected" notice
+   names the exact clicks for the host it runs on. `GET /api/health` says
+   which store a deployment uses and whether it answers, without any data.
+4. **Fewer event rules.** A registration link is optional (no link, no
+   Register button); new events are published by default; an event can go on
+   the timeline as soon as it has ended, with or without photos. The ended
+   list has a one-click **Put on timeline**. The timeline still requires an
+   ended event, so the cached gallery never shows a running event's photos.
+5. **Images are fetched for their crop.** `coverSizes()` widens `sizes` by
+   how much wider a photo is than its frame, so a 16:9 photo in a square tile
+   fills it sharply on a DPR-3 phone. The gallery is two columns on phones.
+   The Home reel shows only stills sharp enough for a card (short side ≥ 960
+   px); phone-video clip posters stay in the gallery. Team photos crop from
+   the top, so faces stay in frame.
+6. **Contact shows the campus.** The address and a Google Maps embed of VIT
+   Bibwewadi (`contact.json`), with an "Open in Google Maps" button under the
+   map for directions on a phone.
+7. **The header never waits for the store.** It is part of the static shell
+   again and receives whether recruitment is open as a promise; only the
+   "open" marks stream in (`WhenRecruitmentOpen`). Behind a whole-header
+   Suspense boundary, the phone menu could not be tapped until the data store
+   answered. Footer links carry their spacing as padding, so each row is a
+   full-height tap target.
+8. **The running site knows which deploy it is.** Netlify sets `CONTEXT` for
+   the build only; its functions never see it, so a live Netlify site took
+   itself for a developer's computer — it looked for Upstash ("Data store not
+   connected") and would have used the `dev` namespace for production and
+   previews alike. `next.config.ts` now bakes the build's context and address
+   in (`BUILD_CONTEXT`, `BUILD_SITE_URL`); `withBuildContext()` hands them to
+   the environment, so Netlify Blobs, `prod`/`preview` and the guards hold at
+   runtime too. `/api/health` was how this was found.
+9. **The contact form needs no Cloudflare account.** Turnstile is on when both
+   keys are set; otherwise the form runs with its honeypot and the per-sender
+   rate limit, and the Setup card lists Turnstile as not set. This supersedes
+   D-032's "fails closed": with the deploy context restored, a deploy without
+   keys would have hidden the club's only contact form.
+
+**Not done, on purpose.** No database outside the hosts' own blob stores: one
+fewer account to hand over each year, and Upstash + R2 remain one set of
+variables away (D-025). Events cannot be ticked onto the timeline before they
+end; that would move the "now" decision into the cached gallery read.

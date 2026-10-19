@@ -22,7 +22,7 @@ their reasons, are in [`DECISIONS.md`](./DECISIONS.md).
 | `/recruitment` | The club's domains, always visible · Google Form link while recruitment is open, plus the roles PDF once uploaded   |
 | `/contact`     | Contact details · sponsorship/collaboration request form                                                            |
 
-**Admin side — five tools, Google sign-in with an allowlist**
+**Admin side — five tools, password or Google sign-in with an allowlist (D-039)**
 
 | Page                  | Content                                                                                                                     |
 | --------------------- | --------------------------------------------------------------------------------------------------------------------------- |
@@ -42,7 +42,7 @@ requests, recruitment status) and `/admin/login` is the sign-in page.
 ```mermaid
 flowchart TB
   V["Visitors<br/>no login"] --> EDGE
-  A["Admins<br/>2–3 allowlisted Google accounts"] --> EDGE
+  A["Admins<br/>2–3 allowlisted emails"] --> EDGE
   G["Maintainers<br/>edit src/content in Git"] -. push → build .-> EDGE
 
   EDGE["Netlify · CDN · HTTPS"]
@@ -72,6 +72,7 @@ flowchart TB
 
   REPO --> REDIS[("Upstash Redis<br/>events · gallery · team · recruitment · sponsorships")]
   REPO --> R2[("Cloudflare R2<br/>event, gallery and team photos · roles PDF · backups")]
+  REPO -. "until Upstash/R2 exist (D-039)" .-> BLOBS[("Netlify Blobs<br/>the same records and files")]
   ADM -. direct PUT to a presigned URL .-> R2
 
   PUB -. verify .-> TURN["Cloudflare Turnstile"]
@@ -157,9 +158,11 @@ erDiagram
   }
 ```
 
-The gallery page shows two sources together, grouped by category and newest
-first: the photos of events on the timeline (category taken from the event) and
-standalone `GALLERY_PHOTO` records. Events and gallery photos share one `Category`
+The gallery page shows three sources together, grouped by category and newest
+first: the photos of events on the timeline (category taken from the event),
+standalone `GALLERY_PHOTO` records, and the club archive — photos and clips
+committed in `public/archive/` and described by `src/content/archive.json`
+(D-039), which shows even when no data store is reachable. Events and gallery photos share one `Category`
 enum — hackathon, competition, workshop, other (D-026) — so the filters mean
 the same thing for both. Standalone photos can grow without limit, so the page
 renders the first batch and loads more on request, with blur placeholders and
@@ -302,15 +305,15 @@ member or the recruitment settings as live.
 
 ## 7. Security
 
-| Layer          | Control                                                                                                                                                           |
-| -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Public surface | No links to `/admin` · `noindex` on admin · `robots.txt` disallows `/admin` and `/api/` · CSP and security headers                                                |
-| Identity       | Google sign-in via Auth.js · `ADMIN_EMAILS` allowlist, re-checked on every request · 8-hour JWT sessions · no user table · local-only development sign-in (D-030) |
-| Route guard    | `proxy.ts` sends `/admin/*` without a session to `/admin/login`, returning only to `/admin` paths; the panel layout checks again                                  |
-| Action guard   | Every admin Server Action runs inside `adminAction()`, which re-checks the session; the upload route checks it too (401) and refuses cross-site requests          |
-| Public form    | Honeypot · Cloudflare Turnstile (fails closed on Netlify without keys) · Zod · 3 requests per sender per hour, hashed address, in the data layer (D-032)          |
-| Data           | Zod on every write and read · stale-write rejection · server-only env module                                                                                      |
-| Scheduled job  | `/api/cron/nightly` accepts only `Authorization: Bearer $CRON_SECRET`                                                                                             |
+| Layer          | Control                                                                                                                                                                                                        |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Public surface | One nofollow footer link to `/admin/login` (D-039) · `noindex` on admin · `robots.txt` disallows `/admin` and `/api/` · CSP and security headers                                                               |
+| Identity       | Password (`ADMIN_PASSWORD`, rate-limited) or Google sign-in via Auth.js · `ADMIN_EMAILS` allowlist, re-checked on every request · 8-hour JWT sessions · no user table · local-only development sign-in (D-030) |
+| Route guard    | `proxy.ts` sends `/admin/*` without a session to `/admin/login`, returning only to `/admin` paths; the panel layout checks again                                                                               |
+| Action guard   | Every admin Server Action runs inside `adminAction()`, which re-checks the session; the upload route checks it too (401) and refuses cross-site requests                                                       |
+| Public form    | Honeypot · Cloudflare Turnstile (when both keys are set, D-041) · Zod · 3 requests per sender per hour, hashed address, in the data layer (D-032)                                                              |
+| Data           | Zod on every write and read · stale-write rejection · server-only env module                                                                                                                                   |
+| Scheduled job  | `/api/cron/nightly` accepts only `Authorization: Bearer $CRON_SECRET`                                                                                                                                          |
 
 Sponsorship requests are stored and read in the admin panel only. There is no
 email integration, so there is no mail provider account, sending domain or
@@ -329,8 +332,9 @@ delivery failure to handle; the dashboard shows a "new requests" count instead.
 
 One Upstash database and one R2 bucket serve every environment; the namespace
 prefixes every Redis key (`sig:{ns}:…`) and R2 object (`{ns}/…`). Netlify
-sets `CONTEXT` on each build, and the build fails if production is not
-`prod` or a preview is.
+sets `CONTEXT` on each build; a `DATA_NAMESPACE` that would put production
+off `prod`, or a preview on it, is ignored with a warning, and the namespace
+for the context is used instead (D-041).
 
 ---
 
@@ -424,7 +428,7 @@ Recorded in [`DECISIONS.md`](./DECISIONS.md) D-032:
   closed.
 - **The sponsorship form on /contact** sends to **/admin/sponsorships** (inbox
   newest first, status, delete). Spam checks, in order: honeypot, Turnstile
-  (fails closed on Netlify without keys), validation, then 3 requests per
+  (when both keys are set, D-041), validation, then 3 requests per
   sender per hour — a counter on the `RecordStore` port (`hit()`), keyed by a
   hash of the address. Where the form cannot work, Contact lists the channels.
 - Public reads go through `publicRead()` and show `<LoadFailed>` on an outage.
@@ -463,3 +467,21 @@ Recorded in [`DECISIONS.md`](./DECISIONS.md) D-034:
   deploy preview or production.
 - **Handover**: `docs/handbook/` for coordinators; `docs/GO_LIVE.md` for
   Stage 10b.
+
+## 17. Revision 10 — the club archive, password sign-in, Netlify Blobs
+
+Recorded in [`DECISIONS.md`](./DECISIONS.md) D-039:
+
+- **Club archive**: a third gallery source in Git (`public/archive/`,
+  `src/content/archive.json`, validated at build), with clips: poster tiles,
+  hover preview, native player; filters animate with GSAP Flip. Home shows it
+  in "Moments from the lab", a CSS-3D reel.
+- **Password sign-in**: an Auth.js Credentials provider for the allowlist,
+  `ADMIN_PASSWORD` in env only, constant-time, rate-limited in the data layer,
+  fingerprinted so changing it ends every password session.
+- **Footer link**: one `nofollow` "Admin" link to `/admin/login` in the footer;
+  admin routes stay `noindex` and disallowed.
+- **Netlify Blobs backend**: `DATA_BACKEND=netlify-blobs`, the default on
+  Netlify without Upstash. Records are one JSON snapshot per collection,
+  written with compare-and-swap on the etag; files are served through
+  `/api/local-media` and uploaded in ≤ 4 MiB parts.

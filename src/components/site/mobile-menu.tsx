@@ -6,6 +6,7 @@ import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from
 
 import { lockScroll } from '@/components/motion/scroll-lock';
 import { Container } from '@/components/ui/container';
+import { HudCorners } from '@/components/ui/hud-corners';
 import { Eyebrow } from '@/components/ui/text';
 import { cn } from '@/lib/cn';
 import type { Channels } from '@/lib/content';
@@ -14,21 +15,22 @@ import { readMotionTokens } from '@/lib/motion/tokens';
 import { clubCredit, siteRoutes } from '@/lib/site';
 
 import { ChannelLinks } from './channel-links';
+import { WhenRecruitmentOpen } from './recruitment-mark';
 
 /**
- * Mobile menu (D-012) — our version of React Bits' StaggeredMenu.
+ * Mobile menu (D-038, superseding the StaggeredMenu sweep of D-012): the
+ * aperture. Five slats of the lab's surface close over the screen like a
+ * shutter — from the centre out, alternately from above and below — a line of
+ * light scans down once, and the pages rise into place, each with its number.
+ * Closing reverses it: the links go dark and the slats open onto the page.
+ * Every step is `transform` or `opacity` (rule 4).
  *
- * Kept from the original: colour layers sweep in ahead of the panel, the links
- * rise into place one after another, the Menu/Close label flips and the plus
- * turns into a cross — all `transform` and `opacity` (rule 4).
- *
- * Fixed: StaggeredMenu tweened the toggle's `color` (rule 4), left its links
- * focusable while off screen, and had no Escape, focus handling or scroll lock.
- * Here the closed panel is `inert`, opening moves focus to the first link and
- * traps Tab inside the menu, Escape closes it and returns focus to the toggle,
- * the page behind is inert and scroll-locked (Lenis included), and a route
- * change closes it. Durations and easings are motion tokens, so under reduced
- * motion it simply appears and disappears.
+ * Kept from the StaggeredMenu rebuild: the Menu/Close label flips and the plus
+ * turns into a cross; the closed panel is `inert`, opening moves focus to the
+ * first link and traps Tab inside the menu, Escape closes it and returns focus
+ * to the toggle, the page behind is inert and scroll-locked (Lenis included),
+ * and a route change closes it. Durations and easings are motion tokens, so
+ * under reduced motion it simply appears and disappears.
  *
  * The toggle sits in the header row and the panel behind it, so the header
  * calls `useMobileMenu()` once and renders both parts.
@@ -62,11 +64,13 @@ export function useMobileMenu() {
   }, []);
   const close = useCallback(() => setOpen(false), []);
 
-  // Start with the layers and panel off screen to the right.
+  // Start with the shutter open: every slat folded flat against its edge.
   useLayoutEffect(() => {
     const root = rootRef.current;
     if (!root) return;
-    gsap.set(root.querySelectorAll('[data-menu-slide]'), { xPercent: 100 });
+    root.querySelectorAll<HTMLElement>('[data-menu-slat]').forEach((slat, index) => {
+      gsap.set(slat, { scaleY: 0, transformOrigin: index % 2 === 0 ? 'top' : 'bottom' });
+    });
   }, []);
 
   // Choreography, driven by `open`.
@@ -83,43 +87,52 @@ export function useMobileMenu() {
     const inOut = gsapEase(tokens, 'inOut');
     const { micro, short, medium, long } = tokens.dur;
 
-    const slides = Array.from(root.querySelectorAll<HTMLElement>('[data-menu-slide]'));
+    const slats = Array.from(root.querySelectorAll<HTMLElement>('[data-menu-slat]'));
+    const scan = root.querySelector('[data-menu-scan]');
     const labels = root.querySelectorAll('[data-menu-label]');
     const numbers = root.querySelectorAll('[data-menu-number]');
     const extras = root.querySelectorAll('[data-menu-extra]');
+    // The shutter closes and opens from the centre out.
+    const fromCentre = { each: tokens.stagger, from: 'center' } as const;
 
     timelineRef.current?.kill();
     const timeline = gsap.timeline();
 
     if (open) {
-      gsap.set(labels, { yPercent: 140, rotate: 10 });
-      gsap.set(numbers, { opacity: 0 });
-      gsap.set(extras, { y: tokens.rise, opacity: 0 });
+      gsap.set(labels, { yPercent: 140, rotate: 4, opacity: 1 });
+      gsap.set([numbers, extras], { opacity: 0 });
+      gsap.set(extras, { y: tokens.rise });
+      gsap.set(scan, { yPercent: 0, opacity: 0 });
 
-      // Layers, then the panel (the last slide), each a stagger apart.
-      slides.forEach((slide, i) => {
-        timeline.to(slide, { xPercent: 0, duration: medium, ease: outExpo }, i * tokens.stagger);
-      });
-      const panelStart = (slides.length - 1) * tokens.stagger;
+      timeline.to(slats, { scaleY: 1, duration: medium, ease: outExpo, stagger: fromCentre }, 0);
+      const closed = short + 2 * tokens.stagger;
       timeline
+        .to(scan, { opacity: 1, duration: micro }, closed)
+        .to(scan, { yPercent: 100, duration: long, ease: inOut }, closed)
+        .to(scan, { opacity: 0, duration: short }, closed + long - short)
         .to(
           labels,
           { yPercent: 0, rotate: 0, duration: long, ease: outExpo, stagger: tokens.stagger },
-          panelStart + micro,
+          closed,
         )
-        .to(numbers, { opacity: 1, duration: medium, stagger: tokens.stagger }, panelStart + short)
+        .to(numbers, { opacity: 1, duration: medium, stagger: tokens.stagger }, closed + micro)
         .to(
           extras,
           { y: 0, opacity: 1, duration: medium, ease: outExpo, stagger: tokens.stagger },
-          panelStart + short,
+          closed + short,
         );
     } else {
-      timeline.to(slides, {
-        xPercent: 100,
-        duration: short,
-        ease: inOut,
-        onComplete: () => setVisible(false),
-      });
+      timeline.to([labels, numbers, extras], { opacity: 0, duration: micro, ease: inOut }, 0).to(
+        slats,
+        {
+          scaleY: 0,
+          duration: short,
+          ease: inOut,
+          stagger: fromCentre,
+          onComplete: () => setVisible(false),
+        },
+        micro,
+      );
     }
 
     // Toggle: Menu → Close label, plus → cross.
@@ -186,10 +199,14 @@ export function useMobileMenu() {
 }
 
 type MobileMenu = ReturnType<typeof useMobileMenu>;
+
 export type MobileMenuState = MobileMenu['state'];
 export type MobileMenuRefs = MobileMenu['refs'];
 
-/** The Menu/Close button, in the header row. Hidden from `lg`, where PillNav takes over. */
+/**
+ * The Menu/Close button, in the header row, framed by the HUD's corner ticks.
+ * Hidden from `lg`, where HudNav takes over.
+ */
 export function MobileMenuToggle({
   menu,
   toggleRef,
@@ -210,9 +227,10 @@ export function MobileMenuToggle({
       onClick={menu.toggle}
       aria-expanded={menu.open}
       aria-controls={menu.panelId}
-      className="relative inline-flex h-10 cursor-pointer items-center gap-2.5 rounded-full px-3 font-mono text-label text-(--color-text) uppercase lg:hidden"
+      className="relative inline-flex h-10 cursor-pointer items-center gap-2.5 rounded-control px-3 font-mono text-label text-(--color-text) uppercase lg:hidden"
     >
       <span className="sr-only">{menu.open ? 'Close menu' : 'Open menu'}</span>
+      <HudCorners className="text-(--color-accent)" cornerClassName="size-1.5" />
       <span
         aria-hidden="true"
         className="relative inline-block h-[1em] overflow-hidden leading-none"
@@ -240,6 +258,9 @@ export function MobileMenuToggle({
 
 const twoDigits = (n: number) => String(n).padStart(2, '0');
 
+/** The aperture's slats. */
+const SLATS = 5;
+
 /** The full-screen panel, behind the header row. Every public page, numbered. */
 export function MobileMenuPanel({
   menu,
@@ -251,7 +272,7 @@ export function MobileMenuPanel({
   rootRef: MobileMenuRefs['root'];
   channels: Channels;
   /** Tags the Recruitment link while recruitment is open (the header CTA is hidden on phones). */
-  recruitmentOpen: boolean;
+  recruitmentOpen: Promise<boolean>;
 }) {
   return (
     <div
@@ -259,22 +280,24 @@ export function MobileMenuPanel({
       inert={!menu.open}
       className={cn('fixed inset-0 overflow-hidden lg:hidden', !menu.visible && 'invisible')}
     >
-      <div
-        aria-hidden="true"
-        data-menu-slide
-        className="absolute inset-0 bg-(--color-spectra-indigo)"
-      />
-      <div
-        aria-hidden="true"
-        data-menu-slide
-        className="absolute inset-0 bg-(--color-surface-raised)"
-      />
+      {/* The shutter: five slats that close over the page, and one line of light. */}
+      <div aria-hidden="true" className="absolute inset-0 flex">
+        {Array.from({ length: SLATS }, (_, slat) => (
+          <span
+            key={slat}
+            data-menu-slat
+            className="h-full flex-1 border-e border-(--color-border) bg-(--color-surface) bg-scanlines last:border-e-0"
+          />
+        ))}
+      </div>
+      <div aria-hidden="true" data-menu-scan className="absolute inset-0 opacity-0">
+        <span className="absolute inset-x-0 top-0 h-px bg-(image:--gradient-rim)" />
+      </div>
       <nav
         id={menu.panelId}
         aria-label="Site menu"
-        data-menu-slide
         data-lenis-prevent
-        className="absolute inset-0 flex flex-col overflow-y-auto bg-(--color-surface) pt-header"
+        className="absolute inset-0 flex flex-col overflow-y-auto pt-header"
       >
         <Container className="flex flex-1 flex-col gap-12 py-10">
           <ol className="flex flex-col gap-3">
@@ -302,13 +325,15 @@ export function MobileMenuPanel({
                       {route.label}
                     </span>
                   </Link>
-                  {route.placement === 'cta' && recruitmentOpen ? (
-                    <span
-                      data-menu-extra
-                      className="rounded-full border border-(--color-accent)/40 px-2.5 py-1 font-mono text-label whitespace-nowrap text-(--color-accent) uppercase"
-                    >
-                      Open now
-                    </span>
+                  {route.placement === 'cta' ? (
+                    <WhenRecruitmentOpen open={recruitmentOpen}>
+                      <span
+                        data-menu-extra
+                        className="rounded-full border border-(--color-accent)/40 px-2.5 py-1 font-mono text-label whitespace-nowrap text-(--color-accent) uppercase"
+                      >
+                        Open now
+                      </span>
+                    </WhenRecruitmentOpen>
                   ) : null}
                 </li>
               );

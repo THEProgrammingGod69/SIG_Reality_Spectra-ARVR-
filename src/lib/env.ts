@@ -49,13 +49,24 @@ export const serverEnvSchema = z
       .default('http://localhost:3000'),
 
     // ---- Stage 5: data layer (Upstash Redis + Cloudflare R2) ----------------
-    /** Upstash REST endpoint and token, from the database page on upstash.com. */
     /**
-     * Where data lives. `upstash` (records) + R2 (files) is the real thing.
-     * `local` keeps both in the gitignored `.data/` folder, for working before
-     * the accounts exist (D-031); refused on Netlify by the guard below.
+     * Where data lives.
+     * - `netlify-blobs`: records and files in the Netlify site's own Blobs
+     *   storage; no other account needed.
+     * - `vercel-blob`: the same on Vercel, in a private Vercel Blob store
+     *   connected to the project (its BLOB_READ_WRITE_TOKEN), D-040.
+     * - `upstash`: records in Upstash Redis, files in Cloudflare R2.
+     * - `local`: both in the gitignored `.data/` folder, for working before
+     *   the accounts exist (D-031); refused on Netlify by the guard below.
+     *
+     * Left unset, a deploy without Upstash variables uses its host's own
+     * store (`netlify-blobs` or `vercel-blob`), and everything else `upstash`
+     * (see `defaultBackend`).
      */
-    DATA_BACKEND: z.enum(['upstash', 'local']).default('upstash'),
+    DATA_BACKEND: z.enum(['netlify-blobs', 'vercel-blob', 'upstash', 'local']).optional(),
+    /** Vercel Blob's read-write token; Vercel sets it when a store is connected. */
+    BLOB_READ_WRITE_TOKEN: z.string().min(1).optional(),
+    /** Upstash REST endpoint and token, from the database page on upstash.com. */
     UPSTASH_REDIS_REST_URL: z.url({ protocol: /^https$/ }).optional(),
     UPSTASH_REDIS_REST_TOKEN: z.string().min(1).optional(),
     /**
@@ -99,10 +110,30 @@ export const serverEnvSchema = z
       .optional(),
 
     /**
+     * Netlify Blobs from outside Netlify, for the command-line tools only
+     * (`pnpm seed`, `pnpm data`): the site's id (Site configuration → Site
+     * details) and a personal access token (User settings → Applications).
+     * Never set them on the Netlify site itself, which reaches its Blobs
+     * without them. The token belongs to one person: revoke it at handover.
+     */
+    NETLIFY_SITE_ID: z
+      .guid({ error: 'The site id from Site configuration → Site details' })
+      .optional(),
+    NETLIFY_AUTH_TOKEN: z
+      .string()
+      .regex(/^\S{16,}$/, 'A Netlify personal access token')
+      .optional(),
+
+    /**
      * Set by Netlify on every build and function: `production`,
      * `deploy-preview`, `branch-deploy` or `dev`. Read only by the guard below.
      */
     CONTEXT: z.string().optional(),
+    /**
+     * Set by Vercel on every build and function: `production`, `preview` or
+     * `development`. Mapped onto Netlify's contexts (`hostContext`).
+     */
+    VERCEL_ENV: z.enum(['production', 'preview', 'development']).optional(),
 
     // ---- Stage 6: admin authentication --------------------------------------
     /** Auth.js session signing secret. Generate with `openssl rand -base64 32`. */
@@ -111,6 +142,14 @@ export const serverEnvSchema = z
     AUTH_GOOGLE_SECRET: z.string().min(1).optional(),
     /** Comma-separated allowlist. These accounts, and only these, can reach /admin. */
     ADMIN_EMAILS: commaSeparatedEmails.optional(),
+    /**
+     * The shared password for the email + password sign-in: an allowlisted
+     * email plus this password lets an admin in. Never committed; set it in
+     * Netlify. Any length is accepted so a deploy never fails on it, but the
+     * dashboard's Setup card warns while it is short or well known. Changing it
+     * signs every password session out.
+     */
+    ADMIN_PASSWORD: z.string().min(1).max(200).optional(),
     /**
      * "true" turns the development sign-in on in a production build (the
      * end-to-end tests' CI run). `next dev` has it on anyway. Refused on Netlify
@@ -133,41 +172,84 @@ export const serverEnvSchema = z
   })
   .superRefine((value, ctx) => {
     // A deploy preview must never be able to write to the live club data, and
-    // production must never quietly run on a test copy. Netlify sets CONTEXT, so
-    // a wrongly scoped variable fails the deploy instead of mixing the two.
-    if (value.CONTEXT === undefined) return;
+    // production must never quietly run on a test copy. Netlify and Vercel say
+    // which deploy this is, so a wrongly scoped variable fails the deploy
+    // instead of mixing the two.
+    const context = hostContext(value);
+    if (context === undefined) return;
     if (value.AUTH_DEV_SIGN_IN === 'true') {
       ctx.addIssue({
         code: 'custom',
         path: ['AUTH_DEV_SIGN_IN'],
-        message: 'The development sign-in is never allowed on a Netlify deploy',
+        message: 'The development sign-in is never allowed on a deployed site',
       });
     }
     if (value.DATA_BACKEND === 'local') {
       ctx.addIssue({
         code: 'custom',
         path: ['DATA_BACKEND'],
-        message: 'Local data lives on one computer; a Netlify deploy must use "upstash"',
+        message:
+          'Local data lives on one computer; a deployed site must use its host\'s blob store or "upstash"',
       });
     }
     // An unset namespace is derived from CONTEXT below, so only an explicit
     // value can be wrong.
     if (value.DATA_NAMESPACE === undefined) return;
-    const isLive = value.CONTEXT === 'production';
+    const isLive = context === 'production';
     if (isLive !== (value.DATA_NAMESPACE === 'prod')) {
       ctx.addIssue({
         code: 'custom',
         path: ['DATA_NAMESPACE'],
         message: isLive
           ? 'Production deploys must use DATA_NAMESPACE="prod"'
-          : `Only production may use DATA_NAMESPACE="prod" (this is a ${value.CONTEXT} deploy)`,
+          : `Only production may use DATA_NAMESPACE="prod" (this is a ${context} deploy)`,
       });
     }
   })
-  .transform(({ DATA_NAMESPACE, ...value }) => ({
+  .transform(({ DATA_NAMESPACE, DATA_BACKEND, ...value }) => ({
     ...value,
-    DATA_NAMESPACE: DATA_NAMESPACE ?? defaultNamespace(value.CONTEXT),
+    DATA_BACKEND: DATA_BACKEND ?? defaultBackend(value),
+    DATA_NAMESPACE: DATA_NAMESPACE ?? defaultNamespace(hostContext(value)),
   }));
+
+/**
+ * Which deploy this is, in Netlify's words: Netlify's CONTEXT, or Vercel's
+ * VERCEL_ENV mapped onto it (`preview` → `deploy-preview`). Undefined on a
+ * developer's computer.
+ */
+function hostContext({
+  CONTEXT,
+  VERCEL_ENV,
+}: {
+  CONTEXT?: string;
+  VERCEL_ENV?: string;
+}): string | undefined {
+  if (CONTEXT !== undefined) return CONTEXT;
+  if (VERCEL_ENV === 'production') return 'production';
+  if (VERCEL_ENV === 'preview') return 'deploy-preview';
+  return undefined;
+}
+
+/**
+ * The backend when DATA_BACKEND is not set: once Upstash is configured,
+ * Upstash; until then the host's own blob store (Netlify Blobs on Netlify,
+ * Vercel Blob on Vercel); on a developer's computer Upstash, as before (they
+ * set `local`).
+ */
+function defaultBackend({
+  CONTEXT,
+  VERCEL_ENV,
+  UPSTASH_REDIS_REST_URL,
+}: {
+  CONTEXT?: string;
+  VERCEL_ENV?: string;
+  UPSTASH_REDIS_REST_URL?: string;
+}): 'netlify-blobs' | 'vercel-blob' | 'upstash' {
+  if (UPSTASH_REDIS_REST_URL !== undefined) return 'upstash';
+  if (CONTEXT !== undefined) return 'netlify-blobs';
+  if (VERCEL_ENV !== undefined && VERCEL_ENV !== 'development') return 'vercel-blob';
+  return 'upstash';
+}
 
 /** The namespace for a deploy that does not set one: see DATA_NAMESPACE above. */
 function defaultNamespace(context: string | undefined): string {
@@ -184,31 +266,133 @@ export type ServerEnv = z.infer<typeof serverEnvSchema>;
 const skipValidation =
   process.env.SKIP_ENV_VALIDATION === '1' || process.env.SKIP_ENV_VALIDATION === 'true';
 
-function parseEnv(): ServerEnv {
-  if (skipValidation) {
-    return serverEnvSchema.parse({});
+/**
+ * A value as people paste it into a host's settings: surrounding spaces and
+ * one pair of matching quotes (copied from a `.env` file) are not part of it.
+ * Blank means "not set".
+ */
+export function cleanEnvValue(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+  let clean = value.trim();
+  const first = clean[0];
+  if (clean.length >= 2 && (first === '"' || first === "'") && clean.endsWith(first)) {
+    clean = clean.slice(1, -1).trim();
   }
-
-  // A variable copied blank from .env.example means "not set yet", not "".
-  const setValues = Object.fromEntries(
-    Object.entries(process.env).filter(([, value]) => value !== ''),
-  );
-  const parsed = serverEnvSchema.safeParse(setValues);
-
-  if (!parsed.success) {
-    const details = parsed.error.issues
-      .map((issue) => `  - ${issue.path.join('.') || '(root)'}: ${issue.message}`)
-      .join('\n');
-    throw new Error(
-      `Invalid server environment variables:\n${details}\n\n` +
-        'Copy .env.example to .env.local and fill in the values for the stage you are on.',
-    );
-  }
-
-  return parsed.data;
+  return clean === '' ? undefined : clean;
 }
 
-export const env: ServerEnv = parseEnv();
+/**
+ * The environment this deployment runs with, made to work rather than to fail
+ * (D-041). A mistake in the host's settings must never take the site down or
+ * break the admin panel, so instead of refusing to start:
+ *
+ * - values are cleaned (`cleanEnvValue`);
+ * - ADMIN_EMAILS keeps its valid addresses and drops the rest;
+ * - the deploy guards correct instead of failing: a deployed site ignores
+ *   `DATA_BACKEND=local` and `AUTH_DEV_SIGN_IN=true`, and a namespace that
+ *   does not match the deploy (production `prod`, previews never `prod`)
+ *   falls back to the deploy's own;
+ * - any other invalid variable is ignored, as if it were not set.
+ *
+ * Every correction is reported in `warnings`: in the logs, on the admin
+ * dashboard's Setup card and, for sign-in settings, on the sign-in page.
+ * `serverEnvSchema` itself stays strict, so the rules stay tested as rules.
+ */
+export function resolveEnv(raw: Record<string, string | undefined>): {
+  env: ServerEnv;
+  warnings: string[];
+} {
+  const warnings: string[] = [];
+  const values: Record<string, string> = {};
+  for (const [key, value] of Object.entries(raw)) {
+    const clean = cleanEnvValue(value);
+    if (clean !== undefined) values[key] = clean;
+  }
+
+  if (values.ADMIN_EMAILS !== undefined) {
+    const entries = values.ADMIN_EMAILS.split(',')
+      .map((entry) => cleanEnvValue(entry)?.toLowerCase())
+      .filter((entry): entry is string => entry !== undefined);
+    const valid = entries.filter((entry) => z.email().safeParse(entry).success);
+    if (valid.length < entries.length) {
+      warnings.push(
+        `ADMIN_EMAILS: ${entries.length - valid.length} entr${entries.length - valid.length === 1 ? 'y is' : 'ies are'} not an email address and ${entries.length - valid.length === 1 ? 'was' : 'were'} ignored.`,
+      );
+    }
+    if (valid.length > 0) values.ADMIN_EMAILS = valid.join(',');
+    else delete values.ADMIN_EMAILS;
+  }
+
+  const context = hostContext(values);
+  if (context !== undefined) {
+    if (values.AUTH_DEV_SIGN_IN === 'true') {
+      delete values.AUTH_DEV_SIGN_IN;
+      warnings.push('AUTH_DEV_SIGN_IN is ignored on a deployed site.');
+    }
+    if (values.DATA_BACKEND === 'local') {
+      delete values.DATA_BACKEND;
+      warnings.push(
+        "DATA_BACKEND=local is ignored on a deployed site: the host's own store is used.",
+      );
+    }
+    const namespace = values.DATA_NAMESPACE;
+    if (namespace !== undefined && (context === 'production') !== (namespace === 'prod')) {
+      delete values.DATA_NAMESPACE;
+      warnings.push(
+        `DATA_NAMESPACE="${namespace}" does not match this ${context} deploy and was ignored.`,
+      );
+    }
+  }
+
+  // Ignore what is still invalid, one variable at a time, until it parses.
+  for (;;) {
+    const parsed = serverEnvSchema.safeParse(values);
+    if (parsed.success) return { env: parsed.data, warnings };
+    const invalid = new Map<string, string>();
+    for (const issue of parsed.error.issues) {
+      const key = issue.path[0];
+      if (typeof key === 'string' && key in values && !invalid.has(key)) {
+        invalid.set(key, issue.message);
+      }
+    }
+    if (invalid.size === 0) {
+      const details = parsed.error.issues.map((issue) => `  - ${issue.message}`).join('\n');
+      throw new Error(`Invalid server environment variables:\n${details}`);
+    }
+    for (const [key, message] of invalid) {
+      delete values[key];
+      warnings.push(`${key} was ignored: ${message}.`);
+    }
+  }
+}
+
+/**
+ * The environment as the running site sees it, plus the deploy context the
+ * build baked in (`BUILD_CONTEXT`, next.config.ts): Netlify sets CONTEXT for
+ * the build but not for the functions that serve the site, which would
+ * otherwise take themselves for a developer's computer (D-041).
+ */
+export function withBuildContext(
+  raw: Record<string, string | undefined>,
+  builtFor: string | undefined,
+): Record<string, string | undefined> {
+  return raw.CONTEXT === undefined && builtFor ? { ...raw, CONTEXT: builtFor } : raw;
+}
+
+function parseEnv(): { env: ServerEnv; warnings: readonly string[] } {
+  if (skipValidation) return { env: serverEnvSchema.parse({}), warnings: [] };
+  // `process.env.BUILD_CONTEXT` is replaced with the build's value (next.config.ts env).
+  const resolved = resolveEnv(withBuildContext(process.env, process.env.BUILD_CONTEXT));
+  for (const warning of resolved.warnings) console.warn(`[env] ${warning}`);
+  return resolved;
+}
+
+const resolved = parseEnv();
+
+/** What `resolveEnv` corrected or ignored in this deployment's settings. */
+export const envWarnings: readonly string[] = resolved.warnings;
+
+export const env: ServerEnv = resolved.env;
 
 /**
  * Read a variable that a feature genuinely cannot run without.

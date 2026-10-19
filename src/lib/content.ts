@@ -2,10 +2,13 @@ import 'server-only';
 
 import type { z } from 'zod';
 
+import archiveJson from '@/content/archive.json';
 import contactJson from '@/content/contact.json';
 import domainsJson from '@/content/domains.json';
 import siteJson from '@/content/site.json';
+import type { GalleryItem } from '@/lib/data';
 
+import { type ArchiveEntry, ArchiveSchema } from './schemas/archive';
 import {
   ContactInfoSchema,
   DOMAIN_GROUPS,
@@ -41,6 +44,30 @@ export function parseContent<Schema extends z.ZodType>(
 export const siteInfo = parseContent(SiteInfoSchema, siteJson, 'site.json');
 export const domains = parseContent(DomainsSchema, domainsJson, 'domains.json');
 export const contactInfo = parseContent(ContactInfoSchema, contactJson, 'contact.json');
+export const archive = parseContent(ArchiveSchema, archiveJson, 'archive.json');
+
+/**
+ * One archive entry as a gallery item. A clip's tile is its poster, so the
+ * grid crops and loads it like any photo; the clip itself plays in the viewer.
+ * Keys are prefixed, so they never collide with record ids or event photos.
+ */
+export function archiveGalleryItem(entry: ArchiveEntry): GalleryItem {
+  const { width, height, alt } = entry;
+  return {
+    key: `archive:${entry.src}`,
+    image: { url: entry.kind === 'video' ? entry.poster : entry.src, alt, width, height },
+    category: entry.category,
+    caption: entry.caption,
+    date: entry.date,
+    video: entry.kind === 'video' ? { src: entry.src, duration: entry.duration } : null,
+    album: entry.album ?? null,
+    credit: entry.credit ?? null,
+    source: { kind: 'archive' },
+  };
+}
+
+/** The whole archive as gallery items, in archive.json order (the page sorts). */
+export const archiveGallery: readonly GalleryItem[] = archive.map(archiveGalleryItem);
 
 /** Each domain's id and name: the secretary's domain picker (a client prop). */
 export const domainOptions = domains.map(({ id, name }) => ({ id, name }));

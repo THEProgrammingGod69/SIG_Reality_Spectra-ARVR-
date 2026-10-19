@@ -15,23 +15,24 @@ The club's accounts are not available yet (Stage 6, D-030), so the site is
 built with these placeholders. When the real details arrive, replace each one,
 then confirm the dashboard's **Setup** card shows everything configured.
 
-| What                        | Placeholder now                                              | Replace with                                           | Guide                             |
-| --------------------------- | ------------------------------------------------------------ | ------------------------------------------------------ | --------------------------------- |
-| `ADMIN_EMAILS`              | `dryerisdry@gmail.com` (temporary, Arnav)                    | The club's 2–3 admin Google accounts (#14)             | `SETUP_AUTH.md`                   |
-| `AUTH_GOOGLE_ID`, `_SECRET` | empty — Google sign-in off, dev sign-in only locally         | OAuth client on the club Google account (#13)          | `SETUP_AUTH.md`                   |
-| `AUTH_SECRET`               | generated in your `.env.local` only                          | A fresh secret per Netlify deploy context              | `SETUP_AUTH.md`                   |
-| Upstash Redis variables     | empty — dashboard says "Data store not connected"            | Club Upstash database (#9)                             | `SETUP_STORAGE.md`                |
-| R2 variables                | empty — uploads answer 503                                   | Club R2 bucket and token (#10)                         | `SETUP_STORAGE.md`                |
-| Turnstile keys              | empty — check off locally; the form is hidden on Netlify     | Club Cloudflare Turnstile site (#22)                   | D-032                             |
-| Analytics token             | empty — no analytics script loads                            | Cloudflare Web Analytics site token (club account)     | `.env.example`, D-033             |
-| `CRON_SECRET`               | empty                                                        | A generated secret (Production context only)           | `GO_LIVE.md`, D-034               |
-| Contact details             | "Coming soon" in `src/content/contact.json`                  | Club email, phone, address, map link (#7)              | `pnpm check:launch` gate          |
-| `DATA_BACKEND`              | `local` in your `.env.local` (records + uploads in `.data/`) | Remove once Upstash + R2 are set (D-031)               | `SETUP_STORAGE.md`                |
-| Events and photos           | `[Demo]` events and club photos from `pnpm seed --demo`      | Real events (#15) and photos (#18), added in the panel | `/admin/events`, `/admin/gallery` |
-| Sample registration link    | The recruitment Google Form link, in demo events only        | Each event's real link (typically VIERP, #16)          | `/admin/events`                   |
-| Team                        | `[Demo]` core members and secretaries                        | The real team (#19), added in the panel                | `/admin/team`                     |
-| Recruitment settings        | Open with the form link in `dev` only (seeded)               | Open in production with the form link (#20, #21)       | `/admin/recruitment`              |
-| Sponsorship requests        | One `[Demo]` request in `dev`                                | Nothing to swap: delete it, real requests arrive       | `/admin/sponsorships`             |
+| What                        | Placeholder now                                                              | Replace with                                           | Guide                             |
+| --------------------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------ | --------------------------------- |
+| `ADMIN_EMAILS`              | `dryerisdry@gmail.com`, `mohan.arnav24@vit.edu`, `sig.vit@gmail.com` (D-039) | The club's 2–3 admin accounts (#14)                    | `SETUP_AUTH.md`                   |
+| `ADMIN_PASSWORD`            | the short password the club chose — the Setup card says weak                 | A long passphrase (≥ 12 characters), set in Netlify    | `SETUP_AUTH.md`, D-039            |
+| `AUTH_GOOGLE_ID`, `_SECRET` | empty — Google sign-in off, dev sign-in only locally                         | OAuth client on the club Google account (#13)          | `SETUP_AUTH.md`                   |
+| `AUTH_SECRET`               | generated in your `.env.local` only                                          | A fresh secret per Netlify deploy context              | `SETUP_AUTH.md`                   |
+| Upstash Redis variables     | empty — on Netlify, Netlify Blobs stores the data (D-039)                    | Club Upstash database (#9)                             | `SETUP_STORAGE.md`                |
+| R2 variables                | empty — on Netlify, uploads go to Netlify Blobs (D-039)                      | Club R2 bucket and token (#10)                         | `SETUP_STORAGE.md`                |
+| Turnstile keys              | empty — check off locally; the form is hidden on Netlify                     | Club Cloudflare Turnstile site (#22)                   | D-032                             |
+| Analytics token             | empty — no analytics script loads                                            | Cloudflare Web Analytics site token (club account)     | `.env.example`, D-033             |
+| `CRON_SECRET`               | empty                                                                        | A generated secret (Production context only)           | `GO_LIVE.md`, D-034               |
+| Contact details             | "Coming soon" in `src/content/contact.json`                                  | Club email and phone (#7); address and map are set     | `pnpm check:launch` gate          |
+| `DATA_BACKEND`              | `local` in your `.env.local` (records + uploads in `.data/`)                 | Remove once Upstash + R2 are set (D-031)               | `SETUP_STORAGE.md`                |
+| Events and photos           | `[Demo]` events and club photos from `pnpm seed --demo`                      | Real events (#15) and photos (#18), added in the panel | `/admin/events`, `/admin/gallery` |
+| Sample registration link    | The recruitment Google Form link, in demo events only                        | Each event's real link (typically VIERP, #16)          | `/admin/events`                   |
+| Team                        | `[Demo]` core members and secretaries                                        | The real team (#19), added in the panel                | `/admin/team`                     |
+| Recruitment settings        | Open with the form link in `dev` only (seeded)                               | Open in production with the form link (#20, #21)       | `/admin/recruitment`              |
+| Sponsorship requests        | One `[Demo]` request in `dev`                                                | Nothing to swap: delete it, real requests arrive       | `/admin/sponsorships`             |
 
 ---
 
@@ -46,9 +47,9 @@ then confirm the dashboard's **Setup** card shows everything configured.
 Stage 4 shipped with "Coming soon" placeholders for these (D-024). `pnpm check:launch`
 fails until they are filled in `src/content/contact.json`.
 
-| #   | Item                                                                                                                                    | Status                                 |
-| --- | --------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
-| 7   | **Official club email**, **phone**, **address** and a **Google Maps link** (embed optional); LinkedIn / GitHub org if the club has them | Open — Instagram and WhatsApp supplied |
+| #   | Item                                                                                                                                    | Status                                                                                               |
+| --- | --------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| 7   | **Official club email**, **phone**, **address** and a **Google Maps link** (embed optional); LinkedIn / GitHub org if the club has them | Open — Instagram, WhatsApp, the VIT Bibwewadi address and map supplied; email and phone still needed |
 
 ## Accounts for the data layer (Stage 5 built; needed before Stage 6 goes live)
 
@@ -65,19 +66,19 @@ later stage needs them. Step-by-step setup: [`SETUP_STORAGE.md`](./SETUP_STORAGE
 
 ## Admin sign-in (Stage 6 built with placeholders)
 
-| #   | Item                                                                                                     | Status                                                               |
-| --- | -------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| 13  | Google Cloud OAuth client under the **club** Google account, with localhost and production callback URLs | Open — Google sign-in is built and switches on with the keys (D-030) |
-| 14  | `ADMIN_EMAILS` — the 2–3 accounts that get admin access                                                  | Placeholder: `dryerisdry@gmail.com` until the club accounts exist    |
+| #   | Item                                                                                                     | Status                                                                                                    |
+| --- | -------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| 13  | Google Cloud OAuth client under the **club** Google account, with localhost and production callback URLs | Open — Google sign-in is built and switches on with the keys (D-030)                                      |
+| 14  | `ADMIN_EMAILS` — the 2–3 accounts that get admin access                                                  | Set: `dryerisdry@gmail.com`, `mohan.arnav24@vit.edu`, `sig.vit@gmail.com` with the admin password (D-039) |
 
 ## Events and gallery content (Stage 7 built with placeholders)
 
-| #   | Item                                                                                      | Status                                                                           |
-| --- | ----------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| 15  | 3–5 **past events** with dates, details and photos (consent checked) to seed the timeline | Open — `[Demo]` placeholders until supplied; add them in `/admin/events` (D-031) |
-| 16  | One example **registration link** (typically VIERP)                                       | Placeholder: the recruitment form link, in demo events only (D-031)              |
-| 17  | Preferred **poster aspect ratio**                                                         | Resolved: any ratio, shown whole in a 4:5 frame (D-031)                          |
-| 18  | A first batch of **standalone club photos** (consent checked), with a category for each   | Open — the drive is not finalised; `[Demo]` photos until then (D-031)            |
+| #   | Item                                                                                      | Status                                                                                          |
+| --- | ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| 15  | 3–5 **past events** with dates, details and photos (consent checked) to seed the timeline | Open — `[Demo]` placeholders until supplied; add them in `/admin/events` (D-031)                |
+| 16  | One example **registration link** (typically VIERP)                                       | Placeholder: the recruitment form link, in demo events only (D-031)                             |
+| 17  | Preferred **poster aspect ratio**                                                         | Resolved: any ratio, shown whole in a 4:5 frame (D-031)                                         |
+| 18  | A first batch of **standalone club photos** (consent checked), with a category for each   | Partly done — the Tesseract'26 and Unity workshop archive is in Git (D-039); more via the panel |
 
 ## Team, recruitment and sponsorships (Stage 8 built with placeholders)
 
@@ -86,7 +87,7 @@ later stage needs them. Step-by-step setup: [`SETUP_STORAGE.md`](./SETUP_STORAGE
 | 19  | **Team list**: name, position, photo; core team or secretary (and which domain) — D-027 | Open — `[Demo]` members until supplied; add them in `/admin/team` (D-032)                                                                |
 | 20  | **Roles and responsibilities PDF** and the current **Google Form** link                 | Form link supplied: `https://forms.gle/WoDyL1mwWHnnKFs38`. The PDF shows as "coming soon" until uploaded in `/admin/recruitment` (D-028) |
 | 21  | **Is recruitment open right now?**                                                      | Yes. It is now set only in `/admin/recruitment` (D-032): open it there with the form link when the live data store exists                |
-| 22  | Cloudflare Turnstile site key and secret                                                | Open — the check is off locally; a Netlify deploy without both keys hides the form and lists the channels (D-032)                        |
+| 22  | Cloudflare Turnstile site key and secret                                                | Open — recommended, not required: without both keys the form runs on its honeypot and rate limit (D-041)                                 |
 
 ## Go-live (Stage 10b) — step by step in [`GO_LIVE.md`](./GO_LIVE.md)
 

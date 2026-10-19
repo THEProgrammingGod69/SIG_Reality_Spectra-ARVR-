@@ -1,6 +1,12 @@
 import type { NextConfig } from 'next';
 
-import { NOINDEX_HEADERS, type SecurityOptions, securityHeaders } from './src/lib/security-headers';
+import { hostSiteUrl } from './src/lib/env.public';
+import {
+  MEDIA_FILE_HEADERS,
+  NOINDEX_HEADERS,
+  type SecurityOptions,
+  securityHeaders,
+} from './src/lib/security-headers';
 
 /**
  * The public origin of the club's R2 bucket (custom domain or r2.dev URL).
@@ -24,9 +30,13 @@ const uploadOrigin = /^[a-f0-9]{32}$/.test(process.env.R2_ACCOUNT_ID ?? '')
 
 const security: SecurityOptions = {
   development: process.env.NODE_ENV === 'development',
-  https: (process.env.NEXT_PUBLIC_SITE_URL ?? '').startsWith('https://'),
+  // The configured address, else the one the host reports (D-041).
+  https: (process.env.NEXT_PUBLIC_SITE_URL?.trim() || hostSiteUrl(process.env) || '').startsWith(
+    'https://',
+  ),
   mediaOrigin: mediaHost ? `https://${mediaHost}` : null,
   uploadOrigin,
+  netlifyPreview: ['deploy-preview', 'branch-deploy'].includes(process.env.CONTEXT ?? ''),
 };
 
 const nextConfig: NextConfig = {
@@ -74,15 +84,30 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
 
   /**
+   * Netlify sets CONTEXT and the site's addresses for the build only: the
+   * functions that serve the site never see them. They are baked in here, so
+   * the running site still knows whether it is production or a preview — and
+   * so uses Netlify Blobs, the right namespace and its own address (D-041).
+   * None of them is secret.
+   */
+  env: {
+    BUILD_CONTEXT: process.env.CONTEXT ?? '',
+    BUILD_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL?.trim() || hostSiteUrl(process.env) || '',
+  },
+
+  /**
    * Security headers on every response (Stage 9, D-033): CSP, HSTS, framing,
    * sniffing, referrer and permissions policies (src/lib/security-headers.ts),
-   * plus `X-Robots-Tag: noindex` on the admin panel and the API (rule 7).
+   * plus `X-Robots-Tag: noindex` on the admin panel and the API (rule 7), and
+   * a sandboxing CSP on uploaded files the site serves itself.
    */
   async headers() {
     return [
       { source: '/:path*', headers: securityHeaders(security) },
       { source: '/admin/:path*', headers: NOINDEX_HEADERS },
       { source: '/api/:path*', headers: NOINDEX_HEADERS },
+      // Last, so its CSP replaces the page one for uploaded files.
+      { source: '/api/local-media/:path*', headers: MEDIA_FILE_HEADERS },
     ];
   },
 

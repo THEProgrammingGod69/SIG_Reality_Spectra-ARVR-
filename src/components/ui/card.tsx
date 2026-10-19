@@ -1,5 +1,6 @@
 import type { HTMLAttributes } from 'react';
 
+import { Spotlight } from '@/components/motion/spotlight';
 import { cn } from '@/lib/cn';
 
 /**
@@ -16,19 +17,29 @@ type CardProps = HTMLAttributes<HTMLElement> & {
   featured?: boolean;
   /** Lift and border glow on hover / keyboard focus, for cards that link somewhere. */
   interactive?: boolean;
+  /**
+   * A light that follows the mouse across the card, with a rim along its edge
+   * (`Spotlight`, D-037). Mouse only; nothing under reduced motion.
+   */
+  spotlight?: boolean;
 };
 
 export function Card({
   as: Tag = 'article',
   featured = false,
   interactive = false,
+  spotlight = false,
   className,
+  children,
   ...rest
 }: CardProps) {
   return (
     <Tag
       className={cn(
         'relative flex h-full min-w-0 flex-col overflow-hidden rounded-card border border-(--color-border) bg-(--color-surface) shadow-card',
+        // Its own stacking context, so the spotlight sits behind the content
+        // and above the card's background.
+        spotlight && 'isolate',
         featured &&
           'before:absolute before:inset-x-0 before:top-0 before:z-10 before:h-px before:bg-(image:--gradient-rim)',
         interactive &&
@@ -37,7 +48,10 @@ export function Card({
         className,
       )}
       {...rest}
-    />
+    >
+      {spotlight ? <Spotlight /> : null}
+      {children}
+    </Tag>
   );
 }
 

@@ -2,17 +2,14 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { resolveTurnstileMode, verifyTurnstile } from '@/lib/turnstile';
 
-/** The contact form's spam check: on, off locally, or failing closed (D-032). */
+/** The contact form's spam check: on with both keys, otherwise off (D-032, D-041). */
 describe('Turnstile mode', () => {
   it.each([
-    [{ siteKey: 'site', secretKey: 'secret', onNetlify: true }, 'on'],
-    [{ siteKey: 'site', secretKey: 'secret', onNetlify: false }, 'on'],
-    [{ siteKey: undefined, secretKey: undefined, onNetlify: false }, 'off'],
-    // A deploy without keys never runs the form unprotected.
-    [{ siteKey: undefined, secretKey: undefined, onNetlify: true }, 'unavailable'],
-    // Half set up is a mistake, wherever it happens.
-    [{ siteKey: 'site', secretKey: undefined, onNetlify: false }, 'unavailable'],
-    [{ siteKey: undefined, secretKey: 'secret', onNetlify: false }, 'unavailable'],
+    [{ siteKey: 'site', secretKey: 'secret' }, 'on'],
+    [{ siteKey: undefined, secretKey: undefined }, 'off'],
+    // Half set up: the widget could never be verified, so it is not shown.
+    [{ siteKey: 'site', secretKey: undefined }, 'off'],
+    [{ siteKey: undefined, secretKey: 'secret' }, 'off'],
   ] as const)('%o → %s', (input, mode) => {
     expect(resolveTurnstileMode(input)).toBe(mode);
   });

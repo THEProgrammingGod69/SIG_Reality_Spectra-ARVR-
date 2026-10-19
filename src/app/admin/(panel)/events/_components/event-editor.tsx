@@ -56,7 +56,8 @@ function blankEvent(id: string): Values {
     mode: EVENT_MODES[0].id,
     registrationUrl: null,
     poster: null,
-    published: false,
+    // Shown as soon as it is saved: unticking makes it a draft (D-041).
+    published: true,
     recap: '',
     photos: [],
     inTimeline: false,
@@ -93,12 +94,16 @@ export function EventEditor({
   useUnsavedChanges(isDirty);
 
   const id = form.getValues('id');
-  const [title, startsAt, endsAt, photos] = useWatch({
+  const [title, startsAt, endsAt, inTimeline] = useWatch({
     control,
-    name: ['title', 'startsAt', 'endsAt', 'photos'],
+    name: ['title', 'startsAt', 'endsAt', 'inTimeline'],
   });
   const ended = Boolean(startsAt) && hasEnded({ startsAt, endsAt: endsAt ?? null }, openedAt);
-  const canTimeline = ended && (photos?.length ?? 0) > 0;
+  const canTimeline = ended;
+  // A ticked box is never disabled: an admin who moves the end into the
+  // future must be able to untick it — a disabled, ticked box would make
+  // every save fail.
+  const timelineLocked = !canTimeline && !inTimeline;
   const defaultAlt = `Photo from ${title || 'the event'}`;
 
   const save = handleSubmit(async (values) => {
@@ -222,7 +227,7 @@ export function EventEditor({
           <FormField
             id="summary"
             label="Summary"
-            hint="One or two sentences, 20–160 characters."
+            hint="One or two sentences, up to 160 characters."
             error={errors.summary?.message}
             className="md:col-span-2"
           >
@@ -252,8 +257,8 @@ export function EventEditor({
         <CardContent className="flex flex-col gap-5">
           <FormField
             id="registrationUrl"
-            label="Registration link"
-            hint="Needed before the event can be published."
+            label="Registration link (optional)"
+            hint="Where people sign up, e.g. the VIERP page. Without one, the card has no Register button."
             error={errors.registrationUrl?.message}
           >
             {(field) => (
@@ -268,7 +273,7 @@ export function EventEditor({
           <CheckboxField
             {...checkboxProps(form, 'published')}
             label="Published"
-            hint="Shown on /events until it ends. Unpublished events are drafts."
+            hint="Shown on /events until it ends. Untick to keep it as a draft."
             error={errors.published?.message}
           />
         </CardContent>
@@ -304,8 +309,8 @@ export function EventEditor({
         <CardHeader>
           <CardTitle>After the event</CardTitle>
           <CardDescription>
-            Once it has ended, add a recap and photos, then put it on the timeline. Its photos then
-            appear in the gallery too.
+            Once it has ended, tick &ldquo;On the timeline&rdquo;. A recap and photos are optional;
+            the photos also appear in the gallery.
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-5">
@@ -338,12 +343,14 @@ export function EventEditor({
           />
           <CheckboxField
             {...checkboxProps(form, 'inTimeline')}
-            disabled={!canTimeline}
+            disabled={timelineLocked}
             label="On the timeline"
             hint={
               canTimeline
                 ? 'Shown in the /events timeline, with its photos in /gallery.'
-                : 'Available once the event has ended and has at least one photo.'
+                : inTimeline
+                  ? 'Untick this to save: only an event that has ended can be on the timeline.'
+                  : 'Available once the event has ended (for an old event, set its dates in the past).'
             }
             error={errors.inTimeline?.message}
           />

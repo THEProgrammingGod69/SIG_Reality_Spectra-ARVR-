@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test';
 import { clubCredit, primaryNavRoutes, siteConfig, siteRoutes } from '@/lib/site';
 
 /**
- * Stage 3 acceptance for the site shell: header (PillNav + CTA), mobile menu,
+ * Stage 3 acceptance for the site shell: header (HudNav + CTA, D-038), mobile menu,
  * footer, page transitions and layout robustness. Cases are generated from
  * `siteRoutes`, so a new page is covered automatically.
  */

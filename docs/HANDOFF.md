@@ -6,21 +6,64 @@ old conversation. Read in this order: this file → `CLAUDE.md` → `docs/DECISI
 
 ## State (as of 2026-10-04)
 
-| Item          | Value                                                                          |
-| ------------- | ------------------------------------------------------------------------------ |
-| Repo          | github.com/THEProgrammingGod69/SIG_Reality_Spectra-ARVR- (private), `main`     |
-| Local folder  | `D:\Academic Nottes VIT\SIG\SIG_Draft_Code`                                    |
-| Hosting       | **Netlify** (D-025)                                                            |
-| Last commit   | `b3df807` — quality pass after Stage 10a (tag `stage-10a`, pushed)                                    |
-| Rollback tags | `stage-1` – `stage-9`, `stage-10a`, `architecture-v2`, `architecture-v3`                    |
-| Done          | Stages 1–9 and 10a, committed, tagged and pushed; quality pass (D-035)                                   |
-| Next          | Stage 10b: go-live with the club's accounts — `docs/GO_LIVE.md`                                             |
+| Item          | Value                                                                                                      |
+| ------------- | ---------------------------------------------------------------------------------------------------------- |
+| Repo          | github.com/THEProgrammingGod69/SIG_Reality_Spectra-ARVR- (private), `main`                                 |
+| Local folder  | `D:\Academic Nottes VIT\SIG\SIG_Draft_Code`                                                                |
+| Hosting       | **Netlify** (D-025)                                                                                        |
+| Last commit   | `b3df807` — quality pass after Stage 10a (tag `stage-10a`, pushed)                                         |
+| Rollback tags | `stage-1` – `stage-9`, `stage-10a`, `architecture-v2`, `architecture-v3`                                   |
+| Done          | Stages 1–9 and 10a, committed, tagged and pushed; quality pass (D-035)                                     |
+| Next          | Stage 10b: go-live with the club's accounts — `docs/GO_LIVE.md`                                            |
 | Gates         | `pnpm check` + `pnpm test:e2e` green: 293 unit, 166 e2e on Chromium + mobile WebKit (dev and `CI=1` build) |
-| Credentials   | **Placeholders** (D-030): swap list at the top of `docs/OPEN_ITEMS.md`         |
+| Credentials   | **Placeholders** (D-030): swap list at the top of `docs/OPEN_ITEMS.md`                                     |
+
+## Premium pass (D-037) — after Stage 10a
+
+A design and motion pass over every public page, on branch
+`ccr-fb1b4dcd-eu2382` (not yet merged to `main`). React Bits SplitText,
+ScrollReveal, SpotlightCard, ScrollVelocity and GlareHover were rebuilt on
+rule 4 (`src/components/motion`); `PageIntro` runs under the header over
+`LabBackdrop`; `SectionHeading` opens every section; Home gained the domain
+ticker and a closing call to action; Events, Gallery, Recruitment, Contact,
+the footer and the 404 were reworked. Read D-037 for the calls made, the
+review findings that were fixed (trigger ordering with the hero pin, reachable
+trigger points, contrast in every state, nothing looping past 5 s) and what
+was left alone on purpose. New e2e: `tests/e2e/motion.spec.ts`.
+
+## The XR HUD (D-038) — after the premium pass
+
+On the same branch. The club asked for more motion and nothing generic, so the
+site now reads as the lab seen through a headset: a HUD navigation rail with a
+lock-on frame (`site/hud-nav.tsx`, replacing PillNav), an aperture-shutter
+mobile menu, a targeting reticle that locks onto links (system cursor kept),
+a shutter between pages, decoding mono labels, the hero's display frame and
+scan, Home's domains on a horizontal rail and its purpose panels stacking,
+the footer wordmark floating in, team members as holographic access passes,
+the gallery's focus dim and curtain develop, and — on capable devices only —
+a light-through-haze shader behind each inner page's opening
+(`three/spectral-field`). Read D-038 for every call; new e2e:
+`tests/e2e/hud.spec.ts`. The club's Instagram could not be read by tools (login
+wall), so no content was taken from it.
+
+## Archive, password sign-in, Netlify Blobs (D-039) — after the XR HUD
+
+On the same branch, with `main` (Srushti's "Who we are" card) merged in. The
+club sent its first real media (the Tesseract'26 hackathon and the Unity
+workshop): 11 photos and 13 clips now live in `public/archive/`, described by
+`src/content/archive.json`, and show in the gallery as a third, Git-managed
+source, with clips (poster tiles, hover preview, native player) and GSAP Flip
+filtering. Home gained "Moments from the lab", a CSS-3D reel of the archive.
+The admin panel now works on the existing Netlify site: a Netlify Blobs
+backend (default on Netlify without Upstash), an email + password sign-in
+(`ADMIN_PASSWORD`, env only) for `dryerisdry@gmail.com` and
+`mohan.arnav24@vit.edu`, and a small "Admin" link in the footer (rule 6
+rewritten). Netlify needs `AUTH_SECRET`, `ADMIN_EMAILS` and `ADMIN_PASSWORD`
+set — `docs/GO_LIVE.md`, "Right now". Read D-039 for every call.
 
 ## Start of the next chat
 
-1. Read this file, then `CLAUDE.md`, `docs/DECISIONS.md` (D-001 – D-035),
+1. Read this file, then `CLAUDE.md`, `docs/DECISIONS.md` (D-001 – D-039),
    `docs/ARCHITECTURE.md`, `docs/OPEN_ITEMS.md`, and the READMEs in
    `src/lib/data`, `src/lib/schemas`, `src/lib/auth`, `src/components/admin`.
 2. Run `git status` (only the untracked `.claude/` launch config is expected).
@@ -28,8 +71,9 @@ old conversation. Read in this order: this file → `CLAUDE.md` → `docs/DECISI
    Arnav's go to run `docs/GO_LIVE.md`.
 
 Working locally: `.env.local` (gitignored) has a generated `AUTH_SECRET`,
-`ADMIN_EMAILS="dryerisdry@gmail.com"` and `DATA_BACKEND="local"`. `pnpm dev` →
-`/admin` → "Sign in (development)". Local `dev` data in `.data/` has demo
+`ADMIN_EMAILS="dryerisdry@gmail.com,mohan.arnav24@vit.edu"`, an
+`ADMIN_PASSWORD` and `DATA_BACKEND="local"`. `pnpm dev` → footer "Admin" →
+email + password, or "Sign in (development)". Local `dev` data in `.data/` has demo
 events, photos, team, one request, and recruitment open.
 
 ## Working agreement with Arnav (applies to every stage)
@@ -107,7 +151,7 @@ stage-N`, push branch and tag, then a small "docs: handoff" commit.
   `{ns}/backups/{date}.json` (30 kept), then a sweep of unused uploads (24 h
   grace, key-based matching, refuses to delete more than half).
   `src/lib/data/maintenance.ts`; `pnpm data backups | backup | sweep
-  [--dry-run] | restore <date> [--yes] [--production]`.
+[--dry-run] | restore <date> [--yes] [--production]`.
 - **Tests:** mobile WebKit (iPhone 14) on the public specs; `pnpm test:deployed`
   against `PLAYWRIGHT_BASE_URL`. Fixed: the contact form wiped text typed
   before hydration (no default values on public forms).
@@ -152,7 +196,8 @@ stage-N`, push branch and tag, then a small "docs: handoff" commit.
 - **Hosting moved to Netlify** (D-025): Upstash used directly, files in
   **Cloudflare R2** (presigned PUT via `aws4fetch`), `DATA_NAMESPACE`
   (replacing `REDIS_KEY_PREFIX`) prefixes Redis keys and R2 objects, and the
-  build refuses a production deploy not on `prod` or a preview on `prod`.
+  build refuses a production deploy not on `prod` or a preview on `prod`
+  (since D-041 the wrong value is ignored with a warning instead).
   Netlify lists Cache Components as supported; confirm on the first real save
   (OPEN_ITEMS #26).
 - **Schemas** (`src/lib/schemas`): shared `fields.ts` with `entitySchemas()`
@@ -206,8 +251,9 @@ stage-N`, push branch and tag, then a small "docs: handoff" commit.
 - `src/components/ui/`: Button/ButtonLink (incl. StarBorder `star` variant and
   `magnetic`), Card family, Badge, Container, Section, Heading, Text/Eyebrow,
   Field/Input/Textarea/Select, Modal, Skeleton, EmptyState, Icon, BrandMark/Badge.
-- `src/components/site/`: fixed header (glass on scroll), PillNav (`lg`+),
-  MobileMenu (StaggeredMenu rebuilt, accessible), footer, recruitment banner
+- `src/components/site/`: fixed header (glass on scroll), PillNav (`lg`+; the
+  HUD rail since D-038), MobileMenu (StaggeredMenu rebuilt, accessible; the
+  aperture since D-038), footer, recruitment banner
   slot, page transition (`(site)/template.tsx`).
 - Brand pack in (D-021); favicon + Apple icon; OPEN_ITEMS #2 and #3 resolved.
 - `/dev/ui` playground; `cn()` (D-019); contrast audit test; shell e2e suite

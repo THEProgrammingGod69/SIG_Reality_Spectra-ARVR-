@@ -1,4 +1,7 @@
+import { ScrollRefresh } from '@/components/motion/scroll-refresh';
 import { SmoothScroll } from '@/components/motion/smooth-scroll';
+import { FilmGrain } from '@/components/site/film-grain';
+import { ReticleCursor } from '@/components/site/reticle-cursor';
 import { SiteFooter } from '@/components/site/site-footer';
 import { SiteHeader } from '@/components/site/site-header';
 import { WebAnalytics } from '@/components/site/web-analytics';
@@ -19,12 +22,12 @@ import { getRecruitment, publicRead } from '@/lib/data';
  * contact channels, and whether recruitment is open — the cached admin
  * setting (`recruitment` tag), so a save in /admin/recruitment updates the
  * header on every page at once. If it cannot be read, the header shows
- * recruitment as closed rather than failing the page.
+ * recruitment as closed rather than failing the page. The header itself is
+ * part of the static shell and gets the setting as a promise: only its
+ * "open" marks wait for the store (`WhenRecruitmentOpen`), so the menu works
+ * as soon as the page hydrates, however slow the store is to answer (D-041).
  */
-export default async function SiteLayout({ children }: LayoutProps<'/'>) {
-  const recruitment = await publicRead('the recruitment status', getRecruitment);
-  const recruitmentOpen = 'data' in recruitment && recruitment.data.open;
-
+export default function SiteLayout({ children }: LayoutProps<'/'>) {
   return (
     <>
       <SmoothScroll />
@@ -37,7 +40,7 @@ export default async function SiteLayout({ children }: LayoutProps<'/'>) {
         Skip to content
       </a>
 
-      <SiteHeader channels={siteChannels} recruitmentOpen={recruitmentOpen} />
+      <SiteHeader channels={siteChannels} recruitmentOpen={isRecruitmentOpen()} />
 
       <main
         id="main-content"
@@ -48,7 +51,16 @@ export default async function SiteLayout({ children }: LayoutProps<'/'>) {
       </main>
 
       <SiteFooter />
+      <ScrollRefresh />
+      <FilmGrain />
+      <ReticleCursor />
       <WebAnalytics />
     </>
   );
+}
+
+/** Whether recruitment is open (the cached admin setting); closed if it cannot be read. */
+async function isRecruitmentOpen(): Promise<boolean> {
+  const recruitment = await publicRead('the recruitment status', getRecruitment);
+  return 'data' in recruitment && recruitment.data.open;
 }

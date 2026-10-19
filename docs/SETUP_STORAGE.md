@@ -24,6 +24,26 @@ When the accounts below are ready, set their variables and remove
 `DATA_BACKEND` (or set it to `upstash`). Local data is not copied across: add
 the real events and photos in the admin panel.
 
+## On Netlify without the accounts: Netlify Blobs
+
+On Netlify, when no Upstash variables are set, the site stores its records and
+uploads in **Netlify Blobs**, the storage built into every Netlify site
+(D-039). Nothing to create or configure: the admin panel works on the existing
+site straight away, saves still show on the public pages at once, and the
+nightly backup and sweep run the same way. `DATA_NAMESPACE` still keeps
+production and previews apart.
+
+It is a bridge, not the long-term home: Upstash + R2 below stay the documented
+production setup (D-025) because they move with the club rather than with the
+host. When they are ready, set their variables on Netlify and redeploy; the
+Blobs data is not copied across, so take a `pnpm data backup` first and re-add
+or restore the content.
+
+To reach the Blobs stores from your computer (for `pnpm seed` or `pnpm data`),
+set `DATA_BACKEND="netlify-blobs"` with `NETLIFY_SITE_ID` (Site configuration →
+Site details → Site ID) and `NETLIFY_AUTH_TOKEN` (User settings → Applications
+→ Personal access tokens) in `.env.local`.
+
 ---
 
 ## 1. Upstash Redis
@@ -126,9 +146,10 @@ token and the two R2 keys.
 | `R2_PUBLIC_BASE_URL`       | from step 2                                                                                                                    |
 | `DATA_NAMESPACE`           | **leave unset**: it follows the deploy context — `prod` in production, `preview` on deploy previews and branch deploys (D-036) |
 
-If you do set it, the build refuses to deploy if production does not use
-`prod`, or if a preview does (D-025), so a mistake here fails loudly instead of mixing test edits into
-the live site.
+If you do set it, a value that would put production off `prod`, or a preview
+on it, is ignored and the dashboard's Setup card says so (D-025, D-041): a
+mistake here never mixes test edits into the live site, and never takes the
+site down either.
 
 Redeploy after adding the variables. A new production store starts with
 recruitment closed (D-032): sign in to `/admin/recruitment`, tick "Recruitment

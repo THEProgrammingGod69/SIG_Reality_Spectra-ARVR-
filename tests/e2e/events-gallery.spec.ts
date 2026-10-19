@@ -1,6 +1,6 @@
 import { expect, type Page, test } from '@playwright/test';
 
-import { hasFiles, hasRecords, signIn, testImage, unique } from './helpers';
+import { hasFiles, hasRecords, showAll, signIn, testImage, unique } from './helpers';
 
 /**
  * Stage 7: events and the gallery, admin ↔ public. Every save must show on the
@@ -54,7 +54,7 @@ test.describe('events', () => {
     const title = unique('Build Night');
     await signIn(page, '/admin/events/new');
     await fillDetails(page, title, '2030-06-01T18:00');
-    await page.getByLabel('Registration link').fill(REGISTRATION);
+    await page.getByLabel('Registration link (optional)').fill(REGISTRATION);
     await page.getByRole('checkbox', { name: /Published/ }).check();
     await page
       .getByRole('group', { name: 'Poster' })
@@ -98,8 +98,9 @@ test.describe('events', () => {
     await page.getByLabel('Category').selectOption('workshop');
     await page.getByLabel('Recap').fill('A recap written by the end-to-end tests.');
 
+    // An event that has ended can go on the timeline at once; photos are optional (D-041).
     const timeline = page.getByRole('checkbox', { name: /On the timeline/ });
-    await expect(timeline).toBeDisabled();
+    await expect(timeline).toBeEnabled();
     await page
       .getByRole('group', { name: /Photos/ })
       .locator('input[type="file"]')
@@ -118,10 +119,14 @@ test.describe('events', () => {
 
     await page.goto('/gallery');
     await page.getByRole('button', { name: /^Workshops/ }).click();
-    await page
-      .getByRole('button', { name: `Photo from ${title}` })
-      .first()
-      .click();
+    // Dated 2025, these photos can sit behind "Show more" in a well-used store,
+    // and the filtered grid settles after the click: reveal until they show.
+    const photo = page.getByRole('button', { name: `Photo from ${title}` }).first();
+    await expect(async () => {
+      await showAll(page);
+      await expect(photo).toBeVisible({ timeout: 1_000 });
+    }).toPass({ timeout: 30_000 });
+    await photo.click();
     const viewer = page.getByRole('dialog');
     await expect(viewer).toContainText(title);
     await page.keyboard.press('Escape');
@@ -131,15 +136,47 @@ test.describe('events', () => {
     await deleteEvent(page);
   });
 
+  test('an ended event goes on the timeline in one click from the list', async ({ page }) => {
+    const title = unique('Ended');
+    await signIn(page, '/admin/events/new');
+    await fillDetails(page, title, '2025-02-14T16:00');
+    await save(page, 'Create event');
+    const editor = page.url();
+
+    await page.goto('/admin/events');
+    const waiting = page.getByRole('heading', { name: /Ended — not on the timeline yet/ });
+    const waitingCard = page.locator('[data-slot="card"]').filter({ has: waiting });
+    await waitingCard.getByRole('button', { name: `Put ${title} on the timeline` }).click();
+    await expect(page.getByRole('status').filter({ hasText: 'On the timeline.' })).toBeVisible({
+      timeout: 30_000,
+    });
+    const timelineCard = page
+      .locator('[data-slot="card"]')
+      .filter({ has: page.getByRole('heading', { name: /^On the timeline/ }) });
+    await expect(timelineCard.getByRole('link', { name: new RegExp(title) })).toBeVisible();
+
+    await page.goto('/events');
+    await expect(
+      page.locator('#event-timeline').locator('..').getByText(title, { exact: true }),
+    ).toBeVisible();
+
+    await page.goto(editor);
+    await deleteEvent(page);
+  });
+
   test('refuses an incomplete event, field by field', async ({ page }) => {
     await signIn(page, '/admin/events/new');
-    await page.getByRole('checkbox', { name: /Published/ }).check();
+    await expect(page.getByRole('checkbox', { name: /Published/ })).toBeChecked();
     await page.getByRole('button', { name: 'Create event' }).click();
 
-    for (const field of ['Title', 'Starts (India time)', 'Venue', 'Summary', 'Registration link']) {
+    for (const field of ['Title', 'Starts (India time)', 'Venue', 'Summary']) {
       await expect(page.getByLabel(field)).toHaveAttribute('aria-invalid', 'true');
     }
-    await expect(page.getByText('A published event needs a registration link')).toBeVisible();
+    // The registration link is optional (D-041).
+    await expect(page.getByLabel('Registration link (optional)')).not.toHaveAttribute(
+      'aria-invalid',
+      'true',
+    );
     await expect(page).toHaveURL('/admin/events/new');
   });
 

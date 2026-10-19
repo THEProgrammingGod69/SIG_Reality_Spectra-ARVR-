@@ -9,14 +9,19 @@ React Three Fiber scenes. Built in **Stage 2**: the Orbit Lab hero (D-001).
 | `orbit-lab/headset-geometry.ts` | the procedural wireframe headset; no `.glb`                              |
 | `orbit-lab/scene-colors.ts`     | scene colours read from the design tokens                                |
 | `orbit-lab/scene-state.ts`      | the numbers GSAP drives and `useFrame` reads                             |
+| `spectral-field/`               | the inner pages' light-through-haze shader and its lazy canvas (D-038)   |
 | `use-hero-tier.ts`              | the device tier, decided once after hydration                            |
 
 The hero section that hosts it is `src/components/sections/hero/`.
 
 Rules:
 
-- **One WebGL context per hero** (D-010), at most two heavy WebGL components per
-  page, three.js only — no `ogl` (D-011).
+- **One WebGL context per page** (D-010): the hero's on Home, the Spectral
+  Field's on an inner page (D-038, high tier only); at most two heavy WebGL
+  components per page, three.js only — no `ogl` (D-011).
+- Nothing animates on its own for long (WCAG 2.2.2): the Spectral Field's time
+  advances while the page settles and while the visitor moves, then it stops
+  drawing (`frameloop="demand"`).
 - The canvas is lazy-loaded (`next/dynamic`, `ssr: false`) and only for the low and
   high tiers. The static tier (reduced motion, no WebGL 2) never downloads it.
 - Device tiers come from `src/lib/motion/hero-tier.ts`. Low = half the particles

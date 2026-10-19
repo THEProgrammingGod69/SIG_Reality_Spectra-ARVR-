@@ -10,6 +10,7 @@ schemas.
 | ---------------- | ----------------------------------------------------------- | -------------------- | ----- |
 | `fields.ts`      | Shared field rules; `entitySchemas()` builds input + record | —                    | 5     |
 | `content.ts`     | SiteInfo, Domain, ContactInfo                               | Git (`src/content`)  | 4     |
+| `archive.ts`     | ArchiveEntry (club archive photo or clip), Archive          | Git (`src/content`)  | 10    |
 | `category.ts`    | Category (shared enum)                                      | —                    | 5     |
 | `image.ts`       | Image (url, alt, width, height)                             | —                    | 5     |
 | `upload.ts`      | UploadRequest, upload targets, folders and limits           | —                    | 5     |
@@ -43,20 +44,20 @@ the same thing everywhere.
 the browser). That the URL is ours and belongs to the record is checked when
 the record is saved (`src/lib/data/media.ts`).
 
-**Event** — id (UUID) · title (3–80) · category · summary (20–160) ·
+**Event** — id (UUID) · title (3–80) · category · summary (3–160) ·
 description (plain text, blank line = new paragraph, ≤ 5000) · startsAt · endsAt (optional, after start) ·
 venue · mode (`offline` · `online` · `hybrid`) · registrationUrl (https;
-required when published) · poster · published · recap (≤ 2000) · photos (≤ 60,
-no duplicates) · inTimeline (needs ≥ 1 photo).
+optional, D-041) · poster · published · recap (≤ 2000) · photos (≤ 60,
+no duplicates) · inTimeline (needs only a past end; photos optional, D-041).
 
 An event's phase is **derived at request time, never stored** (rule 12):
 
-| Phase      | Rule                               | Shown on                       |
-| ---------- | ---------------------------------- | ------------------------------ |
-| `draft`    | not ended, not published           | admin only                     |
-| `current`  | not ended, published               | top of `/events`               |
-| `awaiting` | ended, not on the timeline         | admin only — kept for later    |
-| `timeline` | on the timeline (ended, ≥ 1 photo) | `/events` timeline, `/gallery` |
+| Phase      | Rule                       | Shown on                       |
+| ---------- | -------------------------- | ------------------------------ |
+| `draft`    | not ended, not published   | admin only                     |
+| `current`  | not ended, published       | top of `/events`               |
+| `awaiting` | ended, not on the timeline | admin only — kept for later    |
+| `timeline` | on the timeline (ended)    | `/events` timeline, `/gallery` |
 
 Without `endsAt`, an event ends at the end of its start day in India Standard
 Time.
@@ -64,6 +65,13 @@ Time.
 **GalleryPhoto** (standalone) — id · image · category · caption (≤ 120,
 optional). The public gallery shows these together with the photos of timeline
 events (which take the event's category), newest first.
+
+**ArchiveEntry** (Git, `src/content/archive.json`) — src (`/archive/<folder>/<name>`,
+an image, or `.mp4` for a clip; never `..`) · kind (`photo` · `video`) · poster
+(image; a clip only) · duration (seconds > 0; a clip only) · width · height ·
+category · album (3–60, optional) · date · alt (3–200) · caption (3–120) ·
+credit (3–80, optional). Paths are not `mediaUrl`s: these files are served
+from `public/`, not uploaded. `src` is unique across the file.
 
 **TeamMember** — id · name (2–60) · position (2–60) · tier (`core` ·
 `secretary`, D-027) · domainId (required for a secretary, from

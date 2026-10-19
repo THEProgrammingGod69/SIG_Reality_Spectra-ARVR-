@@ -1,8 +1,9 @@
 # Setting up admin sign-in
 
-Admins sign in to `/admin` with Google (D-030). Access is the `ADMIN_EMAILS`
-allowlist and nothing else: no user table, no passwords. Handing the panel to
-the next committee means editing that one variable.
+Admins sign in to `/admin` with an email and the admin password, or with
+Google (D-030, D-039). Access is the `ADMIN_EMAILS` allowlist and nothing
+else: no user table. Handing the panel to the next committee means editing
+`ADMIN_EMAILS` and `ADMIN_PASSWORD`.
 
 Create the Google client with the **club's Google account**, never a personal
 one. About 10 minutes.
@@ -20,7 +21,25 @@ node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 Put it in `AUTH_SECRET` (`.env.local` locally; Netlify for each deploy
 context). Changing it signs everyone out.
 
-## 2. Google OAuth client
+## 2. Admin password
+
+`ADMIN_PASSWORD` switches on the email + password form on `/admin/login`. It
+needs `AUTH_SECRET` and `ADMIN_EMAILS` too. Rules (D-039):
+
+- It lives in env only: `.env.local` on your computer, Netlify (_Contains
+  secret values_) for the site. Never in the repository.
+- Anyone on `ADMIN_EMAILS` can use it; a wrong password and an address not on
+  the list get the same "Wrong email or password." message.
+- 10 attempts per 15 minutes per network and 20 per email, then a 15-minute
+  wait. The counters are kept in the data store (hashed), or in memory if the
+  store is unreachable, so storage trouble never locks admins out.
+- Changing it signs out everyone who signed in with the old one.
+- The dashboard's Setup card warns while it is shorter than 12 characters or a
+  common password. A short one works; a long passphrase is safer.
+
+Google sign-in (below) is optional once the password is set.
+
+## 3. Google OAuth client
 
 1. Go to <https://console.cloud.google.com> with the club account and create a
    project, e.g. `sig-reality-spectra`.
@@ -40,7 +59,7 @@ context). Changing it signs everyone out.
 Deploy previews have changing addresses that Google cannot list, so sign-in
 with Google works on production and local development, not on previews.
 
-## 3. Admins
+## 4. Admins
 
 `ADMIN_EMAILS` is a comma-separated list of the Google accounts allowed in:
 
@@ -48,18 +67,28 @@ with Google works on production and local development, not on previews.
 ADMIN_EMAILS="secretary@vit.edu,webmaster@vit.edu"
 ```
 
+In `.env.local` the quotes are optional. In Netlify's or Vercel's settings,
+paste the value alone (`secretary@vit.edu,webmaster@vit.edu`); stray quotes or
+spaces are removed anyway, and an address that is not a valid email is
+skipped with a warning on the dashboard instead of locking everyone out
+(D-041).
+
+With the password sign-in, any email address works; with Google, each must be
+a Google account (Gmail or Google Workspace).
+
 Removing an address locks that person out at their next page load.
 
-## 4. Netlify
+## 5. Netlify
 
 Site configuration → Environment variables: add `AUTH_SECRET`,
-`AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET` (tick _Contains secret values_ for the
-secrets) and `ADMIN_EMAILS`, then redeploy. Never set `AUTH_DEV_SIGN_IN` on
-Netlify: the build refuses it.
+`ADMIN_EMAILS` and `ADMIN_PASSWORD`, plus `AUTH_GOOGLE_ID` and
+`AUTH_GOOGLE_SECRET` if Google is set up (tick _Contains secret values_ for the
+secrets), then redeploy. Paste values without quotes. Never set
+`AUTH_DEV_SIGN_IN` on Netlify: a deployed site ignores it (D-041).
 
-## Until Google is set up
+## Development sign-in
 
-`pnpm dev` shows a **development sign-in** on `/admin/login`: pick an address
+`pnpm dev` also shows a **development sign-in** on `/admin/login`: pick an address
 from `ADMIN_EMAILS` and sign in without a password. It only needs
 `AUTH_SECRET` and `ADMIN_EMAILS`, exists only on your computer, and is never
 available on a deployed site. The dashboard's **Setup** card lists which

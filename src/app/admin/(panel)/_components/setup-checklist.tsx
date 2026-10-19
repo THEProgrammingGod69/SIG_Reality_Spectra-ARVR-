@@ -1,3 +1,5 @@
+import { ShieldAlert } from 'lucide-react';
+
 import { Badge } from '@/components/admin/ui/badge';
 import {
   Card,
@@ -6,9 +8,23 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/admin/ui/card';
+import { Icon } from '@/components/ui/icon';
 import { setup } from '@/lib/auth/config';
+import { MIN_STRONG_PASSWORD_LENGTH } from '@/lib/auth/policy';
 import { dataAvailability } from '@/lib/data';
+import { envWarnings } from '@/lib/env';
 import { integrations } from '@/lib/integrations';
+
+/** Where this deployment keeps records and files, in words for the dashboard. */
+const BACKEND_LABELS = {
+  'netlify-blobs': 'Netlify Blobs (built into Netlify)',
+  'vercel-blob': 'Vercel Blob (connected to the Vercel project)',
+  upstash: 'Upstash Redis and Cloudflare R2',
+  local: 'This computer (the .data folder)',
+} as const;
+
+/** Integrations a host's blob store replaces: shown as not needed, not as missing. */
+const REPLACED_BY_BLOBS: readonly string[] = ['redis', 'r2'];
 
 /**
  * Which outside services this deployment has credentials for. Placeholders
@@ -17,7 +33,13 @@ import { integrations } from '@/lib/integrations';
  * list).
  */
 export function SetupChecklist() {
-  const missing = integrations.filter((integration) => !integration.configured).length;
+  const { backend } = dataAvailability();
+  const notNeeded = (id: string) =>
+    (backend === 'netlify-blobs' || backend === 'vercel-blob') && REPLACED_BY_BLOBS.includes(id);
+  const relevant = integrations.filter((integration) => !notNeeded(integration.id));
+  const missing = relevant.filter(
+    (integration) => !integration.configured && !integration.optional,
+  ).length;
   return (
     <Card>
       <CardHeader>
@@ -25,11 +47,40 @@ export function SetupChecklist() {
         <CardDescription>
           {missing === 0
             ? 'Every service this site uses is configured.'
-            : `${missing} of ${integrations.length} services still use placeholder (empty) credentials.`}
+            : `${missing} of ${relevant.length} services still use placeholder (empty) credentials.`}
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
-        {dataAvailability().backend === 'local' ? (
+        {setup.weakPassword ? (
+          // Never the password itself: only that it needs changing.
+          <div className="flex flex-col gap-1 rounded-control border border-destructive/40 p-3 text-body-sm text-foreground">
+            <p className="flex items-center gap-2 font-medium">
+              <Icon icon={ShieldAlert} size="sm" className="text-destructive" />
+              Weak admin password — set a longer ADMIN_PASSWORD in the host&apos;s settings
+            </p>
+            <p className="text-xs text-muted-foreground">
+              It is shorter than {MIN_STRONG_PASSWORD_LENGTH} characters or a well-known password,
+              so it is easy to guess. A long passphrase works best; changing it signs every admin
+              out.
+            </p>
+          </div>
+        ) : null}
+        <p className="text-body-sm text-foreground">
+          <span className="text-muted-foreground">Data is stored in: </span>
+          {BACKEND_LABELS[backend]}
+        </p>
+        {envWarnings.length > 0 ? (
+          // Settings the site corrected or ignored instead of failing (D-041).
+          <div className="flex flex-col gap-1 rounded-control border border-warning/40 p-3 text-body-sm text-foreground">
+            <p className="font-medium">Settings that were corrected or ignored</p>
+            <ul className="list-disc ps-5 text-xs text-muted-foreground">
+              {envWarnings.map((warning) => (
+                <li key={warning}>{warning}</li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+        {backend === 'local' ? (
           <p className="rounded-control border border-warning/40 p-3 text-body-sm text-foreground">
             <Badge variant="warning" className="me-2">
               Local data
@@ -57,9 +108,15 @@ export function SetupChecklist() {
                   </p>
                 ) : null}
               </div>
-              <Badge variant={integration.configured ? 'success' : 'warning'}>
-                {integration.configured ? 'Configured' : 'Not set'}
-              </Badge>
+              {notNeeded(integration.id) ? (
+                <Badge variant="outline">Not needed</Badge>
+              ) : integration.configured ? (
+                <Badge variant="success">Configured</Badge>
+              ) : integration.optional ? (
+                <Badge variant="outline">Optional</Badge>
+              ) : (
+                <Badge variant="warning">Not set</Badge>
+              )}
             </li>
           ))}
         </ul>

@@ -1,11 +1,18 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  admittedEmail,
   authSetup,
+  clientAddress,
   cookieRemovalsOnly,
+  DEV_PROVIDER,
   isBearer,
   isAllowedAdmin,
   isDevSignInEnabled,
+  isWeakPassword,
+  PASSWORD_PROVIDER,
+  passwordFingerprint,
+  passwordMatches,
   safeCallbackPath,
 } from '@/lib/auth/policy';
 
@@ -129,5 +136,121 @@ describe('isBearer (the nightly job, D-034)', () => {
     for (const header of [null, '', secret, `Bearer ${secret}x`, `bearer ${secret}`, 'Bearer ']) {
       expect(isBearer(header, secret)).toBe(false);
     }
+  });
+});
+
+describe('the password sign-in', () => {
+  const base = {
+    NODE_ENV: 'production',
+    ADMIN_EMAILS: ADMINS,
+    AUTH_SECRET: 'x'.repeat(32),
+  } as const;
+  const strong = 'correct horse battery staple';
+
+  it('is on with a secret, an admin and ADMIN_PASSWORD, and is a way in by itself', () => {
+    expect(authSetup({ ...base, ADMIN_PASSWORD: strong })).toMatchObject({
+      password: true,
+      google: false,
+      devSignIn: false,
+      ready: true,
+    });
+    expect(authSetup(base).password).toBe(false);
+    expect(authSetup({ ...base, AUTH_SECRET: undefined, ADMIN_PASSWORD: strong })).toMatchObject({
+      password: false,
+      ready: false,
+    });
+    expect(authSetup({ ...base, ADMIN_EMAILS: [], ADMIN_PASSWORD: strong }).password).toBe(false);
+  });
+
+  it('flags a weak password, only while the password sign-in is on', () => {
+    expect(authSetup({ ...base, ADMIN_PASSWORD: 'admin' }).weakPassword).toBe(true);
+    expect(authSetup({ ...base, ADMIN_PASSWORD: strong }).weakPassword).toBe(false);
+    expect(
+      authSetup({ ...base, AUTH_SECRET: undefined, ADMIN_PASSWORD: 'admin' }).weakPassword,
+    ).toBe(false);
+  });
+
+  it('matches only the exact password, whatever the lengths', () => {
+    expect(passwordMatches(strong, strong)).toBe(true);
+    for (const given of ['', 'correct horse', `${strong} `, strong.toUpperCase(), `${strong}x`]) {
+      expect(passwordMatches(given, strong)).toBe(false);
+    }
+    expect(passwordMatches('a'.repeat(5000), strong)).toBe(false);
+    expect(passwordMatches(strong, 'a')).toBe(false);
+  });
+
+  it('fingerprints the password under the secret, and the print changes with either', () => {
+    const secret = 's'.repeat(32);
+    const print = passwordFingerprint(secret, strong);
+    expect(print).toMatch(/^[0-9a-f]{32}$/);
+    expect(print).not.toContain(strong);
+    expect(passwordFingerprint(secret, strong)).toBe(print);
+    expect(passwordFingerprint(secret, `${strong}!`)).not.toBe(print);
+    expect(passwordFingerprint('t'.repeat(32), strong)).not.toBe(print);
+  });
+
+  it.each([
+    'admin',
+    'password',
+    '123456',
+    'short-pass1',
+    'aaaaaaaaaaaaaaaa',
+    '123456789012345',
+    'Administrator2026!',
+    'Password123456',
+    'RealitySpectra2026!',
+  ])('calls %j weak', (password) => {
+    expect(isWeakPassword(password)).toBe(true);
+  });
+
+  it.each([strong, 'tram-quartz-lantern-41', 'Spectra lab nights at VIT'])(
+    'accepts %j',
+    (password) => {
+      expect(isWeakPassword(password)).toBe(false);
+    },
+  );
+});
+
+describe('clientAddress (the sign-in attempt limit)', () => {
+  it("prefers Netlify's own header, then the first forwarded address", () => {
+    const both = new Headers({
+      'x-nf-client-connection-ip': '203.0.113.9',
+      'x-forwarded-for': '198.51.100.1',
+    });
+    expect(clientAddress(both)).toBe('203.0.113.9');
+    const forwarded = new Headers({ 'x-forwarded-for': ' 198.51.100.4 , 10.0.0.1' });
+    expect(clientAddress(forwarded)).toBe('198.51.100.4');
+    expect(clientAddress(new Headers())).toBe('unknown');
+  });
+});
+
+describe('admittedEmail (the per-request session check)', () => {
+  const secret = 's'.repeat(32);
+  const print = passwordFingerprint(secret, 'correct horse battery staple');
+  const rules = { admins: ADMINS, devSignIn: false, passwordFingerprint: print };
+
+  it('admits an allowlisted session, as the allowlist is now', () => {
+    expect(admittedEmail({ email: 'First@VIT.edu', provider: 'google' }, rules)).toBe(
+      'first@vit.edu',
+    );
+    expect(admittedEmail({ email: 'third@vit.edu', provider: 'google' }, rules)).toBeNull();
+    expect(admittedEmail({ email: null }, rules)).toBeNull();
+    expect(admittedEmail(null, rules)).toBeNull();
+  });
+
+  it('locks a password session out once ADMIN_PASSWORD changes or is removed', () => {
+    const session = { email: 'first@vit.edu', provider: PASSWORD_PROVIDER };
+    expect(admittedEmail({ ...session, passwordFingerprint: print }, rules)).toBe('first@vit.edu');
+    const changed = passwordFingerprint(secret, 'a different passphrase entirely');
+    expect(admittedEmail({ ...session, passwordFingerprint: changed }, rules)).toBeNull();
+    expect(admittedEmail(session, rules)).toBeNull();
+    const off = { ...rules, passwordFingerprint: null };
+    expect(admittedEmail({ ...session, passwordFingerprint: print }, off)).toBeNull();
+  });
+
+  it('admits a development session only where that sign-in is on', () => {
+    const session = { email: 'first@vit.edu', provider: DEV_PROVIDER };
+    expect(admittedEmail(session, rules)).toBeNull();
+    expect(admittedEmail(session, { ...rules, devSignIn: true })).toBe('first@vit.edu');
   });
 });

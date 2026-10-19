@@ -20,13 +20,13 @@ test.describe('home', () => {
     await page.goto('/');
 
     await expect(page.getByText(site.tagline).first()).toBeVisible();
-    await expect(page.getByRole('heading', { level: 2, name: 'WHO WE ARE' })).toBeVisible();
-    await expect(page.getByRole('heading', { level: 3, name: 'About Reality Spectra' })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 2, name: 'Who we are' })).toBeVisible();
+    await expect(page.getByText(site.about.short)).toBeVisible();
+    // The "About Reality Spectra" card, read from the content file (D-039).
     await expect(
-      page.getByText(
-        'Reality Spectra is the official AR/VR/XR Special Interest Group of VIT Pune, bringing students together to explore immersive technologies and creative possibilities.',
-      ),
+      page.getByRole('heading', { level: 3, name: site.about.card.title }),
     ).toBeVisible();
+    await expect(page.getByText(site.about.card.body)).toBeVisible();
     await expect(page.getByText(site.mission)).toBeVisible();
     await expect(page.getByText(site.vision)).toBeVisible();
   });
@@ -34,21 +34,6 @@ test.describe('home', () => {
   test('has no team section: the team is on About only (D-027)', async ({ page }) => {
     await page.goto('/');
     await expect(page.getByRole('heading', { name: /team/i })).toHaveCount(0);
-  });
-
-  test('animates the Who We Are heading and exposes one interactive card', async ({ page }) => {
-    await page.goto('/');
-    const heading = page.getByRole('heading', { level: 2, name: 'WHO WE ARE' });
-    const section = page.locator('section[aria-labelledby="about-intro"]');
-    const card = section.locator('article');
-
-    await heading.scrollIntoViewIfNeeded();
-    await expect(heading.locator('[data-split-flap-state]')).toHaveAttribute(
-      'data-split-flap-state',
-      'complete',
-    );
-    await expect(card).toHaveCount(1);
-    await expect(section.locator('article')).toHaveCount(1);
   });
 
   test('lists every domain by name and links to the full descriptions', async ({ page }) => {
@@ -108,6 +93,17 @@ test.describe('contact', () => {
     await expect(page.locator('dd [data-placeholder]')).toHaveCount(pending.length);
     if (contact.map.embedUrl === null) {
       await expect(page.getByText('Map coming soon')).toBeVisible();
+    } else {
+      await expect(page.locator('iframe[title^="Map showing"]')).toHaveAttribute(
+        'src',
+        contact.map.embedUrl,
+      );
+      if (contact.map.url !== null) {
+        await expect(page.getByRole('link', { name: /Open in Google Maps/ })).toHaveAttribute(
+          'href',
+          contact.map.url,
+        );
+      }
     }
     if (contact.email === null) await expect(page.locator('a[href^="mailto:"]')).toHaveCount(0);
     if (contact.phone === null) await expect(page.locator('a[href^="tel:"]')).toHaveCount(0);
