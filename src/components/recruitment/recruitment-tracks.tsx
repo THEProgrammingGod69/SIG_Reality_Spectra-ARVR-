@@ -157,6 +157,7 @@ export const tracks: Track[] = [
 function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const image = new Image();
+    image.crossOrigin = 'anonymous';
     image.onload = () => resolve(image);
     image.onerror = reject;
     image.src = src;
@@ -306,14 +307,12 @@ function TrackOverview({ onSelect }: { onSelect: (track: Track) => void }) {
 
 function TrackDetail({
   track,
-  onBack,
-  onSelectTrack
+  onBack
 }: {
   track: Track;
   onBack: () => void;
-  onSelectTrack: (track: Track) => void;
 }) {
-  const index = tracks.indexOf(track);
+  const index = tracks.findIndex(t => t.id === track.id || t.title === track.title);
   const [selectedTech, setSelectedTech] = useState('');
   const memberCardTexture = useMemberCardTexture(track, index + 1);
 
@@ -334,6 +333,8 @@ function TrackDetail({
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [onBack]);
+
+  const cardFrontImage = memberCardTexture || track.idPortrait;
 
   return (
     <article className="track-detail" style={{ '--track-accent': track.accent } as React.CSSProperties}>
@@ -433,71 +434,42 @@ function TrackDetail({
             MEMBER IDENTITY
             <span className="lanyard-caption-line" />
           </div>
-          <div className="id-helper-pill" aria-hidden="true">
-            <span className="id-helper-dot" style={{ backgroundColor: track.accent }} />
-            <span>DRAG TO SWING</span>
-            <span className="id-helper-sep">·</span>
-            <span>CLICK TO FLIP</span>
-          </div>
           <div className="track-lanyard-stage">
-            {memberCardTexture ? (
-              <Suspense fallback={<div className="lanyard-loading">PREPARING MEMBER ID</div>}>
-                <Lanyard
-                  frontImage={memberCardTexture}
-                  backImage={sigLogo}
-                  imageFit="contain"
-                  cardColor="#10111d"
-                  orientation="portrait"
-                  finish="matte"
-                  size={0.68}
-                  anchor="center"
-                  strapLength={0.31}
-                  strapColor={track.accent}
-                  metal="silver"
-                  gravity={0.75}
-                  damping={0.58}
-                  elasticity={0.54}
-                  breeze={0.28}
-                  interactive
-                  intro
-                />
-              </Suspense>
-            ) : (
-              <div className="lanyard-loading">PREPARING MEMBER ID</div>
-            )}
+            <Suspense fallback={<div className="lanyard-loading">PREPARING MEMBER ID</div>}>
+              <Lanyard
+                frontImage={cardFrontImage}
+                backImage={sigLogo}
+                imageFit="contain"
+                cardColor="#10111d"
+                orientation="portrait"
+                finish="matte"
+                size={0.68}
+                anchor="center"
+                strapLength={0.31}
+                strapColor={track.accent}
+                metal="silver"
+                gravity={0.75}
+                damping={0.58}
+                elasticity={0.54}
+                breeze={0.28}
+                interactive
+                intro
+              />
+            </Suspense>
           </div>
           <div className="id-helper">
-            <span className="id-helper-dot" style={{ backgroundColor: track.accent }} />
-            <span>DRAG TO SWING</span>
-            <span className="id-helper-sep">·</span>
-            <span>CLICK TO FLIP</span>
+            DRAG TO SWING <span>·</span> CLICK TO FLIP
           </div>
           <div className="track-id-stamp">
             <span>RS</span>
-            <span>REALITY SPECTRA<br />VIT PUNE · EST. 2016</span>
+            <span>
+              REALITY SPECTRA
+              <br />
+              VIT PUNE · EST. 2016
+            </span>
             <span>✳</span>
           </div>
         </aside>
-      </div>
-      <div className="track-detail-switcher" aria-label="Switch to another track">
-        <div className="track-switcher-label">
-          <span>SWITCH TRACK</span>
-          <span>10 SPECIALISATIONS</span>
-        </div>
-        <div className="track-switcher-list">
-          {tracks.map((t, i) => (
-            <button
-              key={t.title}
-              type="button"
-              className={t.id === track.id ? 'active' : ''}
-              style={{ '--track-accent': t.accent } as React.CSSProperties}
-              onClick={() => onSelectTrack(t)}
-            >
-              <span>{String(i + 1).padStart(2, '0')}</span>
-              {t.title}
-            </button>
-          ))}
-        </div>
       </div>
     </article>
   );
@@ -540,7 +512,6 @@ export function RecruitmentTracks() {
             key={activeTrack.title}
             track={activeTrack}
             onBack={handleBack}
-            onSelectTrack={handleSelect}
           />
         ) : (
           <TrackOverview onSelect={handleSelect} />
