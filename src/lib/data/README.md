@@ -201,6 +201,10 @@ were never attached and the parts of an abandoned upload.
 
 ## Tests and tools
 
+- `GET /api/health` — on any deployment: the backend in use and whether a read
+  works (`ok`, `backend`, `records`, `uploads`); 200 or 503, never any data
+  (D-041).
+
 - `pnpm test` — schemas, repositories and media on the in-memory adapters;
   the local and Netlify Blobs backends against the same store contract and
   a hosted-storage contract (`hosted-storage-contract.ts`). Blobs runs on an

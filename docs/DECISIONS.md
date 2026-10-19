@@ -1272,7 +1272,8 @@ files too small for their crop.
    without a condition, re-reads and checks its own write id, and retries on
    a lost race. On Vercel one Blob store must be connected once (the API
    refuses to create it on the club's behalf); the "not connected" notice
-   names the exact clicks for the host it runs on.
+   names the exact clicks for the host it runs on. `GET /api/health` says
+   which store a deployment uses and whether it answers, without any data.
 4. **Fewer event rules.** A registration link is optional (no link, no
    Register button); new events are published by default; an event can go on
    the timeline as soon as it has ended, with or without photos. The ended

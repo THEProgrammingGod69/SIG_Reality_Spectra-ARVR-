@@ -22,9 +22,10 @@ sign-in**. On Netlify → Site configuration → Environment variables, set for
 | `ADMIN_PASSWORD` | the club's admin password (a long passphrase is recommended) |
 
 Leave `DATA_BACKEND` and the Upstash/R2 variables unset, then **Trigger
-deploy**. Check: the footer's **Admin** link opens the sign-in page, both
-admins can sign in, the dashboard's Setup card shows _Netlify Blobs_, and a
-saved event appears on `/events` without a redeploy. The steps below replace
+deploy**. Check: `https://<site>/api/health` answers `"ok": true` with
+`"backend": "netlify-blobs"`, the footer's **Admin** link opens the sign-in
+page, both admins can sign in, the dashboard's Setup card shows _Netlify
+Blobs_, and a saved event appears on `/events` without a redeploy. The steps below replace
 Blobs and add Google later; the password sign-in can stay.
 
 ## 0. Before you start
@@ -88,6 +89,8 @@ is ignored with a warning (D-041).
 
 ## 6. Test the deploy preview
 
+- [ ] Open `https://deploy-preview-N--<site>.netlify.app/api/health`: `"ok": true`
+      means the data store is connected and answering (D-041).
 - [ ] Run the public tests against it (PowerShell):
 
   ```powershell

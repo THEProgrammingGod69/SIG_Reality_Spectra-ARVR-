@@ -48,3 +48,14 @@ test.describe('robots.txt', () => {
     expect(body).toContain('Disallow: /api/');
   });
 });
+
+test.describe('health check', () => {
+  test('reports the data store without revealing any data', async ({ request }) => {
+    const response = await request.get('/api/health');
+    expect(response.headers()['cache-control']).toBe('no-store');
+    const body = (await response.json()) as Record<string, unknown>;
+    expect(Object.keys(body).sort()).toEqual(['backend', 'ok', 'records', 'uploads']);
+    // 200 exactly when the store can be read and receive uploads.
+    expect(response.status()).toBe(body.ok ? 200 : 503);
+  });
+});
