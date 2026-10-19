@@ -23,7 +23,7 @@ import { signInForDevelopment, signInWithGoogle, signInWithPassword } from '@/li
 import { setup } from '@/lib/auth/config';
 import { safeCallbackPath } from '@/lib/auth/policy';
 import { getAdminSession } from '@/lib/auth/session';
-import { isDevelopment } from '@/lib/env';
+import { env, envWarnings, isDevelopment } from '@/lib/env';
 import { siteConfig } from '@/lib/site';
 
 import { SubmitButton } from './submit-button';
@@ -121,15 +121,47 @@ async function SignInOptions({ searchParams }: Pick<PageProps<'/admin/login'>, '
         </form>
       ) : null}
 
-      {!setup.password && !setup.google ? (
-        <p className="text-body-sm text-muted-foreground">
-          {isDevelopment
-            ? 'The password sign-in is off until ADMIN_PASSWORD is set, and Google sign-in until AUTH_GOOGLE_ID and AUTH_GOOGLE_SECRET are (docs/SETUP_AUTH.md).'
-            : 'Sign-in is not set up on this site yet. Ask the site maintainer.'}
-        </p>
-      ) : null}
+      {!setup.password && !setup.google ? <NotSetUp /> : null}
 
       {setup.devSignIn ? <DevelopmentSignIn callbackUrl={callbackUrl} /> : null}
+    </div>
+  );
+}
+
+/** The sign-in settings this deployment is missing, by name (never a value). */
+function missingSignInSettings(): string[] {
+  return [
+    env.AUTH_SECRET ? null : 'AUTH_SECRET',
+    env.ADMIN_EMAILS?.length ? null : 'ADMIN_EMAILS',
+    env.ADMIN_PASSWORD ? null : 'ADMIN_PASSWORD',
+  ].filter((name): name is string => name !== null);
+}
+
+/**
+ * Sign-in is off: say exactly which settings are missing or were ignored, so
+ * whoever looks after the site can fix it in one go (D-041). Names only.
+ */
+function NotSetUp() {
+  const missing = missingSignInSettings();
+  const ignored = envWarnings.filter((warning) =>
+    /^(AUTH_SECRET|ADMIN_EMAILS|ADMIN_PASSWORD)\b/.test(warning),
+  );
+  return (
+    <div className="flex flex-col gap-2 text-body-sm text-muted-foreground">
+      <p>
+        Sign-in is not set up on this site yet.
+        {missing.length > 0 ? (
+          <>
+            {' '}
+            Add {missing.join(', ')} to the site&apos;s environment variables
+            {isDevelopment ? ' (.env.local)' : ' in Netlify or Vercel'}, then redeploy
+            (docs/SETUP_AUTH.md).
+          </>
+        ) : null}
+      </p>
+      {ignored.map((warning) => (
+        <p key={warning}>{warning}</p>
+      ))}
     </div>
   );
 }

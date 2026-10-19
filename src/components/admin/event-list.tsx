@@ -1,5 +1,6 @@
 import { CalendarDays } from 'lucide-react';
 import Image from 'next/image';
+import type { ReactNode } from 'react';
 
 import { Icon } from '@/components/ui/icon';
 import { formatDateTime } from '@/lib/dates';
@@ -14,7 +15,7 @@ export function EventRow({ event, phase }: { event: Event; phase: EventPhase }) 
   return (
     <GuardedLink
       href={`/admin/events/${event.id}`}
-      className="flex items-center gap-4 rounded-control p-2 hover:bg-secondary focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+      className="flex min-w-0 flex-1 items-center gap-4 rounded-control p-2 hover:bg-secondary focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
     >
       <span className="relative flex aspect-4/5 w-10 shrink-0 items-center justify-center overflow-hidden rounded-control bg-secondary text-muted-foreground">
         {event.poster ? (
@@ -41,15 +42,20 @@ export function EventRow({ event, phase }: { event: Event; phase: EventPhase }) 
 
 export type PhasedEvent = { event: Event; phase: EventPhase };
 
-/** A list of events with an empty message, optionally cut to the first few. */
+/**
+ * A list of events with an empty message, optionally cut to the first few,
+ * and an optional quick action beside each (e.g. "Put on timeline").
+ */
 export function EventList({
   items,
   empty,
   limit,
+  action,
 }: {
   items: readonly PhasedEvent[];
   empty: string;
   limit?: number;
+  action?: (item: PhasedEvent) => ReactNode;
 }) {
   if (items.length === 0) {
     return <p className="text-body-sm text-muted-foreground">{empty}</p>;
@@ -59,8 +65,9 @@ export function EventList({
     <>
       <ul className="flex flex-col gap-1">
         {shown.map((item) => (
-          <li key={item.event.id}>
+          <li key={item.event.id} className="flex flex-wrap items-center gap-2">
             <EventRow event={item.event} phase={item.phase} />
+            {action?.(item)}
           </li>
         ))}
       </ul>

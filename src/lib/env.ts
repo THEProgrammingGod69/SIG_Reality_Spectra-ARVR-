@@ -266,31 +266,119 @@ export type ServerEnv = z.infer<typeof serverEnvSchema>;
 const skipValidation =
   process.env.SKIP_ENV_VALIDATION === '1' || process.env.SKIP_ENV_VALIDATION === 'true';
 
-function parseEnv(): ServerEnv {
-  if (skipValidation) {
-    return serverEnvSchema.parse({});
+/**
+ * A value as people paste it into a host's settings: surrounding spaces and
+ * one pair of matching quotes (copied from a `.env` file) are not part of it.
+ * Blank means "not set".
+ */
+export function cleanEnvValue(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+  let clean = value.trim();
+  const first = clean[0];
+  if (clean.length >= 2 && (first === '"' || first === "'") && clean.endsWith(first)) {
+    clean = clean.slice(1, -1).trim();
   }
-
-  // A variable copied blank from .env.example means "not set yet", not "".
-  const setValues = Object.fromEntries(
-    Object.entries(process.env).filter(([, value]) => value !== ''),
-  );
-  const parsed = serverEnvSchema.safeParse(setValues);
-
-  if (!parsed.success) {
-    const details = parsed.error.issues
-      .map((issue) => `  - ${issue.path.join('.') || '(root)'}: ${issue.message}`)
-      .join('\n');
-    throw new Error(
-      `Invalid server environment variables:\n${details}\n\n` +
-        'Copy .env.example to .env.local and fill in the values for the stage you are on.',
-    );
-  }
-
-  return parsed.data;
+  return clean === '' ? undefined : clean;
 }
 
-export const env: ServerEnv = parseEnv();
+/**
+ * The environment this deployment runs with, made to work rather than to fail
+ * (D-041). A mistake in the host's settings must never take the site down or
+ * break the admin panel, so instead of refusing to start:
+ *
+ * - values are cleaned (`cleanEnvValue`);
+ * - ADMIN_EMAILS keeps its valid addresses and drops the rest;
+ * - the deploy guards correct instead of failing: a deployed site ignores
+ *   `DATA_BACKEND=local` and `AUTH_DEV_SIGN_IN=true`, and a namespace that
+ *   does not match the deploy (production `prod`, previews never `prod`)
+ *   falls back to the deploy's own;
+ * - any other invalid variable is ignored, as if it were not set.
+ *
+ * Every correction is reported in `warnings`: in the logs, on the admin
+ * dashboard's Setup card and, for sign-in settings, on the sign-in page.
+ * `serverEnvSchema` itself stays strict, so the rules stay tested as rules.
+ */
+export function resolveEnv(raw: Record<string, string | undefined>): {
+  env: ServerEnv;
+  warnings: string[];
+} {
+  const warnings: string[] = [];
+  const values: Record<string, string> = {};
+  for (const [key, value] of Object.entries(raw)) {
+    const clean = cleanEnvValue(value);
+    if (clean !== undefined) values[key] = clean;
+  }
+
+  if (values.ADMIN_EMAILS !== undefined) {
+    const entries = values.ADMIN_EMAILS.split(',')
+      .map((entry) => cleanEnvValue(entry)?.toLowerCase())
+      .filter((entry): entry is string => entry !== undefined);
+    const valid = entries.filter((entry) => z.email().safeParse(entry).success);
+    if (valid.length < entries.length) {
+      warnings.push(
+        `ADMIN_EMAILS: ${entries.length - valid.length} entr${entries.length - valid.length === 1 ? 'y is' : 'ies are'} not an email address and ${entries.length - valid.length === 1 ? 'was' : 'were'} ignored.`,
+      );
+    }
+    if (valid.length > 0) values.ADMIN_EMAILS = valid.join(',');
+    else delete values.ADMIN_EMAILS;
+  }
+
+  const context = hostContext(values);
+  if (context !== undefined) {
+    if (values.AUTH_DEV_SIGN_IN === 'true') {
+      delete values.AUTH_DEV_SIGN_IN;
+      warnings.push('AUTH_DEV_SIGN_IN is ignored on a deployed site.');
+    }
+    if (values.DATA_BACKEND === 'local') {
+      delete values.DATA_BACKEND;
+      warnings.push(
+        "DATA_BACKEND=local is ignored on a deployed site: the host's own store is used.",
+      );
+    }
+    const namespace = values.DATA_NAMESPACE;
+    if (namespace !== undefined && (context === 'production') !== (namespace === 'prod')) {
+      delete values.DATA_NAMESPACE;
+      warnings.push(
+        `DATA_NAMESPACE="${namespace}" does not match this ${context} deploy and was ignored.`,
+      );
+    }
+  }
+
+  // Ignore what is still invalid, one variable at a time, until it parses.
+  for (;;) {
+    const parsed = serverEnvSchema.safeParse(values);
+    if (parsed.success) return { env: parsed.data, warnings };
+    const invalid = new Map<string, string>();
+    for (const issue of parsed.error.issues) {
+      const key = issue.path[0];
+      if (typeof key === 'string' && key in values && !invalid.has(key)) {
+        invalid.set(key, issue.message);
+      }
+    }
+    if (invalid.size === 0) {
+      const details = parsed.error.issues.map((issue) => `  - ${issue.message}`).join('\n');
+      throw new Error(`Invalid server environment variables:\n${details}`);
+    }
+    for (const [key, message] of invalid) {
+      delete values[key];
+      warnings.push(`${key} was ignored: ${message}.`);
+    }
+  }
+}
+
+function parseEnv(): { env: ServerEnv; warnings: readonly string[] } {
+  if (skipValidation) return { env: serverEnvSchema.parse({}), warnings: [] };
+  const resolved = resolveEnv(process.env);
+  for (const warning of resolved.warnings) console.warn(`[env] ${warning}`);
+  return resolved;
+}
+
+const resolved = parseEnv();
+
+/** What `resolveEnv` corrected or ignored in this deployment's settings. */
+export const envWarnings: readonly string[] = resolved.warnings;
+
+export const env: ServerEnv = resolved.env;
 
 /**
  * Read a variable that a feature genuinely cannot run without.

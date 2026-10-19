@@ -82,16 +82,18 @@ export function EventTimeline({ events }: { events: readonly TimelineEvent[] }) 
                       {event.summary}
                     </p>
                   )}
-                  <PhotoGrid
-                    tile="sm"
-                    limit={PHOTOS_PER_EVENT}
-                    photos={event.photos.map((image) => ({
-                      key: image.url,
-                      image,
-                      caption: event.title,
-                    }))}
-                    className="max-w-3xl"
-                  />
+                  {event.photos.length > 0 ? (
+                    <PhotoGrid
+                      tile="sm"
+                      limit={PHOTOS_PER_EVENT}
+                      photos={event.photos.map((image) => ({
+                        key: image.url,
+                        image,
+                        caption: event.title,
+                      }))}
+                      className="max-w-3xl"
+                    />
+                  ) : null}
                 </Reveal>
               </li>
             ))}

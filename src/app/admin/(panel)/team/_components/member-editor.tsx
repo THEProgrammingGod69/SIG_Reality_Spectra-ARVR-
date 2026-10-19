@@ -198,7 +198,7 @@ export function MemberEditor({
                 defaultAlt={`Photo of ${name || 'the team member'}`}
                 error={errors.photo}
                 frame="aspect-square"
-                hint="A clear head-and-shoulders photo. It is cropped to a square from the centre."
+                hint="A clear head-and-shoulders photo, any shape. The About page crops it to a square from the top, so the face stays in."
               />
             )}
           />

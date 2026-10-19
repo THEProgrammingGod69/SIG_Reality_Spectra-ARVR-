@@ -146,9 +146,10 @@ token and the two R2 keys.
 | `R2_PUBLIC_BASE_URL`       | from step 2                                                                                                                    |
 | `DATA_NAMESPACE`           | **leave unset**: it follows the deploy context — `prod` in production, `preview` on deploy previews and branch deploys (D-036) |
 
-If you do set it, the build refuses to deploy if production does not use
-`prod`, or if a preview does (D-025), so a mistake here fails loudly instead of mixing test edits into
-the live site.
+If you do set it, a value that would put production off `prod`, or a preview
+on it, is ignored and the dashboard's Setup card says so (D-025, D-041): a
+mistake here never mixes test edits into the live site, and never takes the
+site down either.
 
 Redeploy after adding the variables. A new production store starts with
 recruitment closed (D-032): sign in to `/admin/recruitment`, tick "Recruitment

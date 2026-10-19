@@ -210,7 +210,8 @@ src/
   lib/
     data/            repository layer — ONLY place that touches Redis/R2      (Stage 5)
     schemas/         Zod schemas: one per entity, shared by forms and data   (Stage 5)
-    auth/            Auth.js config, access policy, session checks, adminAction()   (Stage 6)
+    auth/            Auth.js config, access policy, session checks, adminAction()   (Stage 6);
+                     the proxy imports only base + proxy-auth + session-check (D-041)
     action-result.ts the one result shape admin Server Actions return     (Stage 6)
     integrations.ts  which outside services have credentials (dashboard)  (Stage 6)
     dates.ts         dates in the club's time zone                        (Stage 6)
@@ -220,6 +221,7 @@ src/
     turnstile.ts     the contact form's spam check: mode + verification   (Stage 8)
     motion/          motion tokens reader, GSAP setup, hero device tiers, reachable scroll points (Stages 2, D-037)
     cn.ts            the one class-name helper (public UI and shadcn admin)
+    image-sizes.ts   coverSizes(): next/image `sizes` for a photo cropped to its frame (D-041)
     contrast.ts      WCAG contrast maths for the token audit and /dev/ui
     env.ts           server env, validated with Zod (server-only)
     env.public.ts    NEXT_PUBLIC_* env, safe in the browser
@@ -290,8 +292,8 @@ upload flow in `src/lib/data/README.md`; diagrams in `docs/ARCHITECTURE.md`.
 
 - **Event phases are derived, not stored:** _current_ = published and not yet
   ended; _awaiting timeline_ = ended but not on the timeline (admin-only, kept for
-  later use); _timeline_ = `inTimeline`, which requires a past end and at least
-  one photo. There is no manual ordering — the timeline is chronological.
+  later use); _timeline_ = `inTimeline`, which requires a past end; photos and a
+  recap are optional (D-041). There is no manual ordering — the timeline is chronological.
 - **The gallery has three sources** and shows them together, newest first,
   grouped by category: the photos of timeline events (category taken from the
   event), standalone `GalleryPhoto` records, and the club archive from Git
@@ -308,7 +310,7 @@ upload flow in `src/lib/data/README.md`; diagrams in `docs/ARCHITECTURE.md`.
 
 Redis keys and R2 files are namespaced by `DATA_NAMESPACE`, which **must differ
 between production and preview** so preview deployments can never touch live
-club data; on Netlify the build enforces `prod` for production only. Every
+club data; a value that breaks that split is ignored with a warning (D-041). Every
 write is one atomic Lua script, so indexes cannot drift. Updates carry an
 `updatedAt` optimistic-concurrency check and reject stale edits with a clear
 message rather than silently clobbering someone else's change (D-029).
@@ -460,6 +462,12 @@ contributor must know before writing UI:
 | Clips              | Square poster tile + play badge; muted preview on mouse hover only; native `<video controls>` in the viewer; nothing autoplays (D-039)                          |
 | Password sign-in   | `ADMIN_PASSWORD` (env only), constant-time, rate-limited, fingerprinted so a change signs everyone out; Setup card warns while weak (D-039)                     |
 | Moments reel       | Home's CSS-3D cylinder of archive moments turns with the scroll (CircularGallery without `ogl`); a snap strip on phones and reduced motion (D-039)              |
+| Forgiving settings | Env values are trimmed and unquoted; invalid or deploy-unsafe ones are dropped with a warning on the dashboard, never a failed site (D-041)                     |
+| Proxy bundle       | `proxy.ts` decodes the session only (`auth/proxy-auth.ts`); a unit test fails if the data layer becomes reachable from it (D-041)                               |
+| Event rules        | Registration link optional, published by default, timeline needs only a past end; one-click Put on timeline (D-041)                                             |
+| Cropped images     | `coverSizes()` widens `sizes` by the photo's shape; gallery two columns on phones; Home reel only stills ≥ 960 px on the short side (D-041)                     |
+| Campus map         | Contact embeds VIT Bibwewadi from `contact.json` with an Open in Google Maps button (D-041)                                                                     |
+| Header and store   | The header is in the static shell; recruitment's "open" marks stream from a promise (`WhenRecruitmentOpen`), so the menu never waits for data (D-041)           |
 
 ---
 

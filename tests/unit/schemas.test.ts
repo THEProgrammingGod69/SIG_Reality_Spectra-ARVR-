@@ -92,13 +92,11 @@ describe('Event', () => {
   it.each([
     ['a 400-character title', { title: 'x'.repeat(400) }, 'title'],
     ['an end before the start', { endsAt: '2026-10-10T17:00:00+05:30' }, 'endsAt'],
-    ['a published event with no registration link', { published: true }, 'registrationUrl'],
     [
       'an http registration link',
       { registrationUrl: 'http://vierp.example.org' },
       'registrationUrl',
     ],
-    ['the timeline without photos', { inTimeline: true }, 'photos'],
     ['the same photo twice', { photos: [image, image] }, 'photos.1'],
     [
       'too many photos',
@@ -122,9 +120,12 @@ describe('Event', () => {
     expect(fails(EventSchema.safeParse(valid))).toEqual(
       expect.arrayContaining(['createdAt', 'updatedAt', 'updatedBy']),
     );
-    expect(fails(EventSchema.safeParse({ ...valid, ...system, published: true }))).toContain(
-      'registrationUrl',
-    );
+    // The record rules are the input's: an end before the start fails here too.
+    expect(
+      fails(EventSchema.safeParse({ ...valid, ...system, endsAt: '2026-10-10T17:00:00+05:30' })),
+    ).toContain('endsAt');
+    // A published event without a registration link is fine (D-041).
+    expect(EventSchema.safeParse({ ...valid, ...system, published: true }).success).toBe(true);
   });
 
   it('derives phases and the end of a single-day event', () => {

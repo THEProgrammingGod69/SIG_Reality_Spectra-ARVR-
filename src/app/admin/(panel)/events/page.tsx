@@ -19,6 +19,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { adminRead } from '@/lib/data';
 import { type EventPhase, eventPhase } from '@/lib/schemas/event';
 
+import { TimelineButton } from './_components/timeline-button';
+
 export const metadata: Metadata = { title: 'Events' };
 
 /** The groups, in the order an admin works through them. */
@@ -31,8 +33,9 @@ const GROUPS = [
   },
   {
     phases: ['awaiting'],
-    title: 'Ended — needs a recap',
-    description: 'Kept for later: add a recap and photos, then put each on the timeline.',
+    title: 'Ended — not on the timeline yet',
+    description:
+      'Put each on the timeline in one click; a recap and photos can be added any time in its editor.',
     empty: 'Nothing waiting.',
   },
   {
@@ -92,7 +95,17 @@ async function EventGroups() {
           <CardDescription>{group.description}</CardDescription>
         </CardHeader>
         <CardContent>
-          <EventList items={items} empty={group.empty} />
+          <EventList
+            items={items}
+            empty={group.empty}
+            {...(group.phases[0] === 'awaiting'
+              ? {
+                  action: ({ event }: PhasedEvent) => (
+                    <TimelineButton id={event.id} version={event.updatedAt} title={event.title} />
+                  ),
+                }
+              : {})}
+          />
         </CardContent>
       </Card>
     );

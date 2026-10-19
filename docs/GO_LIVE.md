@@ -75,11 +75,11 @@ Site configuration → Environment variables. Set **per deploy context**:
 | `NEXT_PUBLIC_CF_WEB_ANALYTICS_TOKEN`                                                           | the token            | leave unset                      |
 | `CRON_SECRET`                                                                                  | its own secret       | leave unset                      |
 
-**Never set** `DATA_BACKEND=local` or `AUTH_DEV_SIGN_IN` on Netlify: the build
-fails if you do, by design. With the Upstash variables set, the site uses
+**Never set** `DATA_BACKEND=local` or `AUTH_DEV_SIGN_IN` on Netlify: a deployed
+site ignores both and lists them on the dashboard's Setup card (D-041). With the Upstash variables set, the site uses
 Upstash + R2; without them, Netlify Blobs (D-039). `DATA_NAMESPACE` follows the deploy context when unset
-(D-036); if it is set, the build fails unless production uses `prod` and
-previews do not.
+(D-036); if it is set to anything that would mix production and previews, it
+is ignored with a warning (D-041).
 
 ## 5. Content in the repository
 

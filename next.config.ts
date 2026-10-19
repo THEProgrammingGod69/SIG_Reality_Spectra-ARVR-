@@ -1,5 +1,6 @@
 import type { NextConfig } from 'next';
 
+import { hostSiteUrl } from './src/lib/env.public';
 import {
   MEDIA_FILE_HEADERS,
   NOINDEX_HEADERS,
@@ -29,7 +30,10 @@ const uploadOrigin = /^[a-f0-9]{32}$/.test(process.env.R2_ACCOUNT_ID ?? '')
 
 const security: SecurityOptions = {
   development: process.env.NODE_ENV === 'development',
-  https: (process.env.NEXT_PUBLIC_SITE_URL ?? '').startsWith('https://'),
+  // The configured address, else the one the host reports (D-041).
+  https: (process.env.NEXT_PUBLIC_SITE_URL?.trim() || hostSiteUrl(process.env) || '').startsWith(
+    'https://',
+  ),
   mediaOrigin: mediaHost ? `https://${mediaHost}` : null,
   uploadOrigin,
   netlifyPreview: ['deploy-preview', 'branch-deploy'].includes(process.env.CONTEXT ?? ''),

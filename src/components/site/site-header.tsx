@@ -11,8 +11,9 @@ import { cn } from '@/lib/cn';
 import type { Channels } from '@/lib/content';
 import { ctaNavRoutes, getRoute, primaryNavRoutes, siteConfig } from '@/lib/site';
 
-import { MobileMenuPanel, MobileMenuToggle, useMobileMenu } from './mobile-menu';
 import { HudNav } from './hud-nav';
+import { MobileMenuPanel, MobileMenuToggle, useMobileMenu } from './mobile-menu';
+import { WhenRecruitmentOpen } from './recruitment-mark';
 
 /** The logo links Home, so Home is not repeated in the rail. */
 const railItems = primaryNavRoutes.filter((route) => route.href !== '/');
@@ -26,7 +27,8 @@ const isScrolled = () => window.scrollY > 0;
 
 type SiteHeaderProps = {
   channels: Channels;
-  recruitmentOpen: boolean;
+  /** Whether recruitment is open: streamed in, so the header never waits for it (D-041). */
+  recruitmentOpen: Promise<boolean>;
 };
 
 /**
@@ -87,14 +89,16 @@ export function SiteHeader({ channels, recruitmentOpen }: SiteHeaderProps) {
               aria-current={menu.pathname === route.href ? 'page' : undefined}
               className="hidden sm:inline-flex"
             >
-              {recruitmentOpen ? (
+              <WhenRecruitmentOpen open={recruitmentOpen}>
                 <span
                   aria-hidden="true"
                   className="size-1.5 rounded-full bg-(--color-accent-contrast)"
                 />
-              ) : null}
+              </WhenRecruitmentOpen>
               {route.label}
-              {recruitmentOpen ? <span className="sr-only"> (open now)</span> : null}
+              <WhenRecruitmentOpen open={recruitmentOpen}>
+                <span className="sr-only"> (open now)</span>
+              </WhenRecruitmentOpen>
             </ButtonLink>
           ))}
           <MobileMenuToggle

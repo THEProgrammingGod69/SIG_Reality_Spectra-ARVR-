@@ -15,6 +15,7 @@ import { prefersReducedMotion } from '@/components/motion/use-reduced-motion';
 import { Icon } from '@/components/ui/icon';
 import { Modal } from '@/components/ui/modal';
 import { cn } from '@/lib/cn';
+import { coverSizes } from '@/lib/image-sizes';
 import { gsap, gsapEase, ScrollTrigger } from '@/lib/motion/gsap';
 import { reachablePoint } from '@/lib/motion/scroll-point';
 import { readMotionTokens } from '@/lib/motion/tokens';
@@ -71,18 +72,22 @@ type PhotoGridProps = {
 
 const tiles = {
   sm: 'grid-cols-[repeat(auto-fill,minmax(min(100%,5.5rem),1fr))]',
-  md: 'grid-cols-[repeat(auto-fill,minmax(min(100%,14rem),1fr))]',
+  // Two columns on phones (8.5rem fits two from a 320px screen), so a long
+  // gallery is half the scroll and each tile half the download; 14rem from sm.
+  md: 'grid-cols-[repeat(auto-fill,minmax(min(100%,8.5rem),1fr))] sm:grid-cols-[repeat(auto-fill,minmax(min(100%,14rem),1fr))]',
 } as const;
 
 /**
  * How wide each tile renders, so the browser fetches the right image: `md`
- * tiles (14rem minimum) are one full-width column on phones, two from 30rem,
- * and about 18rem on a full-width desktop row; a featured tile is two of them.
+ * tiles are at most half the screen below 64rem and about 18rem on a
+ * full-width desktop row; a featured tile is two of them from md. Tiles crop
+ * a square from the photo, so each tile widens these by its photo's shape
+ * (`coverSizes`).
  */
 const TILE_SIZES = {
   sm: '8rem',
-  md: '(min-width: 64rem) 18rem, (min-width: 30rem) 50vw, 100vw',
-  feature: '(min-width: 64rem) 36rem, (min-width: 48rem) 66vw, 100vw',
+  md: '(min-width: 64rem) 18rem, 50vw',
+  feature: '(min-width: 64rem) 36rem, (min-width: 48rem) 66vw, 50vw',
 } as const;
 
 /** Entrances past this many tiles share the last delay, so a long batch never drags. */
@@ -307,7 +312,7 @@ function Tile({
           src={photo.image.url}
           alt={photo.image.alt}
           fill
-          sizes={featured ? TILE_SIZES.feature : TILE_SIZES[tile]}
+          sizes={coverSizes(featured ? TILE_SIZES.feature : TILE_SIZES[tile], photo.image)}
           // The first tile of a grid that opens the page is its largest
           // paint: fetch it first. The rest of the first row loads at once.
           {...(loading === 'preload' ? { preload: true } : { loading })}

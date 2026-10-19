@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { serverEnvSchema } from '@/lib/env';
+import { cleanEnvValue, resolveEnv, serverEnvSchema } from '@/lib/env';
+import { hostSiteUrl } from '@/lib/env.public';
 
 /**
  * These tests assert the environment CONTRACT, not the current machine's values.
@@ -214,5 +215,96 @@ describe('serverEnvSchema', () => {
       const result = serverEnvSchema.safeParse({ ADMIN_EMAILS: '   ' });
       expect(result.success).toBe(false);
     });
+  });
+});
+
+/**
+ * D-041: what a deployment actually runs with. A mistake in the host's
+ * settings is corrected or ignored, never fatal, and always reported.
+ */
+describe('resolveEnv', () => {
+  it('cleans values pasted with spaces or quotes, and treats blank as unset', () => {
+    expect(cleanEnvValue('  admin  ')).toBe('admin');
+    expect(cleanEnvValue('"admin"')).toBe('admin');
+    expect(cleanEnvValue("'a b'")).toBe('a b');
+    expect(cleanEnvValue('"unbalanced')).toBe('"unbalanced');
+    expect(cleanEnvValue('   ')).toBeUndefined();
+    const { env, warnings } = resolveEnv({
+      ADMIN_EMAILS: '"dryerisdry@gmail.com, Mohan.Arnav24@vit.edu"',
+      ADMIN_PASSWORD: '"admin"',
+      AUTH_SECRET: ` "${'s'.repeat(40)}" `,
+    });
+    expect(env.ADMIN_EMAILS).toEqual(['dryerisdry@gmail.com', 'mohan.arnav24@vit.edu']);
+    expect(env.ADMIN_PASSWORD).toBe('admin');
+    expect(env.AUTH_SECRET).toBe('s'.repeat(40));
+    expect(warnings).toEqual([]);
+  });
+
+  it('keeps the valid admin emails and reports the rest', () => {
+    const { env, warnings } = resolveEnv({ ADMIN_EMAILS: 'a@club.org, not-an-email, b@club.org' });
+    expect(env.ADMIN_EMAILS).toEqual(['a@club.org', 'b@club.org']);
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0]).toMatch(/^ADMIN_EMAILS/);
+  });
+
+  it('corrects the deploy guards instead of failing the deploy', () => {
+    const preview = resolveEnv({
+      CONTEXT: 'deploy-preview',
+      DATA_NAMESPACE: 'prod',
+      DATA_BACKEND: 'local',
+      AUTH_DEV_SIGN_IN: 'true',
+    });
+    expect(preview.env.DATA_NAMESPACE).toBe('preview');
+    expect(preview.env.DATA_BACKEND).toBe('netlify-blobs');
+    expect(preview.env.AUTH_DEV_SIGN_IN).toBeUndefined();
+    expect(preview.warnings).toHaveLength(3);
+
+    const production = resolveEnv({ VERCEL_ENV: 'production', DATA_NAMESPACE: 'dev' });
+    expect(production.env.DATA_NAMESPACE).toBe('prod');
+    expect(production.env.DATA_BACKEND).toBe('vercel-blob');
+    expect(production.warnings).toHaveLength(1);
+
+    // On a developer's computer nothing is corrected.
+    const local = resolveEnv({ DATA_BACKEND: 'local', AUTH_DEV_SIGN_IN: 'true' });
+    expect(local.env.DATA_BACKEND).toBe('local');
+    expect(local.warnings).toEqual([]);
+  });
+
+  it('ignores an invalid optional variable instead of stopping the site', () => {
+    const { env, warnings } = resolveEnv({
+      AUTH_SECRET: 'too-short',
+      NEXT_PUBLIC_SITE_URL: 'sigarvr.netlify.app',
+      ADMIN_PASSWORD: 'admin',
+    });
+    expect(env.AUTH_SECRET).toBeUndefined();
+    expect(env.NEXT_PUBLIC_SITE_URL).toBe('http://localhost:3000');
+    expect(env.ADMIN_PASSWORD).toBe('admin');
+    expect(warnings.map((warning) => warning.split(' ')[0])).toEqual([
+      'NEXT_PUBLIC_SITE_URL',
+      'AUTH_SECRET',
+    ]);
+  });
+});
+
+describe('hostSiteUrl', () => {
+  it("uses the host's own address when NEXT_PUBLIC_SITE_URL is not set", () => {
+    expect(hostSiteUrl({ CONTEXT: 'production', URL: 'https://sigarvr.netlify.app' })).toBe(
+      'https://sigarvr.netlify.app',
+    );
+    expect(
+      hostSiteUrl({
+        CONTEXT: 'deploy-preview',
+        URL: 'https://sigarvr.netlify.app',
+        DEPLOY_PRIME_URL: 'https://deploy-preview-2--sigarvr.netlify.app',
+      }),
+    ).toBe('https://deploy-preview-2--sigarvr.netlify.app');
+    expect(
+      hostSiteUrl({
+        VERCEL_ENV: 'production',
+        VERCEL_PROJECT_PRODUCTION_URL: 'sig-reality-spectra.vercel.app',
+        VERCEL_URL: 'sig-reality-spectra-abc.vercel.app',
+      }),
+    ).toBe('https://sig-reality-spectra.vercel.app');
+    expect(hostSiteUrl({})).toBeUndefined();
   });
 });

@@ -24,7 +24,7 @@ const { input, record } = entitySchemas(
     title: text(3, 80),
     category: CategorySchema,
     /** One or two sentences: the card text on /events. */
-    summary: text(20, 160),
+    summary: text(3, 160),
     /** Plain text; a blank line starts a new paragraph (shown as text, never HTML). */
     description: longText(5000),
     startsAt: instant,
@@ -32,7 +32,10 @@ const { input, record } = entitySchemas(
     endsAt: instant.nullable().default(null),
     venue: text(2, 120),
     mode: z.enum(EVENT_MODES.map((mode) => mode.id) as [EventMode, ...EventMode[]]),
-    /** Where people register (typically VIERP). Registration never happens on this site. */
+    /**
+     * Where people register (typically VIERP). Optional: without one the card
+     * simply has no Register button. Registration never happens on this site.
+     */
     registrationUrl: httpsUrl.nullable().default(null),
     poster: ImageSchema.nullable().default(null),
     /** Shown publicly while upcoming or running. Unpublished events are drafts. */
@@ -40,26 +43,15 @@ const { input, record } = entitySchemas(
     /** What happened, written after the event for the timeline. */
     recap: longText(2000),
     photos: z.array(ImageSchema).max(MAX_EVENT_PHOTOS).default([]),
-    /** On the public timeline (and its photos in the gallery). */
+    /**
+     * On the public timeline (and its photos in the gallery). Needs only a past
+     * end (checked when saving); photos and a recap are welcome, not required.
+     */
     inTimeline: z.boolean().default(false),
   },
   (event, ctx) => {
     if (event.endsAt !== null && event.endsAt <= event.startsAt) {
       ctx.addIssue({ code: 'custom', path: ['endsAt'], message: 'Must be after the start' });
-    }
-    if (event.published && event.registrationUrl === null) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['registrationUrl'],
-        message: 'A published event needs a registration link',
-      });
-    }
-    if (event.inTimeline && event.photos.length === 0) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['photos'],
-        message: 'Add at least one photo before putting an event on the timeline',
-      });
     }
     const urls = new Set<string>();
     event.photos.forEach((photo, index) => {
@@ -93,7 +85,7 @@ export type Event = z.output<typeof EventSchema>;
  * | `draft`    | not ended, not published              | admin only                  |
  * | `current`  | not ended, published                  | top of /events              |
  * | `awaiting` | ended, not on the timeline            | admin only, kept for later  |
- * | `timeline` | on the timeline (ended, ≥ 1 photo)    | /events timeline, /gallery  |
+ * | `timeline` | on the timeline (ended)               | /events timeline, /gallery  |
  */
 export type EventPhase = 'draft' | 'current' | 'awaiting' | 'timeline';
 

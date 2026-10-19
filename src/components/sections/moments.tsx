@@ -12,8 +12,8 @@ export type { Moment } from './moments-reel';
 const galleryRoute = getRoute('/gallery');
 
 /**
- * Home: moments from the lab — photos and clip posters from the club's
- * workshops and hackathons on a turning reel (`MomentsReel`), and the way into
+ * Home: moments from the lab — photos from the club's workshops and
+ * hackathons on a turning reel (`MomentsReel`), and the way into
  * the gallery for the rest. Its heading copy sits here, like the other Home
  * sections'; the moments come in as props from the page.
  *

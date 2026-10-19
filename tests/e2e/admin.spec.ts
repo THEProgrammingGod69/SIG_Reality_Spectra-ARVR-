@@ -125,7 +125,9 @@ test.describe('signed in', () => {
     await expect(page.getByText('Admin allowlist')).toBeVisible();
     await expect(page.getByText('Password sign-in', { exact: true })).toBeVisible();
     // The warning says the password is weak, never what it is.
-    const weak = page.getByText('Weak admin password — set a longer ADMIN_PASSWORD in Netlify');
+    const weak = page.getByText(
+      "Weak admin password — set a longer ADMIN_PASSWORD in the host's settings",
+    );
     await expect(weak).toHaveCount(isWeakPassword(ADMIN_PASSWORD) ? 1 : 0);
   });
 

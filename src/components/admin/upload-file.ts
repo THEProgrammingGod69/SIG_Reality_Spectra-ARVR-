@@ -85,7 +85,10 @@ export async function prepareFile(file: File, target: UploadTarget): Promise<Pre
   }
 
   const bitmap = await createImageBitmap(file).catch(() => {
-    throw new Error(`${file.name}: this image could not be read.`);
+    // Usually an iPhone HEIC photo on a browser that cannot open HEIC.
+    throw new Error(
+      `${file.name}: this image could not be read. Save it as a JPEG or PNG and try again.`,
+    );
   });
   const size = fitWithin(bitmap.width, bitmap.height);
   const canvas = document.createElement('canvas');

@@ -196,7 +196,8 @@ stage-N`, push branch and tag, then a small "docs: handoff" commit.
 - **Hosting moved to Netlify** (D-025): Upstash used directly, files in
   **Cloudflare R2** (presigned PUT via `aws4fetch`), `DATA_NAMESPACE`
   (replacing `REDIS_KEY_PREFIX`) prefixes Redis keys and R2 objects, and the
-  build refuses a production deploy not on `prod` or a preview on `prod`.
+  build refuses a production deploy not on `prod` or a preview on `prod`
+  (since D-041 the wrong value is ignored with a warning instead).
   Netlify lists Cache Components as supported; confirm on the first real save
   (OPEN_ITEMS #26).
 - **Schemas** (`src/lib/schemas`): shared `fields.ts` with `entitySchemas()`

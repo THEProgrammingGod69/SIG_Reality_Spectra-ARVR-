@@ -7,43 +7,19 @@ import Google from 'next-auth/providers/google';
 import { allowSignInAttempt } from '@/lib/data';
 import { env } from '@/lib/env';
 
+import { currentPasswordFingerprint, sessionConfig, setup } from './base';
 import {
-  authSetup,
   clientAddress,
   DEV_PROVIDER,
   isAllowedAdmin,
-  LOGIN_PATH,
   PASSWORD_PROVIDER,
-  passwordFingerprint,
   passwordMatches,
-  SESSION_MAX_AGE_SECONDS,
 } from './policy';
 
-declare module 'next-auth' {
-  interface Session {
-    /** How this admin signed in: `password`, `google`, or `dev` for the development sign-in. */
-    provider?: string;
-    /** For a password sign-in: which ADMIN_PASSWORD it used (`passwordFingerprint()`). */
-    passwordFingerprint?: string;
-  }
-}
-
-export { DEV_PROVIDER, PASSWORD_PROVIDER };
+export { currentPasswordFingerprint, DEV_PROVIDER, PASSWORD_PROVIDER, setup };
 
 /** Auth.js error types that mean "not allowed in", not "something broke". */
 const REFUSED = new Set(['AccessDenied', 'CredentialsSignin']);
-
-/** What admin sign-in can do here: which ways in exist, who is allowed. */
-export const setup = authSetup(env);
-
-/**
- * The current admin password's fingerprint, which every password session must
- * carry; null while the password sign-in is off.
- */
-export const currentPasswordFingerprint =
-  setup.password && env.AUTH_SECRET && env.ADMIN_PASSWORD
-    ? passwordFingerprint(env.AUTH_SECRET, env.ADMIN_PASSWORD)
-    : null;
 
 /**
  * A password sign-in refused because the client or the email has made too
@@ -64,11 +40,7 @@ export class TooManyAttempts extends CredentialsSignin {
  * them (the proxy and `getAdminSession()` check `setup.secret` first).
  */
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  secret: env.AUTH_SECRET,
-  // Netlify serves the site on its own, preview and custom hostnames.
-  trustHost: true,
-  session: { strategy: 'jwt', maxAge: SESSION_MAX_AGE_SECONDS },
-  pages: { signIn: LOGIN_PATH, error: LOGIN_PATH },
+  ...sessionConfig,
   logger: {
     // A refused sign-in is routine, not a server error: one line, no stack.
     error(error) {
@@ -138,26 +110,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       : []),
   ],
   callbacks: {
+    ...sessionConfig.callbacks,
     signIn({ user, account, profile }) {
       if (!isAllowedAdmin(user.email, setup.admins)) return false;
       // Google must have verified the address, or anyone could claim it.
       return account?.provider !== 'google' || profile?.email_verified === true;
-    },
-    jwt({ token, account }) {
-      if (account) {
-        token.provider = account.provider;
-        if (account.provider === PASSWORD_PROVIDER && currentPasswordFingerprint) {
-          token.passwordFingerprint = currentPasswordFingerprint;
-        }
-      }
-      return token;
-    },
-    session({ session, token }) {
-      if (typeof token.provider === 'string') session.provider = token.provider;
-      if (typeof token.passwordFingerprint === 'string') {
-        session.passwordFingerprint = token.passwordFingerprint;
-      }
-      return session;
     },
   },
 });

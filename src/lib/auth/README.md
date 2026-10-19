@@ -12,14 +12,17 @@ locks that admin out at once, and changing the password signs every password
 session out. Yearly handover is done by editing those variables. Setup:
 `docs/SETUP_AUTH.md`.
 
-| File              | Does                                                                                                                                                                                           |
-| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `policy.ts`       | The pure rules: allowlist match, development sign-in switch, `authSetup()`, safe callback paths, `cookieRemovalsOnly()`, the password match, fingerprint and weakness check, `admittedEmail()` |
-| `config.ts`       | Auth.js: providers, callbacks, `setup` (what sign-in can do in this environment), the attempt limit in the password `authorize()`                                                              |
-| `session.ts`      | `getAdminSession()` (cached per request), `requireAdmin()`, `adminFromSession()`                                                                                                               |
-| `admin-action.ts` | `adminAction()` — the wrapper every admin Server Action uses                                                                                                                                   |
-| `actions.ts`      | Server Actions: password sign-in, Google sign-in, development sign-in, sign-out                                                                                                                |
-| `errors.ts`       | `NotSignedInError` (client-safe)                                                                                                                                                               |
+| File               | Does                                                                                                                                                                                           |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `policy.ts`        | The pure rules: allowlist match, development sign-in switch, `authSetup()`, safe callback paths, `cookieRemovalsOnly()`, the password match, fingerprint and weakness check, `admittedEmail()` |
+| `base.ts`          | The session settings both sides share (secret, JWT, pages, `jwt`/`session` callbacks), `setup` (what sign-in can do in this environment), the password fingerprint                             |
+| `proxy-auth.ts`    | Auth.js with no providers, for `src/proxy.ts`: decodes the session only, so the data layer never reaches the proxy's (edge) bundle (D-041)                                                     |
+| `session-check.ts` | `adminFromSession()`: the allowlist and password-fingerprint re-check, shared by the proxy and the server                                                                                      |
+| `config.ts`        | Auth.js: providers, the `signIn` callback, the attempt limit in the password `authorize()` (uses the data layer; never imported by the proxy)                                                  |
+| `session.ts`       | `getAdminSession()` (cached per request), `requireAdmin()`                                                                                                                                     |
+| `admin-action.ts`  | `adminAction()` — the wrapper every admin Server Action uses                                                                                                                                   |
+| `actions.ts`       | Server Actions: password sign-in, Google sign-in, development sign-in, sign-out                                                                                                                |
+| `errors.ts`        | `NotSignedInError` (client-safe)                                                                                                                                                               |
 
 ## Three locks (rule 8)
 

@@ -12,6 +12,7 @@ import { Icon } from '@/components/ui/icon';
 import { setup } from '@/lib/auth/config';
 import { MIN_STRONG_PASSWORD_LENGTH } from '@/lib/auth/policy';
 import { dataAvailability } from '@/lib/data';
+import { envWarnings } from '@/lib/env';
 import { integrations } from '@/lib/integrations';
 
 /** Where this deployment keeps records and files, in words for the dashboard. */
@@ -55,7 +56,7 @@ export function SetupChecklist() {
           <div className="flex flex-col gap-1 rounded-control border border-destructive/40 p-3 text-body-sm text-foreground">
             <p className="flex items-center gap-2 font-medium">
               <Icon icon={ShieldAlert} size="sm" className="text-destructive" />
-              Weak admin password — set a longer ADMIN_PASSWORD in Netlify
+              Weak admin password — set a longer ADMIN_PASSWORD in the host&apos;s settings
             </p>
             <p className="text-xs text-muted-foreground">
               It is shorter than {MIN_STRONG_PASSWORD_LENGTH} characters or a well-known password,
@@ -68,6 +69,17 @@ export function SetupChecklist() {
           <span className="text-muted-foreground">Data is stored in: </span>
           {BACKEND_LABELS[backend]}
         </p>
+        {envWarnings.length > 0 ? (
+          // Settings the site corrected or ignored instead of failing (D-041).
+          <div className="flex flex-col gap-1 rounded-control border border-warning/40 p-3 text-body-sm text-foreground">
+            <p className="font-medium">Settings that were corrected or ignored</p>
+            <ul className="list-disc ps-5 text-xs text-muted-foreground">
+              {envWarnings.map((warning) => (
+                <li key={warning}>{warning}</li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
         {backend === 'local' ? (
           <p className="rounded-control border border-warning/40 p-3 text-body-sm text-foreground">
             <Badge variant="warning" className="me-2">

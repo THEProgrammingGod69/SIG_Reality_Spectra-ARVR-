@@ -6,6 +6,7 @@ import { useLayoutEffect, useRef, useSyncExternalStore, type CSSProperties } fro
 import { prefersReducedMotion, useReducedMotion } from '@/components/motion/use-reduced-motion';
 import { HudCorners } from '@/components/ui/hud-corners';
 import { cn } from '@/lib/cn';
+import { coverSizes } from '@/lib/image-sizes';
 import { gsap, gsapEase } from '@/lib/motion/gsap';
 import { reachablePoint } from '@/lib/motion/scroll-point';
 import { readCssVar, readMotionTokens } from '@/lib/motion/tokens';
@@ -39,8 +40,12 @@ function subscribeToWide(onChange: () => void) {
 }
 const isWide = () => window.matchMedia(WIDE).matches;
 
-/** Fetch each card at the width it renders: the ring card or the strip card. */
+/**
+ * Fetch each card at the width it renders: the ring card or the strip card,
+ * widened by the photo's shape, since the 4:5 card crops it (`coverSizes`).
+ */
 const CARD_SIZES = '(min-width: 48rem) 15rem, 72vw';
+const CARD_RATIO = 4 / 5;
 
 /**
  * The ring's geometry, all in CSS from the tokens: each card is a step of the
@@ -218,7 +223,7 @@ export function MomentsReel({
                         alt={moment.alt}
                         width={moment.width}
                         height={moment.height}
-                        sizes={CARD_SIZES}
+                        sizes={coverSizes(CARD_SIZES, moment, CARD_RATIO)}
                         className="size-full object-cover"
                       />
                     </div>

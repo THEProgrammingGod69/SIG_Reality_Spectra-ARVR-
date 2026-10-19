@@ -51,9 +51,8 @@ describe('events repository', () => {
       .catch((caught: unknown) => caught);
 
     expect(error).toBeInstanceOf(InvalidDataError);
-    expect((error as InvalidDataError).issues.map((issue) => issue.path)).toEqual(
-      expect.arrayContaining(['title', 'registrationUrl']),
-    );
+    // A registration link is optional, even when published (D-041).
+    expect((error as InvalidDataError).issues.map((issue) => issue.path)).toEqual(['title']);
     expect(h.store.size()).toBe(0);
     expect(h.invalidate).not.toHaveBeenCalled();
   });
@@ -87,11 +86,25 @@ describe('events repository', () => {
       expect((error as InvalidDataError).issues[0]?.path).toBe('inTimeline');
     });
 
-    it('refuses an event without photos', async () => {
+    it('accepts an ended event without photos (D-041)', async () => {
       h.tick(30 * DAY);
-      await expect(h.events.create(draft({ inTimeline: true }), ADMIN)).rejects.toBeInstanceOf(
-        InvalidDataError,
+      await h.events.create(draft({ inTimeline: true }), ADMIN);
+      const { timeline } = splitByPhase(
+        await h.events.listPublic(),
+        new Date('2026-10-31T10:00:00Z'),
       );
+      expect(timeline.map((event) => event.id)).toEqual([ID]);
+    });
+
+    it('puts an ended event on the timeline with a one-field update', async () => {
+      const created = await h.events.create(draft({ published: true }), ADMIN);
+      await expect(
+        h.events.update(ID, created.updatedAt, { inTimeline: true }, ADMIN),
+      ).rejects.toBeInstanceOf(InvalidDataError);
+
+      h.tick(30 * DAY);
+      const moved = await h.events.update(ID, created.updatedAt, { inTimeline: true }, ADMIN);
+      expect(moved).toMatchObject({ inTimeline: true, title: created.title, published: true });
     });
 
     it('accepts an ended event with photos, newest first', async () => {

@@ -26,7 +26,7 @@ then confirm the dashboard's **Setup** card shows everything configured.
 | Turnstile keys              | empty — check off locally; the form is hidden on Netlify     | Club Cloudflare Turnstile site (#22)                   | D-032                             |
 | Analytics token             | empty — no analytics script loads                            | Cloudflare Web Analytics site token (club account)     | `.env.example`, D-033             |
 | `CRON_SECRET`               | empty                                                        | A generated secret (Production context only)           | `GO_LIVE.md`, D-034               |
-| Contact details             | "Coming soon" in `src/content/contact.json`                  | Club email, phone, address, map link (#7)              | `pnpm check:launch` gate          |
+| Contact details             | "Coming soon" in `src/content/contact.json`                  | Club email and phone (#7); address and map are set     | `pnpm check:launch` gate          |
 | `DATA_BACKEND`              | `local` in your `.env.local` (records + uploads in `.data/`) | Remove once Upstash + R2 are set (D-031)               | `SETUP_STORAGE.md`                |
 | Events and photos           | `[Demo]` events and club photos from `pnpm seed --demo`      | Real events (#15) and photos (#18), added in the panel | `/admin/events`, `/admin/gallery` |
 | Sample registration link    | The recruitment Google Form link, in demo events only        | Each event's real link (typically VIERP, #16)          | `/admin/events`                   |
@@ -47,9 +47,9 @@ then confirm the dashboard's **Setup** card shows everything configured.
 Stage 4 shipped with "Coming soon" placeholders for these (D-024). `pnpm check:launch`
 fails until they are filled in `src/content/contact.json`.
 
-| #   | Item                                                                                                                                    | Status                                 |
-| --- | --------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
-| 7   | **Official club email**, **phone**, **address** and a **Google Maps link** (embed optional); LinkedIn / GitHub org if the club has them | Open — Instagram and WhatsApp supplied |
+| #   | Item                                                                                                                                    | Status                                                                                               |
+| --- | --------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| 7   | **Official club email**, **phone**, **address** and a **Google Maps link** (embed optional); LinkedIn / GitHub org if the club has them | Open — Instagram, WhatsApp, the VIT Bibwewadi address and map supplied; email and phone still needed |
 
 ## Accounts for the data layer (Stage 5 built; needed before Stage 6 goes live)
 

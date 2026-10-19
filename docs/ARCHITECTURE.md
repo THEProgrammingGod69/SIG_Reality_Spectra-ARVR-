@@ -332,8 +332,9 @@ delivery failure to handle; the dashboard shows a "new requests" count instead.
 
 One Upstash database and one R2 bucket serve every environment; the namespace
 prefixes every Redis key (`sig:{ns}:…`) and R2 object (`{ns}/…`). Netlify
-sets `CONTEXT` on each build, and the build fails if production is not
-`prod` or a preview is.
+sets `CONTEXT` on each build; a `DATA_NAMESPACE` that would put production
+off `prod`, or a preview on it, is ignored with a warning, and the namespace
+for the context is used instead (D-041).
 
 ---
 

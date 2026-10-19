@@ -128,6 +128,13 @@ export function createKeyedQueue() {
   };
 }
 
+const warnedNoEtag = new Set<string>();
+function warnNoEtag(key: string) {
+  if (warnedNoEtag.has(key)) return;
+  warnedNoEtag.add(key);
+  console.warn(`[data] "${key}" came back without an etag; saving it without compare-and-swap.`);
+}
+
 /** How many times a contended write is retried before giving up. */
 export const CAS_ATTEMPTS = 8;
 
@@ -162,18 +169,26 @@ export async function compareAndSwap<T extends object>(
     const current = await blobs.getWithMetadata(key, { type: 'json', consistency: 'strong' });
     const landed = sent.get(writeIdOf(current?.data) ?? '');
     if (landed) return landed;
-    if (current && !current.etag) {
-      throw new Error(`Netlify Blobs returned "${key}" without an etag, so it cannot be updated.`);
-    }
 
     const value = await next(current ? parse(current.data) : null);
     const writeId = randomUUID();
     sent.set(writeId, value);
-    const result = await blobs.setJSON(
-      key,
-      { ...value, writeId },
-      current?.etag ? { onlyIfMatch: current.etag } : { onlyIfNew: true },
-    );
+    // A document read back without an etag (a store that does not report one)
+    // cannot be compared: it is written as is and confirmed by its writeId
+    // below, rather than refused — the in-process queue still orders this
+    // instance's writes (D-041).
+    if (current && !current.etag) warnNoEtag(key);
+    const condition: WriteCondition | undefined = !current
+      ? { onlyIfNew: true }
+      : current.etag
+        ? { onlyIfMatch: current.etag }
+        : undefined;
+    const result = await blobs.setJSON(key, { ...value, writeId }, condition);
+    if (!condition) {
+      const check = await blobs.getWithMetadata(key, { type: 'json', consistency: 'strong' });
+      if (writeIdOf(check?.data) === writeId) return value;
+      continue; // Overwritten in between: read again and redo it.
+    }
     if (!result.modified) continue; // Somebody else wrote first: read again.
     if (result.etag) return value;
 

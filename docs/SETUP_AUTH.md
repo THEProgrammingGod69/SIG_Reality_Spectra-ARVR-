@@ -67,6 +67,12 @@ with Google works on production and local development, not on previews.
 ADMIN_EMAILS="secretary@vit.edu,webmaster@vit.edu"
 ```
 
+In `.env.local` the quotes are optional. In Netlify's or Vercel's settings,
+paste the value alone (`secretary@vit.edu,webmaster@vit.edu`); stray quotes or
+spaces are removed anyway, and an address that is not a valid email is
+skipped with a warning on the dashboard instead of locking everyone out
+(D-041).
+
 With the password sign-in, any email address works; with Google, each must be
 a Google account (Gmail or Google Workspace).
 
@@ -77,8 +83,8 @@ Removing an address locks that person out at their next page load.
 Site configuration → Environment variables: add `AUTH_SECRET`,
 `ADMIN_EMAILS` and `ADMIN_PASSWORD`, plus `AUTH_GOOGLE_ID` and
 `AUTH_GOOGLE_SECRET` if Google is set up (tick _Contains secret values_ for the
-secrets), then redeploy. Never set `AUTH_DEV_SIGN_IN` on
-Netlify: the build refuses it.
+secrets), then redeploy. Paste values without quotes. Never set
+`AUTH_DEV_SIGN_IN` on Netlify: a deployed site ignores it (D-041).
 
 ## Development sign-in
 

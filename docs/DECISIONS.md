@@ -8,48 +8,49 @@ bottom; never edit an old one — supersede it with a new entry.
 **Decided by** is either _team_ (the club decided) or _lead_ (the club delegated
 the call and it was made on the reasoning shown).
 
-| ID    | Decision                                                                        | Decided by |
-| ----- | ------------------------------------------------------------------------------- | ---------- |
-| D-001 | Hero direction: **Orbit Lab**                                                   | lead       |
-| D-002 | Fonts: **Space Grotesk · Inter · JetBrains Mono**                               | lead       |
-| D-003 | Caption colour `text-subtle` is **`#797F8D`**                                   | team       |
-| D-004 | Vendored components come from **React Bits only**                               | lead       |
-| D-005 | Gallery shows **event photos and standalone club photos**                       | team       |
-| D-006 | Contact and sponsorship are **one page**                                        | team       |
-| D-007 | No stat counters on Home in v1                                                  | lead       |
-| D-008 | No email: sponsorship requests live in the admin inbox                          | lead       |
-| D-009 | Rule 4 has **no exceptions**; blur/layout-animating effects are rewritten       | lead       |
-| D-010 | The hero has **one WebGL context**, and its name is real text at first paint    | lead       |
-| D-011 | No `ogl`, no second WebGL library                                               | lead       |
-| D-012 | Navigation: PillNav on desktop, StaggeredMenu on mobile                         | lead       |
-| D-013 | Component shortlist and rejections                                              | lead       |
-| D-014 | Repo stays private while vendored React Bits code is inside                     | lead       |
-| D-015 | Style Board colours adopted in Stage 2 ("tokens before hero")                   | lead       |
-| D-016 | MagicRings is ported into the R3F scene, not used as its own canvas             | lead       |
-| D-017 | The static hero still is an inline SVG drawn from tokens, not a WebP            | lead       |
-| D-018 | Hero scroll-out: pinned 150vh on 3D tiers only, handing over dimmed             | lead       |
-| D-019 | Stage 3 additions: Lucide icons and one `cn()` helper                           | lead       |
-| D-020 | Site shell: React Bits nav and effects rebuilt; header overlays the page        | lead       |
-| D-021 | Logo: the original badge ships as raster; the pack's dark badge is rejected     | lead       |
-| D-022 | Rule 4 covers colour: no colour or background transitions                       | lead       |
-| D-023 | Content layer in `src/content`; QR codes generated from the links               | lead       |
-| D-024 | Interim recruitment, honest placeholders, no fake sponsorship form              | team       |
-| D-025 | Hosting on **Netlify**; files in **Cloudflare R2**; Upstash used directly       | team, lead |
-| D-026 | Categories: hackathon · competition · workshop · other                          | team       |
-| D-027 | Team: core + domain secretaries only; no team section on Home                   | team       |
-| D-028 | Recruitment opens with the form alone; the roles PDF is optional                | team       |
-| D-029 | Data layer: one generic repository over two storage ports                       | lead       |
-| D-030 | Admin access: Auth.js beta pinned, development sign-in, reviewed shadcn subset  | team, lead |
-| D-031 | Stage 7: local data mode, any-ratio images, placeholders until real content     | team, lead |
-| D-032 | Stage 8: contact-form spam checks, recruitment moves to the admin panel         | lead       |
-| D-033 | Stage 9: motion polish, performance, accessibility, security headers, analytics | lead       |
-| D-034 | Stage 10a: nightly backup and orphan sweep, restore, WebKit tests, handbook     | lead       |
-| D-035 | Final quality pass: Next.js security update, software-GPU detection, audits     | lead       |
-| D-036 | `DATA_NAMESPACE` follows the Netlify deploy context when unset                  | lead       |
-| D-037 | Premium pass: React Bits effects rebuilt, the lab on every page                 | lead       |
-| D-038 | The XR HUD: a motion language of its own, on every page                         | lead       |
-| D-039 | Club archive, password sign-in, footer admin link, Netlify Blobs                | team       |
-| D-040 | Vercel as a second host, on a private Vercel Blob store                         | team       |
+| ID    | Decision                                                                          | Decided by |
+| ----- | --------------------------------------------------------------------------------- | ---------- |
+| D-001 | Hero direction: **Orbit Lab**                                                     | lead       |
+| D-002 | Fonts: **Space Grotesk · Inter · JetBrains Mono**                                 | lead       |
+| D-003 | Caption colour `text-subtle` is **`#797F8D`**                                     | team       |
+| D-004 | Vendored components come from **React Bits only**                                 | lead       |
+| D-005 | Gallery shows **event photos and standalone club photos**                         | team       |
+| D-006 | Contact and sponsorship are **one page**                                          | team       |
+| D-007 | No stat counters on Home in v1                                                    | lead       |
+| D-008 | No email: sponsorship requests live in the admin inbox                            | lead       |
+| D-009 | Rule 4 has **no exceptions**; blur/layout-animating effects are rewritten         | lead       |
+| D-010 | The hero has **one WebGL context**, and its name is real text at first paint      | lead       |
+| D-011 | No `ogl`, no second WebGL library                                                 | lead       |
+| D-012 | Navigation: PillNav on desktop, StaggeredMenu on mobile                           | lead       |
+| D-013 | Component shortlist and rejections                                                | lead       |
+| D-014 | Repo stays private while vendored React Bits code is inside                       | lead       |
+| D-015 | Style Board colours adopted in Stage 2 ("tokens before hero")                     | lead       |
+| D-016 | MagicRings is ported into the R3F scene, not used as its own canvas               | lead       |
+| D-017 | The static hero still is an inline SVG drawn from tokens, not a WebP              | lead       |
+| D-018 | Hero scroll-out: pinned 150vh on 3D tiers only, handing over dimmed               | lead       |
+| D-019 | Stage 3 additions: Lucide icons and one `cn()` helper                             | lead       |
+| D-020 | Site shell: React Bits nav and effects rebuilt; header overlays the page          | lead       |
+| D-021 | Logo: the original badge ships as raster; the pack's dark badge is rejected       | lead       |
+| D-022 | Rule 4 covers colour: no colour or background transitions                         | lead       |
+| D-023 | Content layer in `src/content`; QR codes generated from the links                 | lead       |
+| D-024 | Interim recruitment, honest placeholders, no fake sponsorship form                | team       |
+| D-025 | Hosting on **Netlify**; files in **Cloudflare R2**; Upstash used directly         | team, lead |
+| D-026 | Categories: hackathon · competition · workshop · other                            | team       |
+| D-027 | Team: core + domain secretaries only; no team section on Home                     | team       |
+| D-028 | Recruitment opens with the form alone; the roles PDF is optional                  | team       |
+| D-029 | Data layer: one generic repository over two storage ports                         | lead       |
+| D-030 | Admin access: Auth.js beta pinned, development sign-in, reviewed shadcn subset    | team, lead |
+| D-031 | Stage 7: local data mode, any-ratio images, placeholders until real content       | team, lead |
+| D-032 | Stage 8: contact-form spam checks, recruitment moves to the admin panel           | lead       |
+| D-033 | Stage 9: motion polish, performance, accessibility, security headers, analytics   | lead       |
+| D-034 | Stage 10a: nightly backup and orphan sweep, restore, WebKit tests, handbook       | lead       |
+| D-035 | Final quality pass: Next.js security update, software-GPU detection, audits       | lead       |
+| D-036 | `DATA_NAMESPACE` follows the Netlify deploy context when unset                    | lead       |
+| D-037 | Premium pass: React Bits effects rebuilt, the lab on every page                   | lead       |
+| D-038 | The XR HUD: a motion language of its own, on every page                           | lead       |
+| D-039 | Club archive, password sign-in, footer admin link, Netlify Blobs                  | team       |
+| D-040 | Vercel as a second host, on a private Vercel Blob store                           | team       |
+| D-041 | A site that sets itself up: forgiving settings, a lean proxy, simpler admin rules | team       |
 
 ---
 
@@ -1231,3 +1232,69 @@ Netlify's review drawer. The club asked for the site on Vercel as well.
 login wall on the production URL are switched off; previews stay behind
 Vercel login. Netlify's drawer is a Netlify setting (Site configuration →
 Build & deploy → Deploy Previews → Netlify Drawer), not code.
+
+## D-041 — A site that sets itself up: forgiving settings, a lean proxy, simpler admin rules
+
+**Decided by:** team (the club asked for a data store that needs no manual
+work, admin tools without restrictions, sharp images on phones and a campus
+map); lead for how.
+
+**Context.** The Netlify deploy preview failed to build: the `/admin` proxy
+imported the full Auth.js setup, which pulled the whole data layer and the
+storage SDKs (`undici` among them) into Netlify's edge bundle. A setting typed
+with quotes or a stray space, or one left over from local development, failed
+the whole site instead of only the feature that needed it. On Vercel the
+admin said "Data store not connected" with no next step. Admins could not put
+an event on the timeline without photos, nor publish one without a
+registration link. On a phone, square gallery tiles and reel cards fetched
+files too small for their crop.
+
+**Decisions.**
+
+1. **The proxy reads the session and nothing else.** `auth/base.ts` holds the
+   session settings both sides share; `auth/proxy-auth.ts` is Auth.js with no
+   providers (it only decodes the JWT); `auth/session-check.ts` re-checks the
+   allowlist and password fingerprint. The full setup (`auth/config.ts`, with
+   the sign-in rate limit in the data layer) is reached only by the sign-in
+   routes and server code. `tests/unit/proxy-imports.test.ts` walks the
+   proxy's import graph and fails if the data layer or a storage SDK is ever
+   reachable from it again.
+2. **Settings correct themselves instead of failing the site.** `resolveEnv()`
+   trims values and strips one pair of surrounding quotes, keeps the valid
+   addresses in `ADMIN_EMAILS`, and drops what cannot apply on a deploy
+   (`AUTH_DEV_SIGN_IN`, `DATA_BACKEND=local`, a `DATA_NAMESPACE` that breaks
+   the production/preview split) or is malformed — each with a warning. The
+   warnings are logged and listed on the dashboard's Setup card; the login
+   page names the sign-in settings still missing. The strict schema and its
+   guards are unchanged: only what passes them is used.
+3. **The data store needs no setup on Netlify.** Netlify Blobs is built in.
+   Its compare-and-swap also works when a read reports no etag: it writes
+   without a condition, re-reads and checks its own write id, and retries on
+   a lost race. On Vercel one Blob store must be connected once (the API
+   refuses to create it on the club's behalf); the "not connected" notice
+   names the exact clicks for the host it runs on.
+4. **Fewer event rules.** A registration link is optional (no link, no
+   Register button); new events are published by default; an event can go on
+   the timeline as soon as it has ended, with or without photos. The ended
+   list has a one-click **Put on timeline**. The timeline still requires an
+   ended event, so the cached gallery never shows a running event's photos.
+5. **Images are fetched for their crop.** `coverSizes()` widens `sizes` by
+   how much wider a photo is than its frame, so a 16:9 photo in a square tile
+   fills it sharply on a DPR-3 phone. The gallery is two columns on phones.
+   The Home reel shows only stills sharp enough for a card (short side ≥ 960
+   px); phone-video clip posters stay in the gallery. Team photos crop from
+   the top, so faces stay in frame.
+6. **Contact shows the campus.** The address and a Google Maps embed of VIT
+   Bibwewadi (`contact.json`), with an "Open in Google Maps" button under the
+   map for directions on a phone.
+7. **The header never waits for the store.** It is part of the static shell
+   again and receives whether recruitment is open as a promise; only the
+   "open" marks stream in (`WhenRecruitmentOpen`). Behind a whole-header
+   Suspense boundary, the phone menu could not be tapped until the data store
+   answered. Footer links carry their spacing as padding, so each row is a
+   full-height tap target.
+
+**Not done, on purpose.** No database outside the hosts' own blob stores: one
+fewer account to hand over each year, and Upstash + R2 remain one set of
+variables away (D-025). Events cannot be ticked onto the timeline before they
+end; that would move the "now" decision into the cached gallery read.

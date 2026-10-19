@@ -82,3 +82,14 @@ export function testPdf(name: string) {
 
 /** A title no other test or record shares. */
 export const unique = (label: string) => `E2E ${label} ${Date.now().toString(36)}`;
+
+/**
+ * Reveal every batch of the gallery ("Show more"): which items fall past the
+ * first batch depends on whatever else the store holds, newest first.
+ */
+export async function showAll(page: Page) {
+  const more = page.getByRole('button', { name: /^Show more/ });
+  while ((await more.count()) > 0) {
+    await more.click();
+  }
+}

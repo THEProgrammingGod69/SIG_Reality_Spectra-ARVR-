@@ -15,6 +15,7 @@ import { readMotionTokens } from '@/lib/motion/tokens';
 import { clubCredit, siteRoutes } from '@/lib/site';
 
 import { ChannelLinks } from './channel-links';
+import { WhenRecruitmentOpen } from './recruitment-mark';
 
 /**
  * Mobile menu (D-038, superseding the StaggeredMenu sweep of D-012): the
@@ -271,7 +272,7 @@ export function MobileMenuPanel({
   rootRef: MobileMenuRefs['root'];
   channels: Channels;
   /** Tags the Recruitment link while recruitment is open (the header CTA is hidden on phones). */
-  recruitmentOpen: boolean;
+  recruitmentOpen: Promise<boolean>;
 }) {
   return (
     <div
@@ -324,13 +325,15 @@ export function MobileMenuPanel({
                       {route.label}
                     </span>
                   </Link>
-                  {route.placement === 'cta' && recruitmentOpen ? (
-                    <span
-                      data-menu-extra
-                      className="rounded-full border border-(--color-accent)/40 px-2.5 py-1 font-mono text-label whitespace-nowrap text-(--color-accent) uppercase"
-                    >
-                      Open now
-                    </span>
+                  {route.placement === 'cta' ? (
+                    <WhenRecruitmentOpen open={recruitmentOpen}>
+                      <span
+                        data-menu-extra
+                        className="rounded-full border border-(--color-accent)/40 px-2.5 py-1 font-mono text-label whitespace-nowrap text-(--color-accent) uppercase"
+                      >
+                        Open now
+                      </span>
+                    </WhenRecruitmentOpen>
                   ) : null}
                 </li>
               );

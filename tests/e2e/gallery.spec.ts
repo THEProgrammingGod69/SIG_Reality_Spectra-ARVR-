@@ -3,7 +3,7 @@ import { expect, type Page, test } from '@playwright/test';
 
 import archive from '@/content/archive.json';
 
-import { signIn } from './helpers';
+import { showAll, signIn } from './helpers';
 
 /**
  * The club archive in /gallery: photos and clips committed to Git, merged with
@@ -35,17 +35,6 @@ async function openGallery(page: Page) {
 async function countOf(filters: ReturnType<Page['getByRole']>, name: RegExp) {
   const label = await filters.getByRole('button', { name }).textContent();
   return Number(/(\d+)\s*$/.exec(label ?? '')?.[1]);
-}
-
-/**
- * Reveal every batch ("Show more"): the store's own photos can be newer than
- * the archive and push archive items past the first batch.
- */
-async function showAll(page: Page) {
-  const more = page.getByRole('button', { name: /^Show more/ });
-  while ((await more.count()) > 0) {
-    await more.click();
-  }
 }
 
 /** The grid's tiles that are really there (a leaving tile is hidden, then removed). */

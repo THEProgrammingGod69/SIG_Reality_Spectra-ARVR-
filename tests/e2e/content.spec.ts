@@ -93,6 +93,17 @@ test.describe('contact', () => {
     await expect(page.locator('dd [data-placeholder]')).toHaveCount(pending.length);
     if (contact.map.embedUrl === null) {
       await expect(page.getByText('Map coming soon')).toBeVisible();
+    } else {
+      await expect(page.locator('iframe[title^="Map showing"]')).toHaveAttribute(
+        'src',
+        contact.map.embedUrl,
+      );
+      if (contact.map.url !== null) {
+        await expect(page.getByRole('link', { name: /Open in Google Maps/ })).toHaveAttribute(
+          'href',
+          contact.map.url,
+        );
+      }
     }
     if (contact.email === null) await expect(page.locator('a[href^="mailto:"]')).toHaveCount(0);
     if (contact.phone === null) await expect(page.locator('a[href^="tel:"]')).toHaveCount(0);

@@ -44,20 +44,20 @@ the same thing everywhere.
 the browser). That the URL is ours and belongs to the record is checked when
 the record is saved (`src/lib/data/media.ts`).
 
-**Event** — id (UUID) · title (3–80) · category · summary (20–160) ·
+**Event** — id (UUID) · title (3–80) · category · summary (3–160) ·
 description (plain text, blank line = new paragraph, ≤ 5000) · startsAt · endsAt (optional, after start) ·
 venue · mode (`offline` · `online` · `hybrid`) · registrationUrl (https;
-required when published) · poster · published · recap (≤ 2000) · photos (≤ 60,
-no duplicates) · inTimeline (needs ≥ 1 photo).
+optional, D-041) · poster · published · recap (≤ 2000) · photos (≤ 60,
+no duplicates) · inTimeline (needs only a past end; photos optional, D-041).
 
 An event's phase is **derived at request time, never stored** (rule 12):
 
-| Phase      | Rule                               | Shown on                       |
-| ---------- | ---------------------------------- | ------------------------------ |
-| `draft`    | not ended, not published           | admin only                     |
-| `current`  | not ended, published               | top of `/events`               |
-| `awaiting` | ended, not on the timeline         | admin only — kept for later    |
-| `timeline` | on the timeline (ended, ≥ 1 photo) | `/events` timeline, `/gallery` |
+| Phase      | Rule                       | Shown on                       |
+| ---------- | -------------------------- | ------------------------------ |
+| `draft`    | not ended, not published   | admin only                     |
+| `current`  | not ended, published       | top of `/events`               |
+| `awaiting` | ended, not on the timeline | admin only — kept for later    |
+| `timeline` | on the timeline (ended)    | `/events` timeline, `/gallery` |
 
 Without `endsAt`, an event ends at the end of its start day in India Standard
 Time.

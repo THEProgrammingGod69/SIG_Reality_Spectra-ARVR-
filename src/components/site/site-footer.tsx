@@ -58,14 +58,15 @@ export function SiteFooter() {
               <h2 className="font-mono text-label text-(--color-muted) uppercase">
                 {group.heading}
               </h2>
-              <ul className="mt-4 flex flex-col gap-3 text-body-sm">
+              {/* The gap sits inside each link (py-1.5), so a phone's tap target is the whole row. */}
+              <ul className="mt-2.5 flex flex-col text-body-sm">
                 {routesInGroup(group.id).map((route) => (
                   <li key={route.href}>
                     <Link
                       href={route.href}
                       // `pe-5` holds room for the label's 1.25rem shift, so the
                       // focus ring surrounds the label where it ends up.
-                      className="group/link inline-flex items-center gap-2 pe-5 text-(--color-text-body) hover:text-(--color-text)"
+                      className="group/link inline-flex items-center gap-2 py-1.5 pe-5 text-(--color-text-body) hover:text-(--color-text)"
                     >
                       <span
                         aria-hidden="true"

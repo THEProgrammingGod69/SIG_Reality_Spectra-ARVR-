@@ -52,6 +52,21 @@ hostedStorageContract('netlify-blobs', async () => {
 });
 
 describe('Netlify Blobs record store', () => {
+  it('still saves when the store reports no etag on reads (D-041)', async () => {
+    const fake = createFakeBlobs();
+    const noEtag = {
+      ...fake,
+      getWithMetadata: (async (key: string, options: { type: 'json' | 'stream' }) => {
+        const found = await fake.getWithMetadata(key, options as never);
+        return found ? { ...(found as object), etag: undefined } : null;
+      }) as typeof fake.getWithMetadata,
+    };
+    const store = createBlobsStore({ blobs: () => noEtag, namespace: NS });
+    await store.write([create('first')]);
+    await store.write([create('second')]);
+    expect(await store.count('gallery')).toBe(2);
+  });
+
   it('connects on first use, never when it is created', async () => {
     const store = createBlobsStore({
       blobs: () => {

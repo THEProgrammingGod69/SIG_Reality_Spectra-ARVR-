@@ -13,6 +13,7 @@ import { Heading } from '@/components/ui/heading';
 import { Section } from '@/components/ui/section';
 import { Text } from '@/components/ui/text';
 import type { PublicTeam } from '@/lib/data';
+import { coverSizes } from '@/lib/image-sizes';
 import { initialsOf, TEAM_TIERS } from '@/lib/schemas/team';
 
 import { SectionHeading } from './section-heading';
@@ -140,9 +141,14 @@ function MemberCard({
             src={member.photo.url}
             alt={member.photo.alt}
             fill
-            // 13rem-minimum tiles: one column on phones, two from 28rem, three from 48rem.
-            sizes="(min-width: 64rem) 16rem, (min-width: 48rem) 33vw, (min-width: 28rem) 50vw, 100vw"
-            className="object-cover transition-transform duration-(--dur-long) ease-out-expo group-hover/member:scale-105"
+            // 13rem-minimum tiles: one column on phones, two from 28rem, three
+            // from 48rem; widened for a landscape photo the square crops.
+            sizes={coverSizes(
+              '(min-width: 64rem) 16rem, (min-width: 48rem) 33vw, (min-width: 28rem) 50vw, 100vw',
+              member.photo,
+            )}
+            // Portraits are cropped from the top, so a face is never cut off.
+            className="object-cover object-top transition-transform duration-(--dur-long) ease-out-expo group-hover/member:scale-105"
           />
         ) : (
           <span

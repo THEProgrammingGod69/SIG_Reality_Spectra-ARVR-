@@ -1,8 +1,9 @@
 import { type NextRequest, NextResponse } from 'next/server';
 
-import { auth, setup } from '@/lib/auth/config';
+import { setup } from '@/lib/auth/base';
 import { cookieRemovalsOnly, LOGIN_PATH } from '@/lib/auth/policy';
-import { adminFromSession } from '@/lib/auth/session';
+import { proxyAuth } from '@/lib/auth/proxy-auth';
+import { adminFromSession } from '@/lib/auth/session-check';
 
 /**
  * The first lock on the admin panel (rule 8): every /admin page except the
@@ -16,7 +17,7 @@ function toLogin(request: NextRequest) {
   return NextResponse.redirect(url);
 }
 
-const guard = auth((request) => {
+const guard = proxyAuth((request) => {
   if (request.nextUrl.pathname === LOGIN_PATH) return NextResponse.next();
   if (adminFromSession(request.auth) === null) return toLogin(request);
   return NextResponse.next();

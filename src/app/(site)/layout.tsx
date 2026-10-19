@@ -1,5 +1,3 @@
-import { Suspense } from 'react';
-
 import { ScrollRefresh } from '@/components/motion/scroll-refresh';
 import { SmoothScroll } from '@/components/motion/smooth-scroll';
 import { FilmGrain } from '@/components/site/film-grain';
@@ -24,10 +22,10 @@ import { getRecruitment, publicRead } from '@/lib/data';
  * contact channels, and whether recruitment is open — the cached admin
  * setting (`recruitment` tag), so a save in /admin/recruitment updates the
  * header on every page at once. If it cannot be read, the header shows
- * recruitment as closed rather than failing the page. The read sits in its
- * own Suspense boundary: where the store is only reachable at request time
- * (Netlify Blobs during the build), the shell carries the closed header and
- * the real one streams in.
+ * recruitment as closed rather than failing the page. The header itself is
+ * part of the static shell and gets the setting as a promise: only its
+ * "open" marks wait for the store (`WhenRecruitmentOpen`), so the menu works
+ * as soon as the page hydrates, however slow the store is to answer (D-041).
  */
 export default function SiteLayout({ children }: LayoutProps<'/'>) {
   return (
@@ -42,9 +40,7 @@ export default function SiteLayout({ children }: LayoutProps<'/'>) {
         Skip to content
       </a>
 
-      <Suspense fallback={<SiteHeader channels={siteChannels} recruitmentOpen={false} />}>
-        <Header />
-      </Suspense>
+      <SiteHeader channels={siteChannels} recruitmentOpen={isRecruitmentOpen()} />
 
       <main
         id="main-content"
@@ -63,9 +59,8 @@ export default function SiteLayout({ children }: LayoutProps<'/'>) {
   );
 }
 
-/** The header, with whether recruitment is open (the cached admin setting). */
-async function Header() {
+/** Whether recruitment is open (the cached admin setting); closed if it cannot be read. */
+async function isRecruitmentOpen(): Promise<boolean> {
   const recruitment = await publicRead('the recruitment status', getRecruitment);
-  const recruitmentOpen = 'data' in recruitment && recruitment.data.open;
-  return <SiteHeader channels={siteChannels} recruitmentOpen={recruitmentOpen} />;
+  return 'data' in recruitment && recruitment.data.open;
 }

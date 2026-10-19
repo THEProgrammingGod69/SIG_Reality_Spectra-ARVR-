@@ -16,10 +16,18 @@ import { organizationJsonLd } from '@/lib/structured-data';
 const route = getRoute('/');
 
 /**
- * The club archive as reel cards, newest first. A clip shows its poster: the
- * reel is a strip of stills, and the gallery is where clips play.
+ * A still at least this many pixels on its short side fills a reel card
+ * sharply on any phone (a card is about 850 × 1050 device pixels at DPR 3).
+ */
+const SHARP_STILL = 960;
+
+/**
+ * The club archive as reel cards, newest first: only stills sharp enough for
+ * a card. Most clips are phone video a few hundred pixels across, so their
+ * posters stay in the gallery, which is where clips play anyway.
  */
 const moments = [...archive]
+  .filter((entry) => Math.min(entry.width, entry.height) >= SHARP_STILL)
   .sort((a, b) => b.date.localeCompare(a.date))
   .map((entry) => ({
     key: entry.src,

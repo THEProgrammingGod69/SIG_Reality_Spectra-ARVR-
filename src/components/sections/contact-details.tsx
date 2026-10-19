@@ -1,4 +1,4 @@
-import { Mail, MapPin, Phone, type LucideIcon } from 'lucide-react';
+import { Mail, MapPin, Navigation, Phone, type LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
 
 import { ButtonLink } from '@/components/ui/button';
@@ -81,11 +81,11 @@ export function ContactDetails({ email, phone, address, map }: ContactDetailsPro
         </Card>
 
         <Card spotlight>
-          <CardMedia ratio="16/9" className="h-full min-h-64">
+          <CardMedia ratio="16/9" className="min-h-64 flex-1">
             {map.embedUrl ? (
               <iframe
                 src={map.embedUrl}
-                title="Map showing where to find the club"
+                title="Map showing the club's campus, VIT Bibwewadi"
                 loading="lazy"
                 referrerPolicy="no-referrer-when-downgrade"
                 className="absolute inset-0 size-full border-0"
@@ -110,6 +110,17 @@ export function ContactDetails({ email, phone, address, map }: ContactDetailsPro
               </div>
             )}
           </CardMedia>
+          {map.embedUrl && map.url ? (
+            // Directions open in the Maps app on a phone, where a small embed is fiddly.
+            <CardBody className="flex-none flex-row flex-wrap items-center justify-between gap-3 px-6 py-4">
+              <Text as="span" size="sm" tone="muted">
+                Directions to the campus
+              </Text>
+              <ButtonLink href={map.url} external variant="secondary" size="sm" icon={Navigation}>
+                Open in Google Maps
+              </ButtonLink>
+            </CardBody>
+          ) : null}
         </Card>
       </div>
     </Section>
