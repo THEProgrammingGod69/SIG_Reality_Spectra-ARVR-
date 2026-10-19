@@ -2,6 +2,7 @@
 
 import React, { Suspense, useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
+import { DomainList } from '@/components/sections/domain-list';
 import './recruitment-tracks.css';
 
 type DynamicComponent = React.ComponentType<Record<string, unknown>>;
@@ -307,10 +308,12 @@ function TrackOverview({ onSelect }: { onSelect: (track: Track) => void }) {
 
 function TrackDetail({
   track,
-  onBack
+  onBack,
+  onSelectTrack
 }: {
   track: Track;
   onBack: () => void;
+  onSelectTrack: (track: Track) => void;
 }) {
   const index = tracks.findIndex(t => t.id === track.id || t.title === track.title);
   const [selectedTech, setSelectedTech] = useState('');
@@ -471,6 +474,27 @@ function TrackDetail({
           </div>
         </aside>
       </div>
+
+      <div className="track-detail-switcher" aria-label="Quick switch to another track">
+        <div className="track-switcher-label">
+          <span>SWITCH TRACK</span>
+          <span>10 SPECIALISATIONS</span>
+        </div>
+        <div className="track-switcher-list">
+          {tracks.map((t, i) => (
+            <button
+              key={t.title}
+              type="button"
+              className={t.id === track.id ? 'active' : ''}
+              style={{ '--track-accent': t.accent } as React.CSSProperties}
+              onClick={() => onSelectTrack(t)}
+            >
+              <span>{String(i + 1).padStart(2, '0')}</span>
+              {t.title}
+            </button>
+          ))}
+        </div>
+      </div>
     </article>
   );
 }
@@ -504,20 +528,35 @@ export function RecruitmentTracks() {
     }
   };
 
+  const handleDomainSelect = (trackName: string) => {
+    const found = tracks.find(
+      t =>
+        t.title.toLowerCase().includes(trackName.toLowerCase()) ||
+        trackName.toLowerCase().includes(t.title.toLowerCase())
+    );
+    if (found) {
+      handleSelect(found);
+    }
+  };
+
   return (
-    <section className="reference-section recruitment-tracks-section" id="domains-section">
-      <div id="recruitment-tracks-root" className="tracks-experience">
-        {activeTrack ? (
-          <TrackDetail
-            key={activeTrack.title}
-            track={activeTrack}
-            onBack={handleBack}
-          />
-        ) : (
-          <TrackOverview onSelect={handleSelect} />
-        )}
-      </div>
-    </section>
+    <>
+      <section className="reference-section recruitment-tracks-section" id="domains-section">
+        <div id="recruitment-tracks-root" className="tracks-experience">
+          {activeTrack ? (
+            <TrackDetail
+              key={activeTrack.title}
+              track={activeTrack}
+              onBack={handleBack}
+              onSelectTrack={handleSelect}
+            />
+          ) : (
+            <TrackOverview onSelect={handleSelect} />
+          )}
+        </div>
+      </section>
+      {!activeTrack && <DomainList onSelectTrack={handleDomainSelect} />}
+    </>
   );
 }
 

@@ -28,24 +28,26 @@ export function RecruitmentStatus({ recruitment, socials }: RecruitmentStatusPro
   const formUrl = recruitment.open ? recruitment.formUrl : null;
 
   return (
-    <Section labelledBy="recruitment-status" className="pb-0">
+    <Section labelledBy="recruitment-status" className="!py-3 sm:!py-4">
       <Card featured={formUrl !== null}>
-        <CardBody className="gap-6 p-8 md:flex-row md:items-center md:justify-between">
-          <div className="flex max-w-prose flex-col gap-4">
-            <Badge tone={formUrl ? 'success' : 'neutral'} className="self-start">
-              {formUrl ? 'Recruitment open' : 'Recruitment closed'}
-            </Badge>
-            <Heading level={2} size="md" id="recruitment-status">
-              {formUrl ? 'Applications are open' : 'Applications are closed right now'}
-            </Heading>
-            <Text tone="muted">
+        <CardBody className="gap-4 p-4 sm:p-5 md:flex-row md:items-center md:justify-between">
+          <div className="flex max-w-prose flex-col gap-2">
+            <div className="flex items-center gap-2">
+              <Badge tone={formUrl ? 'success' : 'neutral'} className="self-start text-xs py-0.5">
+                {formUrl ? 'Recruitment open' : 'Recruitment closed'}
+              </Badge>
+              <Heading level={2} size="sm" id="recruitment-status" className="text-sm sm:text-base font-semibold">
+                {formUrl ? 'Applications are open' : 'Applications are closed right now'}
+              </Heading>
+            </div>
+            <Text tone="muted" size="sm">
               {formUrl
                 ? 'Pick the domains that interest you below, then apply through the club’s application form.'
-                : 'Follow the club to hear when the next recruitment drive opens.'}
+                : 'Follow the club on our social channels to hear when the next recruitment drive opens.'}
             </Text>
             {formUrl ? (
-              <div className="flex flex-col gap-4">
-                <ButtonLink href={formUrl} external variant="star" size="lg" className="self-start">
+              <div className="flex flex-wrap items-center gap-3 pt-1">
+                <ButtonLink href={formUrl} external variant="star" size="sm" className="self-start">
                   Apply now
                 </ButtonLink>
                 {recruitment.rolesPdfUrl ? (
@@ -53,30 +55,29 @@ export function RecruitmentStatus({ recruitment, socials }: RecruitmentStatusPro
                     href={recruitment.rolesPdfUrl}
                     external
                     variant="secondary"
+                    size="sm"
                     icon={FileText}
                     className="self-start"
                   >
                     Roles &amp; responsibilities (PDF)
                   </ButtonLink>
-                ) : (
-                  <Text size="sm" tone="muted">
-                    The roles and responsibilities document is coming soon.
-                  </Text>
-                )}
+                ) : null}
               </div>
             ) : (
-              <SocialButtons socials={socials} />
+              <div className="pt-1">
+                <SocialButtons socials={socials} />
+              </div>
             )}
           </div>
 
           {formUrl ? (
-            <figure className="hidden shrink-0 flex-col items-center gap-3 md:flex">
+            <figure className="hidden shrink-0 flex-col items-center gap-2 md:flex">
               <QrCode
                 value={formUrl}
                 label="QR code for the application form"
-                className="size-40"
+                className="size-28"
               />
-              <figcaption className="font-mono text-label text-(--color-muted) uppercase">
+              <figcaption className="font-mono text-label text-(--color-muted) uppercase text-xs">
                 Scan to apply
               </figcaption>
             </figure>

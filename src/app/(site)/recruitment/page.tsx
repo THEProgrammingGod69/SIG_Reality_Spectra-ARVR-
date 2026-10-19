@@ -22,15 +22,14 @@ export default function RecruitmentPage() {
       <RecruitmentHero />
       <Suspense
         fallback={
-          <Section className="pb-0" aria-busy="true">
-            <Skeleton className="h-64 rounded-card" />
+          <Section className="!py-3 sm:!py-4" aria-busy="true">
+            <Skeleton className="h-20 rounded-card" />
           </Section>
         }
       >
         <Status />
       </Suspense>
       <RecruitmentTracks />
-      <DomainList groups={domainGroups} />
     </>
   );
 }
