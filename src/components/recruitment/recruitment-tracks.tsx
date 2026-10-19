@@ -304,10 +304,30 @@ function TrackOverview({ onSelect }: { onSelect: (track: Track) => void }) {
   );
 }
 
-function TrackDetail({ track, onBack }: { track: Track; onBack: () => void }) {
+function TrackDetail({
+  track,
+  onBack,
+  onSelectTrack
+}: {
+  track: Track;
+  onBack: () => void;
+  onSelectTrack: (track: Track) => void;
+}) {
   const index = tracks.indexOf(track);
   const [selectedTech, setSelectedTech] = useState('');
   const memberCardTexture = useMemberCardTexture(track, index + 1);
+
+  useEffect(() => {
+    const target = document.getElementById('domains-section') || document.getElementById('recruitment-tracks-root');
+    if (target) {
+      const headerOffset = 76;
+      const targetTop = target.getBoundingClientRect().top + window.scrollY - headerOffset;
+      window.scrollTo({
+        top: Math.max(0, targetTop),
+        behavior: 'smooth'
+      });
+    }
+  }, [track]);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => event.key === 'Escape' && onBack();
@@ -409,7 +429,15 @@ function TrackDetail({ track, onBack }: { track: Track; onBack: () => void }) {
         </div>
         <aside className="track-id-column" aria-label="SIG Reality Spectra identity card">
           <div className="lanyard-caption">
-            <span className="lanyard-caption-dot" /> MEMBER IDENTITY <span className="lanyard-caption-line" />
+            <span className="lanyard-caption-dot" style={{ backgroundColor: track.accent }} />
+            MEMBER IDENTITY
+            <span className="lanyard-caption-line" />
+          </div>
+          <div className="id-helper-pill" aria-hidden="true">
+            <span className="id-helper-dot" style={{ backgroundColor: track.accent }} />
+            <span>DRAG TO SWING</span>
+            <span className="id-helper-sep">·</span>
+            <span>CLICK TO FLIP</span>
           </div>
           <div className="track-lanyard-stage">
             {memberCardTexture ? (
@@ -438,13 +466,38 @@ function TrackDetail({ track, onBack }: { track: Track; onBack: () => void }) {
               <div className="lanyard-loading">PREPARING MEMBER ID</div>
             )}
           </div>
-          <div className="id-helper">DRAG TO SWING <span>·</span> CLICK TO FLIP</div>
+          <div className="id-helper">
+            <span className="id-helper-dot" style={{ backgroundColor: track.accent }} />
+            <span>DRAG TO SWING</span>
+            <span className="id-helper-sep">·</span>
+            <span>CLICK TO FLIP</span>
+          </div>
           <div className="track-id-stamp">
             <span>RS</span>
             <span>REALITY SPECTRA<br />VIT PUNE · EST. 2016</span>
             <span>✳</span>
           </div>
         </aside>
+      </div>
+      <div className="track-detail-switcher" aria-label="Switch to another track">
+        <div className="track-switcher-label">
+          <span>SWITCH TRACK</span>
+          <span>10 SPECIALISATIONS</span>
+        </div>
+        <div className="track-switcher-list">
+          {tracks.map((t, i) => (
+            <button
+              key={t.title}
+              type="button"
+              className={t.id === track.id ? 'active' : ''}
+              style={{ '--track-accent': t.accent } as React.CSSProperties}
+              onClick={() => onSelectTrack(t)}
+            >
+              <span>{String(i + 1).padStart(2, '0')}</span>
+              {t.title}
+            </button>
+          ))}
+        </div>
       </div>
     </article>
   );
@@ -453,13 +506,44 @@ function TrackDetail({ track, onBack }: { track: Track; onBack: () => void }) {
 export function RecruitmentTracks() {
   const [activeTrack, setActiveTrack] = useState<Track | null>(null);
 
+  const handleSelect = (track: Track) => {
+    setActiveTrack(track);
+    const target = document.getElementById('domains-section') || document.getElementById('recruitment-tracks-root');
+    if (target) {
+      const headerOffset = 76;
+      const targetTop = target.getBoundingClientRect().top + window.scrollY - headerOffset;
+      window.scrollTo({
+        top: Math.max(0, targetTop),
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  const handleBack = () => {
+    setActiveTrack(null);
+    const target = document.getElementById('domains-section') || document.getElementById('recruitment-tracks-root');
+    if (target) {
+      const headerOffset = 76;
+      const targetTop = target.getBoundingClientRect().top + window.scrollY - headerOffset;
+      window.scrollTo({
+        top: Math.max(0, targetTop),
+        behavior: 'smooth'
+      });
+    }
+  };
+
   return (
     <section className="reference-section recruitment-tracks-section" id="domains-section">
       <div id="recruitment-tracks-root" className="tracks-experience">
         {activeTrack ? (
-          <TrackDetail key={activeTrack.title} track={activeTrack} onBack={() => setActiveTrack(null)} />
+          <TrackDetail
+            key={activeTrack.title}
+            track={activeTrack}
+            onBack={handleBack}
+            onSelectTrack={handleSelect}
+          />
         ) : (
-          <TrackOverview onSelect={setActiveTrack} />
+          <TrackOverview onSelect={handleSelect} />
         )}
       </div>
     </section>

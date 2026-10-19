@@ -5,10 +5,9 @@
   --pixel-card-highlight: rgba(255, 255, 255, 0.06);
   --pixel-card-shadow: 0 24px 48px -24px rgba(0, 0, 0, 0.85), 0 8px 18px -10px rgba(0, 0, 0, 0.6);
   position: relative;
-  display: grid;
-  place-items: center;
-  width: 300px;
-  height: 400px;
+  display: block;
+  width: 100%;
+  height: auto;
   overflow: hidden;
   border-radius: var(--pixel-card-radius, 24px);
   background: var(--pixel-card-surface);
@@ -65,4 +64,5 @@
 .pixel-card > :not(.pixel-card-canvas) {
   position: relative;
   z-index: 1;
+  width: 100%;
 }
