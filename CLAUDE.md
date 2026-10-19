@@ -381,8 +381,8 @@ updated to match; `docs/ARCHITECTURE.md` is the current design.
 
 **Temporary scaffolding, to delete as it is replaced:**
 
-- Placeholder credentials (admins `dryerisdry@gmail.com` and
-  `mohan.arnav24@vit.edu` with a short `ADMIN_PASSWORD`, no Google keys, Netlify
+- Placeholder credentials (admins `dryerisdry@gmail.com`,
+  `mohan.arnav24@vit.edu` and `sig.vit@gmail.com` with a short `ADMIN_PASSWORD`, no Google keys, Netlify
   Blobs instead of Upstash/R2) — the swap list is at the top of
   `docs/OPEN_ITEMS.md`.
 - Local data mode (`DATA_BACKEND=local`) and the `[Demo]` events, photos, team

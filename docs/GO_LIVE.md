@@ -15,11 +15,11 @@ Before any of the accounts below exist, the club's current Netlify site
 sign-in**. On Netlify → Site configuration → Environment variables, set for
 **all deploy contexts** (tick _Contains secret values_ for the secrets):
 
-| Variable         | Value                                                        |
-| ---------------- | ------------------------------------------------------------ |
-| `AUTH_SECRET`    | `openssl rand -base64 32` (a different one for production)   |
-| `ADMIN_EMAILS`   | `dryerisdry@gmail.com,mohan.arnav24@vit.edu`                 |
-| `ADMIN_PASSWORD` | the club's admin password (a long passphrase is recommended) |
+| Variable         | Value                                                          |
+| ---------------- | -------------------------------------------------------------- |
+| `AUTH_SECRET`    | `openssl rand -base64 32` (a different one for production)     |
+| `ADMIN_EMAILS`   | `dryerisdry@gmail.com,mohan.arnav24@vit.edu,sig.vit@gmail.com` |
+| `ADMIN_PASSWORD` | the club's admin password (a long passphrase is recommended)   |
 
 Leave `DATA_BACKEND` and the Upstash/R2 variables unset, then **Trigger
 deploy**. Check: `https://<site>/api/health` answers `"ok": true` with
